@@ -82,11 +82,10 @@
   .sobre-editrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
   @media(max-width:560px){.resp-grid,.sobre-editrow{grid-template-columns:1fr}}
   .nav button.active::after{transform:scaleX(1)}
-  .nav button.admintab{display:none}
-  body.owner .nav button.admintab{display:inline-flex}
-  .nav .lock{margin-left:auto;font-size:14px;padding:9px 12px;opacity:.55;border-radius:10px;transition:opacity .15s}
-  .nav .lock:hover{opacity:1}
-  body.owner .nav .lock{opacity:1;color:var(--accent-2)}
+  /* blindagem de layout: nada de flex/float/position no pai empurrando os blocos pro lado */
+  html,body{display:block}
+  .topbar,.nav,.wrap{width:100%;float:none;position:static;clear:both}
+  .nav{display:flex}
   .pub{font-size:11px;color:var(--serie);margin-top:2px;font-weight:600}
   .dhead .pub{font-size:12.5px;margin-top:3px}
   .wrap{max-width:1100px;margin:0 auto;padding:26px 24px 80px}
@@ -251,9 +250,8 @@
   <button class="active" data-view="plataformas">Plataformas</button>
   <button data-view="busca">Buscar tipos</button>
   <button data-view="materiais">Materiais</button>
-  <button class="admintab" data-view="personalizar">Logos &amp; aparência</button>
-  <button class="admintab" data-view="admin">Atualizar regras</button>
-  <button class="lock" id="lock-btn" title="Modo edição">🔒</button>
+  <button data-view="personalizar">Logos &amp; aparência</button>
+  <button data-view="admin">Atualizar regras</button>
 </div>
 
 <div class="wrap">
@@ -369,21 +367,6 @@ let SQL = {Turmas:b64dec(DATA.SQL.Turmas), Alunos:b64dec(DATA.SQL.Alunos), Profe
 try{const savedSQL=JSON.parse(localStorage.getItem('hubSQL')||'null');if(savedSQL&&savedSQL.Turmas)SQL={...SQL,...savedSQL};}catch(e){}
 function saveSQL(){try{localStorage.setItem('hubSQL',JSON.stringify(SQL))}catch(e){}}
 
-/* ============ cadeado: separa as abas de edição ============ */
-function setOwner(on){
-  try{on?localStorage.setItem('hubOwner','1'):localStorage.removeItem('hubOwner')}catch(e){}
-  document.body.classList.toggle('owner',on);
-  const lk=document.getElementById('lock-btn'); if(lk)lk.textContent=on?'🔓':'🔒';
-  if(!on){const cur=document.querySelector('.nav button[data-view].active');
-    if(cur&&(cur.dataset.view==='personalizar'||cur.dataset.view==='admin'))
-      document.querySelector('.nav button[data-view="plataformas"]').click();}
-}
-(function(){let o=false;try{o=localStorage.getItem('hubOwner')==='1'}catch(e){}setOwner(o);})();
-document.getElementById('lock-btn').onclick=()=>{
-  const on=!document.body.classList.contains('owner');
-  setOwner(on);
-  if(on) document.querySelector('.nav button[data-view="personalizar"]').click();
-};
 const SERVER_URL = "https://script.google.com/macros/s/AKfycbzDFq57Z3dwS7rkSoTM5tyATTPUCWYPu9EHm7UTrR5sNIryCAcn0zXs9O_y9iymq-xy/exec";
 const hasServer = SERVER_URL && SERVER_URL.indexOf('http')===0;
 async function serverLoad(){
