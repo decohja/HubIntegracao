@@ -117,6 +117,8 @@
   .resp-input:hover{border-color:var(--line)}
   .resp-input:focus{outline:none;border-color:var(--accent);background:var(--panel-2)}
   .sel-badge option{background:#15202e;color:var(--ink)}
+  .addfld{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13.5px;margin-top:3px}
+  .addfld:focus{outline:none;border-color:var(--accent)}
   .nav button.active::after{transform:scaleX(1)}
   /* blindagem de layout: nada de flex/float/position no pai empurrando os blocos pro lado */
   html,body{display:block}
@@ -329,7 +331,12 @@
           <div class="field" id="d-field"></div>
           <div class="cli" id="d-cli"></div>
         </div>
-        <span class="st" id="d-status"></span>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <span class="st" id="d-status"></span>
+          <select id="d-status-edit" class="sel-badge cl-na" title="Alterar status (salva no banco)">
+            <option value="ativa">Ativa</option><option value="parcial">Parcial / aguardando</option><option value="off">Pausada</option>
+          </select>
+        </div>
       </div>
       <div class="card" id="d-sobre"></div>
       <div class="card" id="d-sync"></div>
@@ -356,6 +363,21 @@
       <input type="text" id="ac-input" placeholder="ex: 101, novo ensino, profissional, itinerario..." autocomplete="off">
       <div class="ac" id="ac-list"></div>
     </div>
+    <div style="margin:14px 0 4px;display:flex;gap:12px;flex-wrap:wrap">
+      <select class="plat-select" id="tipo-select" style="min-width:300px;max-width:100%"><option value="">— escolher tipo de ensino —</option></select>
+      <select class="plat-select" id="rede-select" style="min-width:240px;max-width:100%"><option value="">— escolher rede de ensino —</option></select>
+    </div>
+    <details class="rules-acc" style="margin:8px 0 16px">
+      <summary><span>➕ Adicionar tipo de ensino ou rede</span></summary>
+      <div class="acc-inner" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <div><label class="resp-lbl">O que é</label><br>
+          <select id="add-kind" class="addfld" style="min-width:150px"><option value="tipo">Tipo de ensino</option><option value="rede">Rede de ensino</option></select></div>
+        <div><label class="resp-lbl">Código</label><br><input id="add-code" class="addfld" style="width:96px" placeholder="ex: 111" inputmode="numeric"></div>
+        <div style="flex:1;min-width:200px"><label class="resp-lbl">Nome</label><br><input id="add-name" class="addfld" style="width:100%" placeholder="nome do tipo / rede"></div>
+        <button class="btn pubbtn" onclick="addTipoRede(this)">💾 Adicionar e salvar</button>
+        <div id="add-status" style="font-size:12px;width:100%;min-height:14px"></div>
+      </div>
+    </details>
     <div id="search-results"></div>
   </div>
 
@@ -423,6 +445,10 @@ async function serverLoad(){
       if(cfg.sql&&cfg.sql.Turmas) SQL={...SQL,...cfg.sql};
       if(Array.isArray(cfg.materiais)){MATERIAIS.length=0;cfg.materiais.forEach(x=>MATERIAIS.push(x));}
       if(cfg.meta&&typeof cfg.meta==='object') META=Object.assign({},DATA.META||{},cfg.meta);
+      if(cfg.tipos&&typeof cfg.tipos==='object') Object.assign(TIPOS,cfg.tipos);
+      if(cfg.redes&&typeof cfg.redes==='object') Object.assign(REDES,cfg.redes);
+      if(cfg.status&&typeof cfg.status==='object') for(const k in cfg.status){if(PLATS[k])PLATS[k].status=cfg.status[k];}
+      rebuildIndex();
       PARSED=parseAll();
       return true;
     }
@@ -434,19 +460,23 @@ function getSecret(force){
   if(!s||force){ s=prompt('Senha de edição (para salvar no site):'); if(s){try{sessionStorage.setItem('hubSecret',s)}catch(e){}} }
   return s;
 }
+function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap()};}
+function postBank(onok,onerr){
+  if(!hasServer){onerr&&onerr('servidor não configurado');return;}
+  const secret=getSecret(); if(!secret){onerr&&onerr('sem senha');return;}
+  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload:bankPayload()})})
+    .then(r=>r.json()).then(res=>{if(res&&res.ok)onok&&onok();else{try{sessionStorage.removeItem('hubSecret')}catch(e){}onerr&&onerr((res&&res.error)||'erro');}})
+    .catch(e=>onerr&&onerr(e.message));
+}
 async function serverSave(btn){
   if(!hasServer){alert('O salvamento no site ainda não está configurado neste arquivo.');return;}
-  const secret=getSecret(); if(!secret) return;
   const old=btn?btn.textContent:''; if(btn){btn.textContent='Salvando…';btn.disabled=true;}
-  try{
-    const payload={logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META};
-    const r=await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload})});
-    const res=await r.json();
-    if(res&&res.ok){ if(btn){btn.textContent='✓ Salvo no site!';setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2500);} }
-    else{ try{sessionStorage.removeItem('hubSecret')}catch(e){} throw new Error(res&&res.error?res.error:'falhou'); }
-  }catch(e){alert('Não consegui salvar no site: '+e.message);if(btn){btn.textContent=old;btn.disabled=false;}}
+  postBank(()=>{ if(btn){btn.textContent='✓ Salvo no site!';setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2500);} },
+           e=>{ alert('Não consegui salvar no site: '+e); if(btn){btn.textContent=old;btn.disabled=false;} });
 }
-const PLATS=DATA.PLATS, EXCEL_RULES=DATA.EXCEL_RULES, ADMINS=DATA.ADMINS, TIPOS=DATA.TIPOS, REDES=DATA.REDES, DISC=DATA.DISC, ESCOLAS=DATA.ESCOLAS, MATERIAIS=DATA.MATERIAIS||[];
+const PLATS=DATA.PLATS, EXCEL_RULES=DATA.EXCEL_RULES, ADMINS=DATA.ADMINS, DISC=DATA.DISC, ESCOLAS=DATA.ESCOLAS, MATERIAIS=DATA.MATERIAIS||[];
+let TIPOS=DATA.TIPOS, REDES=DATA.REDES;
 let META=DATA.META||{};
 const ORDER=Object.keys(PLATS).filter(k=>!PLATS[k].hide);
 
@@ -598,11 +628,9 @@ function setSobre(k,field,val,el){
   if(val)META[k][field]=val; else delete META[k][field];
   const st=document.getElementById('sobre-status');
   if(!hasServer){if(st){st.style.color='var(--ink-3)';st.textContent='Servidor não configurado — alteração não salva.';}return;}
-  const secret=getSecret(); if(!secret){if(st){st.style.color='#ff9b9b';st.textContent='Salvar cancelado (sem senha).';}return;}
   if(st){st.style.color='var(--ink-3)';st.textContent='Salvando…';}
-  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload:{logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META}})})
-    .then(r=>r.json()).then(res=>{if(st){if(res&&res.ok){st.style.color='#86e29a';st.textContent='✓ Salvo no banco.';}else{try{sessionStorage.removeItem('hubSecret')}catch(e){}st.style.color='#ff9b9b';st.textContent='Falha: '+((res&&res.error)||'erro');}}})
-    .catch(e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e.message;}});
+  postBank(()=>{if(st){st.style.color='#86e29a';st.textContent='✓ Salvo no banco.';}},
+           e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e;}});
 }
 
 function renderRules(p,role){
@@ -695,6 +723,14 @@ function openPlat(k){const p=PLATS[k];
   document.getElementById('d-cli').textContent=p.cliente?('Cliente: '+p.cliente):'';
   const st=document.getElementById('d-status');st.className='st '+p.status;
   st.innerHTML='<span class="dot"></span>'+(p.status==='ativa'?'Ativa':(p.status==='off'?'Pausada':'Parcial / aguardando'));
+  const se=document.getElementById('d-status-edit');
+  if(se){se.value=p.status;se.onchange=()=>{p.status=se.value;
+    st.className='st '+p.status;
+    st.innerHTML='<span class="dot"></span>'+(p.status==='ativa'?'Ativa':(p.status==='off'?'Pausada':'Parcial / aguardando'));
+    renderGrid();renderHeroStats();
+    se.title='Salvando…';
+    postBank(()=>{se.title='✓ Status salvo no banco';},e=>{alert('Status mudou na tela, mas falha ao salvar: '+e);});
+  };}
   document.getElementById('d-sobre').innerHTML=renderSobre(k);
   const sync=document.getElementById('d-sync');let sh='<div class="card-title">Sincronismo com o Hub</div>';
   if(p.sync&&p.sync.length){sh+='<ul class="sync-list">'+p.sync.map(s=>`<li><span class="obj">${esc(s[0])}</span><span class="when ${s[2]}"><span class="dot"></span>${esc(s[1])}</span></li>`).join('')+'</ul>';}
@@ -717,7 +753,8 @@ document.getElementById('back-btn').onclick=()=>{document.getElementById('plat-d
 /* ============ busca ============ */
 function buildIndex(){const idx=[];for(const[c,v]of Object.entries(TIPOS))idx.push({code:+c,name:v[0],kind:'Tipo de ensino',conf:v[1]});
   for(const[c,v]of Object.entries(REDES))idx.push({code:+c,name:v[0],kind:'Rede de ensino',conf:v[1]});return idx;}
-const INDEX=buildIndex();
+let INDEX=buildIndex();
+function rebuildIndex(){INDEX=buildIndex();}
 function norm(s){return s.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
 function lev(a,b){a=norm(a);b=norm(b);const m=a.length,n=b.length;const D=Array.from({length:m+1},(_,i)=>[i]);
   for(let j=0;j<=n;j++)D[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)D[i][j]=Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return D[m][n];}
@@ -752,6 +789,31 @@ function pick(it){acInput.value='';acList.classList.remove('show');const box=doc
   div.innerHTML=`<div class="code">${it.code}</div><div style="flex:1"><div class="nm">${esc(it.name)} ${it.conf?'':'<span class="tag toconf">conferir</span>'}</div>
     <div class="mt">${it.kind}</div>${usedBy(it)}</div>
     <button class="btn ghost" style="padding:6px 12px" onclick="this.closest('.res-card').remove()">Remover</button>`;box.prepend(div);}
+
+function fillTipoSelect(){
+  const ts=document.getElementById('tipo-select'), rs=document.getElementById('rede-select');
+  const tipos=INDEX.filter(it=>it.kind==='Tipo de ensino').sort((a,b)=>a.code-b.code);
+  const redes=INDEX.filter(it=>it.kind==='Rede de ensino').sort((a,b)=>a.code-b.code);
+  const opt=it=>`<option value="${it.code}">${it.code} · ${esc(it.name)}${it.conf?'':' (conferir)'}</option>`;
+  if(ts){ts.innerHTML='<option value="">— escolher tipo de ensino —</option>'+tipos.map(opt).join('');
+    ts.onchange=()=>{const c=ts.value;if(!c)return;const it=INDEX.find(x=>x.kind==='Tipo de ensino'&&String(x.code)===c);if(it)pick(it);ts.value='';};}
+  if(rs){rs.innerHTML='<option value="">— escolher rede de ensino —</option>'+redes.map(opt).join('');
+    rs.onchange=()=>{const c=rs.value;if(!c)return;const it=INDEX.find(x=>x.kind==='Rede de ensino'&&String(x.code)===c);if(it)pick(it);rs.value='';};}
+}
+function addTipoRede(btn){
+  const kind=document.getElementById('add-kind').value;
+  const code=parseInt(document.getElementById('add-code').value,10);
+  const name=document.getElementById('add-name').value.trim();
+  const st=document.getElementById('add-status');
+  const setMsg=(c,t)=>{if(st){st.style.color=c;st.textContent=t;}};
+  if(!code||!name){setMsg('#ff9b9b','Preencha código (número) e nome.');return;}
+  if(kind==='tipo')TIPOS[code]=[name,true]; else REDES[code]=[name,true];
+  rebuildIndex();fillTipoSelect();
+  setMsg('var(--ink-3)','Salvando…');
+  postBank(()=>{setMsg('#86e29a','✓ Adicionado e salvo: '+code+' · '+name);
+      document.getElementById('add-code').value='';document.getElementById('add-name').value='';},
+    e=>{setMsg('#ff9b9b','Adicionado localmente, mas falha ao salvar: '+e);});
+}
 
 /* ============ personalizar logos ============ */
 function renderCust(){const box=document.getElementById('cust-list');
@@ -865,8 +927,8 @@ async function publishFile(btn){
 }
 
 /* ============ init ============ */
-fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();renderCust();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();renderCust(); } })();
+fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();fillTipoSelect();renderCust();
+(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();fillTipoSelect();renderCust(); } })();
 </script>
 </body>
 </html>
