@@ -304,7 +304,6 @@
   <button data-view="busca">Tipos de Ensino</button>
   <button data-view="materiais">Materiais</button>
   <button data-view="personalizar">Logos &amp; aparência</button>
-  <button data-view="admin">Atualizar regras</button>
 </div>
 
 <div class="wrap">
@@ -404,29 +403,6 @@
     </div>
     <div class="info-banner" style="margin-bottom:16px">Coloque os logos e clique em <b>Salvar no site</b> — eles ficam na planilha e aparecem pra todos. (Os logos são reduzidos automaticamente para carregar rápido.)</div>
     <div class="card" id="cust-list"></div>
-  </div>
-
-  <div class="view" id="view-admin">
-    <h2>Atualizar regras</h2>
-    <p class="lead">As queries são procedures únicas que contêm todas as plataformas. Para conferir uma plataforma específica, escolha-a abaixo: você vê o público atual e o trecho exato da query dela em cada procedure. Para atualizar, abra a procedure correspondente, cole a versão nova e reprocesse. Nada sai do navegador.</p>
-
-    <div class="card">
-      <div class="card-title">Inspecionar uma plataforma</div>
-      <select class="plat-select" id="insp-select" style="min-width:320px"><option value="">— escolher plataforma —</option></select>
-      <div id="insp-out" style="margin-top:14px"></div>
-    </div>
-
-    <div class="card-title" style="margin-top:18px">Procedures (clique para abrir e colar a versão nova)</div>
-    <div id="sql-accordions"></div>
-
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn" id="reparse-btn">Reprocessar (pré-visualizar)</button>
-      <button class="btn pubbtn" onclick="serverSave(this)">💾 Salvar no site</button>
-      <button class="btn ghost" id="reset-btn">Restaurar SQL original</button>
-      <button class="btn ghost" onclick="publishFile(this)">baixar cópia (index.html)</button>
-    </div>
-    <div class="info-banner" style="margin-top:12px"><b>Reprocessar</b> mostra o resultado só pra você (pré-visualização). <b>Salvar no site</b> grava na planilha e fica no ar pra todos na hora.</div>
-    <div class="parse-status" id="parse-status"></div>
   </div>
 
 </div>
@@ -703,7 +679,7 @@ function renderRules(p,role){
   if(!v||v.mode==='absent')return '<div class="empty">Sem informação desta regra para este recorte.</div>';
   if(v.mode==='none')return '<div class="info-banner">Não é enturmado por esta regra. O público é definido por outro fluxo (ver sincronismo acima).</div>';
   if(v.mode==='allactive')return '<div class="info-banner">Todas as turmas ativas da rede Estadual - SE (1). Não há recorte por tipo de ensino ou série nesta regra.</div>';
-  if(v.mode==='unknown')return '<div class="empty">Regra não reconhecida automaticamente. Confira na aba "Atualizar regras".</div>';
+  if(v.mode==='unknown')return '<div class="empty">Regra não reconhecida automaticamente. Atualize a query desta plataforma na própria página dela.</div>';
   let escolasBlock='';
   const allEsc=[].concat(...v.rules.filter(r=>r.escolas).map(r=>r.escolas));
   const uniqEsc=[...new Set(allEsc)];
@@ -907,61 +883,16 @@ document.getElementById('imp-file').onchange=e=>{const f=e.target.files[0];if(!f
   rd.onload=()=>{try{LOGOS=JSON.parse(rd.result)||{};saveLogos();refreshAll();}catch(err){alert('Arquivo inválido');}};rd.readAsText(f);};
 document.getElementById('clr-btn').onclick=()=>{if(confirm('Remover todos os logos?')){LOGOS={};saveLogos();refreshAll();}};
 
-/* ============ atualizar regras: acordeões + inspetor ============ */
-const ROLE_PROCS={Turmas:'sp_InsereIntegracaoTurma',Alunos:'sp_InsereIntegracaoAluno',Professores:'sp_InsereIntegracaoProfessor'};
-function fillAdmin(){
-  const box=document.getElementById('sql-accordions');
-  box.innerHTML=['Turmas','Alunos','Professores'].map(r=>`
-    <div class="acc" data-acc="${r}">
-      <div class="acc-head"><span>${r} — ${ROLE_PROCS[r]}</span><span class="chev">▸</span></div>
-      <div class="acc-body"><textarea id="sql-${r}"></textarea></div>
-    </div>`).join('');
-  ['Turmas','Alunos','Professores'].forEach(r=>document.getElementById('sql-'+r).value=SQL[r]);
-  box.querySelectorAll('.acc-head').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
-}
-function rawBlock(role,plat){try{const b=extractBlocks(SQL[role]);return b[plat];}catch(e){return null;}}
-function fillInspSelect(){const sel=document.getElementById('insp-select');sel.innerHTML='<option value="">— escolher plataforma —</option>';
-  ORDER.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=PLATS[k].nome+(PLATS[k].interno?' ('+PLATS[k].interno+')':'');sel.appendChild(o);});
-  sel.onchange=()=>renderInspector(sel.value);}
-function renderInspector(k){const out=document.getElementById('insp-out');if(!k){out.innerHTML='';return;}
-  const p=PLATS[k];
-  let h=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">${avatarHTML(k)}<div><div style="font-weight:650">${esc(p.nome)}</div><div class="src" style="font-size:11px;color:var(--ink-3)">${p.src==='excel'?'via planilha de regras':'campo: '+k}</div></div></div>`;
-  if(p.src==='excel'){h+='<div class="info-banner">Esta plataforma vem da planilha de regra de negócio, não destas procedures. Não há bloco SQL para editar aqui.</div>';out.innerHTML=h;return;}
-  h+='<div class="subtabs" id="insp-sub">'+['Turmas','Alunos','Professores'].map((r,i)=>`<button class="${i===0?'active':''}" data-r="${r}">${r}</button>`).join('')+'</div>';
-  ['Turmas','Alunos','Professores'].forEach((r,i)=>{
-    const blk=rawBlock(r,k);
-    h+=`<div class="ptab ${i===0?'active':''}" id="insp-${r}">
-      <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-2)">Público interpretado:</div>${renderRules(k,r)}
-      <div style="margin:12px 0 4px;font-size:12px;color:var(--ink-2)">Trecho desta plataforma na procedure <b>${ROLE_PROCS[r]}</b>:</div>
-      <div class="blockcode">${blk?esc(blk):'(não encontrado nesta procedure)'}</div></div>`;});
-  out.innerHTML=h;
-  out.querySelectorAll('#insp-sub button').forEach(b=>b.onclick=()=>{
-    out.querySelectorAll('#insp-sub button').forEach(x=>x.classList.remove('active'));
-    out.querySelectorAll('[id^=insp-Turmas],[id^=insp-Alunos],[id^=insp-Professores]').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');out.querySelector('#insp-'+b.dataset.r).classList.add('active');});
-}
 function renderHeroStats(){const s=document.getElementById('hero-stats');if(!s)return;
   const tot=ORDER.length,ativ=ORDER.filter(k=>PLATS[k].status==='ativa').length,
    parc=ORDER.filter(k=>PLATS[k].status==='parcial').length,
-   pausa=ORDER.filter(k=>PLATS[k].status==='off').length,plan=ORDER.filter(k=>PLATS[k].src==='excel').length;
+   pausa=ORDER.filter(k=>PLATS[k].status==='off').length;
   s.innerHTML=`<div class="stat sc-total" data-f="todas"><b>${tot}</b><span>plataformas</span></div>
    <div class="stat sc-ativa" data-f="ativa"><b>${ativ}</b><span>ativas</span></div>
    <div class="stat sc-parcial" data-f="parcial"><b>${parc}</b><span>parcial</span></div>
    <div class="stat sc-pausa" data-f="off"><b>${pausa}</b><span>pausadas</span></div>`;
   s.querySelectorAll('.stat').forEach(el=>el.onclick=()=>{curFilter=el.dataset.f;renderChips();renderGrid();
     const g=document.getElementById('filterchips');if(g&&g.scrollIntoView)g.scrollIntoView({behavior:'smooth',block:'center'});});}
-document.getElementById('reparse-btn').onclick=()=>{
-  ['Turmas','Alunos','Professores'].forEach(r=>SQL[r]=document.getElementById('sql-'+r).value);
-  try{PARSED=parseAll();saveSQL();const total=ORDER.reduce((a,p)=>{const v=PARSED.Turmas[p];return a+(v.mode==='rules'?v.rules.length:0);},0);
-    let s='<div class="info-banner">Reprocessado e salvo neste navegador. '+ORDER.length+' plataformas, '+total+' regras de turma extraídas.</div>';
-    s+='<table style="margin-top:10px"><thead><tr><th>Plataforma</th><th>Turmas</th><th>Alunos</th><th>Professores</th></tr></thead><tbody>';
-    s+=ORDER.map(p=>{const f=r=>{const v=PARSED[r][p];return v.mode==='rules'?v.rules.length+' regra(s)':({none:'—',allactive:'todas ativas',absent:'ausente',unknown:'?'}[v.mode]||v.mode);};
-      return `<tr><td>${esc(PLATS[p].nome)}</td><td>${f('Turmas')}</td><td>${f('Alunos')}</td><td>${f('Professores')}</td></tr>`;}).join('');
-    s+='</tbody></table>';document.getElementById('parse-status').innerHTML=s;renderGrid();
-  }catch(err){document.getElementById('parse-status').innerHTML='<div class="info-banner" style="background:var(--cond-bg);color:var(--off);border-color:#4a2123">Erro ao processar: '+esc(err.message)+'</div>';}};
-document.getElementById('reset-btn').onclick=()=>{SQL={Turmas:b64dec(DATA.SQL.Turmas),Alunos:b64dec(DATA.SQL.Alunos),Professores:b64dec(DATA.SQL.Professores)};
-  try{localStorage.removeItem('hubSQL')}catch(e){}
-  fillAdmin();PARSED=parseAll();renderGrid();document.getElementById('parse-status').innerHTML='<div class="info-banner">SQL original restaurado (voltou ao que vem embutido no arquivo).</div>';};
 
 /* ============ materiais ============ */
 function renderMateriais(){const box=document.getElementById('materiais-list');if(!box)return;
@@ -993,8 +924,8 @@ async function publishFile(btn){
 }
 
 /* ============ init ============ */
-fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();fillTipoSelect();renderCust();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillAdmin();fillInspSelect();fillTipoSelect();renderCust(); } })();
+fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderCust();
+(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderCust(); } })();
 </script>
 </body>
 </html>
