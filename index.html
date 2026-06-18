@@ -444,7 +444,10 @@ async function serverLoad(){
   if(!hasServer) return false;
   try{
     const r=await fetch(SERVER_URL,{cache:'no-store'});
-    const cfg=await r.json();
+    const raw=await r.text();
+    let cfg=null;
+    try{ let parsed=JSON.parse(raw); if(typeof parsed==='string'){const d=hexDec(parsed); parsed=d?JSON.parse(d):JSON.parse(parsed);} cfg=parsed; }
+    catch(e){ console.warn('Config ilegível (talvez corrompido):',e); return false; }
     if(cfg&&typeof cfg==='object'){
       if(cfg.logos&&typeof cfg.logos==='object') LOGOS=cfg.logos;
       if(cfg.sql&&cfg.sql.Turmas) SQL={...SQL,...cfg.sql};
@@ -467,10 +470,13 @@ function getSecret(force){
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
 function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap()};}
+function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
+function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
   if(!hasServer){onerr&&onerr('servidor não configurado');return;}
   const secret=getSecret(); if(!secret){onerr&&onerr('sem senha');return;}
-  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload:bankPayload()})})
+  const hex=hexEnc(JSON.stringify(bankPayload()));
+  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload:hex})})
     .then(r=>r.json()).then(res=>{if(res&&res.ok)onok&&onok();else{try{sessionStorage.removeItem('hubSecret')}catch(e){}onerr&&onerr((res&&res.error)||'erro');}})
     .catch(e=>onerr&&onerr(e.message));
 }
