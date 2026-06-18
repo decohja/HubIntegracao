@@ -119,6 +119,10 @@
   .sel-badge option{background:#15202e;color:var(--ink)}
   .addfld{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13.5px;margin-top:3px}
   .addfld:focus{outline:none;border-color:var(--accent)}
+  .q-edit{width:100%;min-height:120px;max-height:280px;margin:3px 0 12px;resize:vertical;
+    background:#0c1622;border:1px solid var(--line);color:#cfe3f5;border-radius:10px;padding:11px 13px;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;overflow:auto}
+  .q-edit:focus{outline:none;border-color:var(--accent)}
   .nav button.active::after{transform:scaleX(1)}
   /* blindagem de layout: nada de flex/float/position no pai empurrando os blocos pro lado */
   html,body{display:block}
@@ -352,6 +356,7 @@
         <div class="ptab" id="ptab-Professores"></div>
         <div class="ptab" id="ptab-Admins"></div>
       </div>
+      <div class="card" id="d-query"></div>
     </div>
   </div>
 
@@ -633,6 +638,60 @@ function setSobre(k,field,val,el){
            e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e;}});
 }
 
+/* ===== atualizar query individual por plataforma ===== */
+function platBlockSpan(raw,k){
+  const into=raw.search(/INTO\s+#TMP/i); const lim=into>0?into:raw.length;
+  const re=/,\s*([A-Z][A-Z_]+)\s*=\s*/g; let m,marks=[];
+  while((m=re.exec(raw))){ if(m.index>=lim)break; marks.push({name:m[1],start:m.index,valStart:re.lastIndex}); }
+  for(let i=0;i<marks.length;i++){ if(marks[i].name===k){
+    const start=marks[i].start; let end=lim;
+    for(let j=i+1;j<marks.length;j++){ if(PLATFORMS.includes(marks[j].name)){end=marks[j].start;break;} }
+    return {start,end};
+  }}
+  return null;
+}
+function getPlatBlockText(role,k){const raw=SQL[role];const sp=platBlockSpan(raw,k);return sp?raw.slice(sp.start,sp.end).trim():'';}
+function valueFromPasted(pasted){
+  let t=pasted.trim();
+  const m=t.match(/^,?\s*[A-Z][A-Z_]+\s*=\s*([\s\S]+)$/);
+  let v=m?m[1].trim():t;
+  if(/^(MAX|CAST|0\b)/i.test(v))return v;
+  if(/^CASE\s+WHEN/i.test(v))return 'MAX('+v+')';
+  if(/^\(/.test(v))return 'MAX(CASE WHEN '+v+' THEN 1 ELSE 0 END)';
+  return v;
+}
+function replacePlatBlock(role,k,pasted){
+  if(!pasted||!pasted.trim())return false;
+  const raw=SQL[role];const sp=platBlockSpan(raw,k);if(!sp)return false;
+  const novo=','+k+' = '+valueFromPasted(pasted);
+  SQL[role]=raw.slice(0,sp.start)+novo+'\n\n        '+raw.slice(sp.end);
+  return true;
+}
+function renderQueryEditor(k){
+  const block=role=>esc(getPlatBlockText(role,k)||'');
+  return `<details class="rules-acc"><summary><span>✎ Atualizar a query desta plataforma</span></summary>
+   <div class="acc-inner">
+   <p class="lead" style="margin:0 0 12px">Cole o bloco que o time técnico te enviou — o trecho completo, ex.: <code>,${k} = MAX(CASE WHEN … THEN 1 ELSE 0 END)</code> (também aceita só o miolo entre parênteses). Ao salvar, substituo <b>apenas</b> o trecho desta plataforma na procedure e reprocesso o público dela. Deixe em branco o público que não mudou.</p>
+   ${['Turmas','Alunos','Professores'].map(r=>`<label class="resp-lbl">${r}</label>
+     <textarea class="q-edit" id="d-q-${r}" spellcheck="false">${block(r)}</textarea>`).join('')}
+   <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+     <button class="btn pubbtn" onclick="savePlatQuery('${k}')">💾 Salvar query no banco</button>
+     <button class="btn ghost" onclick="openPlat('${k}')">descartar</button>
+     <span id="d-query-status" style="font-size:12px;color:var(--ink-3)"></span>
+   </div></div></details>`;
+}
+function savePlatQuery(k){
+  let mudou=false;
+  ['Turmas','Alunos','Professores'].forEach(r=>{const el=document.getElementById('d-q-'+r);
+    if(el){const atual=getPlatBlockText(r,k);const novo=el.value.trim();
+      if(novo&&novo!==atual){if(replacePlatBlock(r,k,novo))mudou=true;}}});
+  if(!mudou){const st=document.getElementById('d-query-status');if(st){st.style.color='var(--ink-3)';st.textContent='Nenhuma mudança para salvar.';}return;}
+  saveSQL();PARSED=parseAll();openPlat(k);renderGrid();
+  const st=document.getElementById('d-query-status');if(st){st.style.color='var(--ink-3)';st.textContent='Reprocessado. Salvando no banco…';}
+  postBank(()=>{const s=document.getElementById('d-query-status');if(s){s.style.color='#86e29a';s.textContent='✓ Query atualizada e salva no banco.';}},
+    e=>{const s=document.getElementById('d-query-status');if(s){s.style.color='#ff9b9b';s.textContent='Reprocessou na tela, mas falhou ao salvar: '+e;}});
+}
+
 function renderRules(p,role){
   const v=PARSED[role][p];
   if(!v||v.mode==='absent')return '<div class="empty">Sem informação desta regra para este recorte.</div>';
@@ -732,6 +791,7 @@ function openPlat(k){const p=PLATS[k];
     postBank(()=>{se.title='✓ Status salvo no banco';},e=>{alert('Status mudou na tela, mas falha ao salvar: '+e);});
   };}
   document.getElementById('d-sobre').innerHTML=renderSobre(k);
+  document.getElementById('d-query').innerHTML=renderQueryEditor(k);
   const sync=document.getElementById('d-sync');let sh='<div class="card-title">Sincronismo com o Hub</div>';
   if(p.sync&&p.sync.length){sh+='<ul class="sync-list">'+p.sync.map(s=>`<li><span class="obj">${esc(s[0])}</span><span class="when ${s[2]}"><span class="dot"></span>${esc(s[1])}</span></li>`).join('')+'</ul>';}
   if(p.note)sh+=`<div class="note">${esc(p.note)}</div>`;
