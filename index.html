@@ -106,6 +106,16 @@
   .sel-badge.cl-doacao{background-color:rgba(34,197,170,.14);color:#7fe9cf;border-color:#266e5e}
   .sel-badge.cl-gestao{background-color:rgba(74,168,240,.14);color:#9fd0ff;border-color:#27506f}
   .sel-badge.cl-na{background-color:var(--panel-2);color:var(--ink-2);border-color:var(--line)}
+  .sel-badge.ig-sso{background-color:rgba(74,168,240,.16);color:#9fd0ff;border-color:#27506f}
+  .sel-badge.ig-api{background-color:rgba(167,121,226,.16);color:#d3b8f4;border-color:#553a73}
+  .sel-badge.ig-sftp{background-color:rgba(34,197,170,.16);color:#7fe9cf;border-color:#266e5e}
+  .sel-badge.ig-manual{background-color:rgba(255,173,71,.16);color:#ffce8a;border-color:#6e5326}
+  .sel-badge.ig-mista{background-color:rgba(246,145,178,.16);color:#ffb6cf;border-color:#7a3a52}
+  .resp-input{width:100%;margin-top:3px;background:transparent;border:1px solid transparent;border-radius:8px;
+    padding:5px 8px;margin-left:-8px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);transition:border-color .15s,background .15s}
+  .resp-input::placeholder{color:var(--ink-3);font-weight:600}
+  .resp-input:hover{border-color:var(--line)}
+  .resp-input:focus{outline:none;border-color:var(--accent);background:var(--panel-2)}
   .sel-badge option{background:#15202e;color:var(--ink)}
   .nav button.active::after{transform:scaleX(1)}
   /* blindagem de layout: nada de flex/float/position no pai empurrando os blocos pro lado */
@@ -549,6 +559,7 @@ function autoDesc(k){const p=PLATS[k];const pubs=publicosDe(k);
   const lista=pubs.length?(pubs.length>1?pubs.slice(0,-1).join(', ')+' e '+pubs[pubs.length-1]:pubs[0]):'os perfis definidos';
   return `A ${p.nome} disponibiliza acesso para ${lista} da rede estadual de São Paulo, conforme as regras de enturmação abaixo.`;}
 const CLASSIF_CLS={'Paga':'cl-paga','Doação / Parceria':'cl-doacao','Gestão Própria':'cl-gestao'};
+const INTEG_CLS={'SSO':'ig-sso','API':'ig-api','SFTP':'ig-sftp','Manual':'ig-manual','Mista':'ig-mista'};
 const INTEG_LEGEND='SSO = login único pela Sala do Futuro · API = integração via serviços · SFTP = troca de arquivos · Manual = sem automação · Mista = mais de uma forma';
 function renderSobre(k){
   const m=META[k]||{};
@@ -561,17 +572,22 @@ function renderSobre(k){
       <div class="resp-item"><span class="resp-lbl">Classificação</span>
         <select class="sel-badge ${CLASSIF_CLS[classif]||'cl-na'}" onchange="setSobre('${k}','classif',this.value,this)">${opts(['Paga','Doação / Parceria','Gestão Própria'],classif,'—')}</select></div>
       <div class="resp-item"><span class="resp-lbl">Forma de integração</span>
-        <select class="sel-badge cl-na" onchange="setSobre('${k}','integ',this.value,this)">${opts(['SSO','API','SFTP','Manual','Mista'],integ,'a definir')}</select></div>
-      <div class="resp-item"><span class="resp-lbl">Responsável SEDUC</span><span class="resp-val">${esc(m.respSeduc||'—')}</span></div>
-      <div class="resp-item"><span class="resp-lbl">Responsável (Plataforma)</span><span class="resp-val">${esc(m.respTec||'—')}</span></div>
+        <select class="sel-badge ${INTEG_CLS[integ]||'cl-na'}" onchange="setSobre('${k}','integ',this.value,this)">${opts(['SSO','API','SFTP','Manual','Mista'],integ,'a definir')}</select></div>
+      <div class="resp-item"><span class="resp-lbl">Responsável SEDUC</span>
+        <input class="resp-input" value="${esc(m.respSeduc||'')}" placeholder="—" onblur="setSobre('${k}','respSeduc',this.value.trim(),this)"></div>
+      <div class="resp-item"><span class="resp-lbl">Responsável (Plataforma)</span>
+        <input class="resp-input" value="${esc(m.respTec||'')}" placeholder="—" onblur="setSobre('${k}','respTec',this.value.trim(),this)"></div>
     </div>
     <div class="note" style="margin-top:10px">${INTEG_LEGEND}</div>
     <div id="sobre-status" style="font-size:12px;margin-top:8px;min-height:16px"></div>`;
 }
 function setSobre(k,field,val,el){
   if(!META[k])META[k]={};
-  if(val)META[k][field]=val; else delete META[k][field];
+  const cur=META[k][field]||'';
   if(field==='classif')el.className='sel-badge '+(CLASSIF_CLS[val]||'cl-na');
+  if(field==='integ')el.className='sel-badge '+(INTEG_CLS[val]||'cl-na');
+  if((cur||'')===(val||''))return; // nada mudou: não salva à toa
+  if(val)META[k][field]=val; else delete META[k][field];
   const st=document.getElementById('sobre-status');
   if(!hasServer){if(st){st.style.color='var(--ink-3)';st.textContent='Servidor não configurado — alteração não salva.';}return;}
   const secret=getSecret(); if(!secret){if(st){st.style.color='#ff9b9b';st.textContent='Salvar cancelado (sem senha).';}return;}
