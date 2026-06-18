@@ -74,6 +74,12 @@
   .btn.pubbtn:hover{filter:brightness(1.06)}
   code{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;font-family:"SF Mono",ui-monospace,monospace}
   .sobre-desc{font-size:14.5px;line-height:1.6;color:var(--ink);margin-bottom:14px}
+  .desc-input{width:100%;display:block;box-sizing:border-box;font-family:inherit;font-size:14.5px;line-height:1.6;
+    color:var(--ink);background:transparent;border:1px solid transparent;border-radius:10px;
+    padding:8px 10px;margin:-8px -10px 8px;resize:vertical;min-height:52px;transition:border-color .15s,background .15s}
+  .desc-input::placeholder{color:var(--ink-3)}
+  .desc-input:hover{border-color:var(--line)}
+  .desc-input:focus{outline:none;border-color:var(--accent);background:var(--panel-2)}
   .resp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .resp-item{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
   .resp-lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin-bottom:4px}
@@ -111,6 +117,10 @@
   .sel-badge.ig-sftp{background-color:rgba(34,197,170,.16);color:#7fe9cf;border-color:#266e5e}
   .sel-badge.ig-manual{background-color:rgba(255,173,71,.16);color:#ffce8a;border-color:#6e5326}
   .sel-badge.ig-mista{background-color:rgba(246,145,178,.16);color:#ffb6cf;border-color:#7a3a52}
+  .sel-badge.sy-rt{background-color:rgba(34,197,170,.16);color:#7fe9cf;border-color:#266e5e}
+  .sel-badge.sy-daily{background-color:rgba(255,173,71,.16);color:#ffce8a;border-color:#6e5326}
+  .sel-badge.sy-na{background-color:var(--panel-2);color:var(--ink-2);border-color:var(--line)}
+  .sel-badge.sy-off{background-color:rgba(255,107,107,.15);color:#ff9b9b;border-color:#6e2b2b}
   .resp-input{width:100%;margin-top:3px;background:transparent;border:1px solid transparent;border-radius:8px;
     padding:5px 8px;margin-left:-8px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);transition:border-color .15s,background .15s}
   .resp-input::placeholder{color:var(--ink-3);font-weight:600}
@@ -592,7 +602,9 @@ function renderSobre(k){
   const classif=m.classif||'', integ=m.integ||'';
   const opts=(arr,cur,empty)=>`<option value="">${empty}</option>`+arr.map(v=>`<option ${v===cur?'selected':''}>${v}</option>`).join('');
   return `<div class="card-title">Sobre a integração</div>
-    <p class="sobre-desc">${esc(desc)}</p>
+    <textarea class="desc-input" rows="2" placeholder="Descreva o que esta plataforma faz e quem ela atende…"
+      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+      onblur="setSobre('${k}','desc',this.value.trim(),this)">${esc(desc)}</textarea>
     <div class="resp-grid">
       <div class="resp-item"><span class="resp-lbl">Classificação</span>
         <select class="sel-badge ${CLASSIF_CLS[classif]||'cl-na'}" onchange="setSobre('${k}','classif',this.value,this)">${opts(['Paga','Doação / Parceria','Gestão Própria'],classif,'—')}</select></div>
@@ -614,6 +626,48 @@ function setSobre(k,field,val,el){
   if((cur||'')===(val||''))return; // nada mudou: não salva à toa
   if(val)META[k][field]=val; else delete META[k][field];
   const st=document.getElementById('sobre-status');
+  if(!hasServer){if(st){st.style.color='var(--ink-3)';st.textContent='Servidor não configurado — alteração não salva.';}return;}
+  if(st){st.style.color='var(--ink-3)';st.textContent='Salvando…';}
+  postBank(()=>{if(st){st.style.color='#86e29a';st.textContent='✓ Salvo no banco.';}},
+           e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e;}});
+}
+
+/* ===== sincronismo editável por plataforma ===== */
+const SYNC_OPTS=['Real-time','No login','1x ao dia, 6h','1x ao dia, meio-dia','1x ao dia','1x por semana','1x ao mês','Sob demanda','Pausado'];
+function syncCls(v){const t=(v||'').toLowerCase();
+  if(/real-?time|no login|tempo real/.test(t))return 'sy-rt';
+  if(/pausad|parad|desativ/.test(t))return 'sy-off';
+  if(/sob demanda|manual|on-?demand/.test(t))return 'sy-na';
+  if(/1x|di[aá]|semana|m[eê]s|hora|h\b|carga/.test(t))return 'sy-daily';
+  return 'sy-na';}
+function effSync(k,p){return (META[k]&&Array.isArray(META[k].sync))?META[k].sync:(p.sync||[]);}
+function renderSync(k){
+  const p=PLATS[k];const rows=effSync(k,p);
+  let h='<div class="card-title">Sincronismo com o Hub</div>';
+  if(rows.length){
+    h+='<ul class="sync-list">'+rows.map((s,i)=>{
+      const cur=s[1]||'';const cls=syncCls(cur);
+      const inList=SYNC_OPTS.indexOf(cur)>=0;
+      const opts=(inList?'':`<option selected>${esc(cur)}</option>`)+SYNC_OPTS.map(o=>`<option ${o===cur?'selected':''}>${o}</option>`).join('');
+      return `<li><span class="obj">${esc(s[0])}</span>
+        <select class="sel-badge ${cls}" onchange="setSync('${k}',${i},this.value,this)">${opts}</select></li>`;
+    }).join('')+'</ul>';
+  }
+  if(p.note)h+=`<div class="note">${esc(p.note)}</div>`;
+  if(!rows.length&&!p.note)h+='<div class="empty">Sem detalhes de sincronismo.</div>';
+  h+='<div id="sync-status" style="font-size:12px;margin-top:8px;min-height:16px"></div>';
+  return h;
+}
+function setSync(k,idx,val,el){
+  const p=PLATS[k];
+  if(!META[k])META[k]={};
+  if(!Array.isArray(META[k].sync))META[k].sync=(p.sync||[]).map(r=>r.slice());
+  if(!META[k].sync[idx])return;
+  if(el)el.className='sel-badge '+syncCls(val);
+  if((META[k].sync[idx][1]||'')===(val||''))return;
+  META[k].sync[idx][1]=val;
+  META[k].sync[idx][2]=syncCls(val).replace('sy-','');
+  const st=document.getElementById('sync-status');
   if(!hasServer){if(st){st.style.color='var(--ink-3)';st.textContent='Servidor não configurado — alteração não salva.';}return;}
   if(st){st.style.color='var(--ink-3)';st.textContent='Salvando…';}
   postBank(()=>{if(st){st.style.color='#86e29a';st.textContent='✓ Salvo no banco.';}},
@@ -773,12 +827,9 @@ function openPlat(k){const p=PLATS[k];
     postBank(()=>{se.title='✓ Status salvo no banco';},e=>{alert('Status mudou na tela, mas falha ao salvar: '+e);});
   };}
   document.getElementById('d-sobre').innerHTML=renderSobre(k);
+  const dti=document.querySelector('#d-sobre .desc-input');if(dti){dti.style.height='auto';dti.style.height=dti.scrollHeight+'px';}
   document.getElementById('d-query').innerHTML=renderQueryEditor(k);
-  const sync=document.getElementById('d-sync');let sh='<div class="card-title">Sincronismo com o Hub</div>';
-  if(p.sync&&p.sync.length){sh+='<ul class="sync-list">'+p.sync.map(s=>`<li><span class="obj">${esc(s[0])}</span><span class="when ${s[2]}"><span class="dot"></span>${esc(s[1])}</span></li>`).join('')+'</ul>';}
-  if(p.note)sh+=`<div class="note">${esc(p.note)}</div>`;
-  if(!(p.sync&&p.sync.length)&&!p.note)sh+='<div class="empty">Sem detalhes de sincronismo.</div>';
-  sync.innerHTML=sh;
+  document.getElementById('d-sync').innerHTML=renderSync(k);
   document.getElementById('ptab-Turmas').innerHTML=renderRules(k,'Turmas');
   document.getElementById('ptab-Alunos').innerHTML=renderRules(k,'Alunos');
   document.getElementById('ptab-Professores').innerHTML=renderRules(k,'Professores');
