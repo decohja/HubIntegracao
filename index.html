@@ -20,6 +20,7 @@
     --head:#ffffff;
     --glass:rgba(255,255,255,.04); --glass-hover:rgba(74,168,240,.1); --hairline:rgba(255,255,255,.05);
     --dot:rgba(150,196,255,.16);
+    --rail:#10151d; --card-el:#1c2433;
     --body-grad:radial-gradient(1100px 760px at 92% -6%, rgba(92,184,255,.34), transparent 56%),
       radial-gradient(1000px 820px at 2% 22%, rgba(64,124,224,.24), transparent 58%),
       radial-gradient(900px 900px at 60% 120%, rgba(40,140,220,.16), transparent 60%),
@@ -31,21 +32,22 @@
   }
   [data-theme="light"]{
     color-scheme:light;
-    --bg:#eef2f8; --bg2:#e9eef5; --panel:#ffffff; --panel-2:#f3f6fb; --line:#dde4ee; --line-2:#cbd6e4;
+    --bg:#ccd7e6; --bg2:#c3d0e2; --panel:#eaeff7; --panel-2:#dde5f0; --line:#c8d3e2; --line-2:#b4c2d6;
     --ink:#16222f; --ink-2:#4a5765; --ink-3:#76828f;
     --accent:#2f7fd0; --accent-2:#2168b3; --accent-soft:#e3f0fc;
     --rede:#1f6fb0; --rede-bg:#e3f0fb; --tipo:#7a52c8; --tipo-bg:#efe8fc;
     --serie:#1f9460; --serie-bg:#e0f6ea; --disc:#b9831f; --disc-bg:#fbf0d8;
     --cond:#cf5052; --cond-bg:#fde7e8; --adm:#1d8ea0; --adm-bg:#def4f7;
     --ok:#1f9460; --warn:#b9831f; --off:#cf5052;
-    --shadow:0 1px 0 rgba(255,255,255,.6),0 8px 26px rgba(40,70,110,.12);
+    --shadow:0 1px 2px rgba(38,66,105,.05),0 10px 30px rgba(38,66,105,.08);
     --head:#142433;
     --glass:rgba(28,60,104,.05); --glass-hover:rgba(47,127,208,.1); --hairline:rgba(20,45,80,.07);
-    --dot:rgba(45,95,160,.11);
-    --body-grad:radial-gradient(1100px 760px at 92% -6%, rgba(120,180,255,.22), transparent 56%),
-      radial-gradient(1000px 820px at 2% 22%, rgba(150,195,245,.2), transparent 58%),
-      radial-gradient(900px 900px at 60% 120%, rgba(140,185,235,.16), transparent 60%),
-      linear-gradient(152deg,#dde8f5 0%,#e6eef8 30%,#eef2f8 60%,#f1f4fa 100%);
+    --dot:rgba(45,95,160,.12);
+    --rail:#d6dfeb; --card-el:#f2f6fc;
+    --body-grad:radial-gradient(1100px 760px at 92% -6%, rgba(110,170,250,.26), transparent 56%),
+      radial-gradient(1000px 820px at 2% 22%, rgba(140,185,240,.24), transparent 58%),
+      radial-gradient(900px 900px at 60% 120%, rgba(130,175,230,.18), transparent 60%),
+      linear-gradient(152deg,#cedcee 0%,#d8e3f1 32%,#dfe7f2 62%,#e4ebf5 100%);
     --topbar-grad:radial-gradient(680px 240px at 14% -30%,rgba(120,180,255,.3),transparent 68%),
       radial-gradient(560px 220px at 86% -40%,rgba(150,140,235,.18),transparent 70%),
       linear-gradient(180deg,#ffffff,#f1f5fb 60%,#e9eff7);
@@ -228,6 +230,8 @@
   .manage-chip .mc-del{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
     border:none;cursor:pointer;background:rgba(255,107,107,.14);color:#ff9b9b;font-size:14px;line-height:1;font-family:inherit;transition:background .15s,color .15s}
   .manage-chip .mc-del:hover{background:rgba(255,107,107,.3);color:#fff}
+  .manage-chip .mc-restore{color:var(--ok)} .manage-chip .mc-restore:hover{background:rgba(94,211,153,.28);color:#fff}
+  .hidden-chip{opacity:.85}
   .q-edit{width:100%;min-height:120px;max-height:280px;margin:3px 0 12px;resize:vertical;
     background:#0c1622;border:1px solid var(--line);color:#cfe3f5;border-radius:10px;padding:11px 13px;
     font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;overflow:auto}
@@ -418,14 +422,14 @@
   .kcol{display:flex;flex-direction:column;gap:10px}
   .kcol.dragover{}
   .kcol-head{position:sticky;top:8px;z-index:3;display:flex;align-items:center;justify-content:space-between;
-    background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+    background:var(--card-el);border:1px solid var(--line);border-radius:11px;padding:10px 14px;box-shadow:0 2px 10px rgba(20,40,70,.12)}
   .kcol-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);display:flex;align-items:center;gap:8px}
   .kcol-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px var(--glass)}
   .kcol.todo .kcol-dot{background:var(--accent)} .kcol.doing .kcol-dot{background:var(--warn)} .kcol.pendente .kcol-dot{background:var(--tipo)} .kcol.done .kcol-dot{background:var(--ok)}
   .kcol-count{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:1px 9px}
-  .kcol-body{display:flex;flex-direction:column;gap:10px;min-height:72px;padding:8px;border-radius:12px;border:1px dashed var(--line);transition:background .15s,border-color .15s}
-  .kcol-body.dragover{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
-  .kcard{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:11px 12px 11px 26px;margin-bottom:10px;cursor:grab;position:relative;border-left:3px solid var(--line)}
+  .kcol-body{display:flex;flex-direction:column;gap:10px;min-height:72px;padding:10px;border-radius:13px;background:var(--rail);border:1px solid var(--line);transition:background .15s,border-color .15s}
+  .kcol-body.dragover{border-color:var(--accent);background:var(--accent-soft)}
+  .kcard{background:var(--card-el);border:1px solid var(--line);border-radius:11px;padding:11px 12px 11px 26px;margin-bottom:0;cursor:grab;position:relative;border-left:3px solid var(--line);box-shadow:0 1px 2px rgba(20,40,70,.06),0 3px 8px rgba(20,40,70,.08)}
   .kcard:active{cursor:grabbing}
   .kcard-grip{position:absolute;left:8px;top:11px;color:var(--ink-3);font-size:13px;line-height:1;cursor:grab;user-select:none;letter-spacing:-1px}
   .kcard-grip:active{cursor:grabbing}
@@ -459,6 +463,13 @@
   .kanban-empty{font-size:12px;color:var(--ink-3);text-align:center;padding:14px 0}
   @media(max-width:1000px){.kanban{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.kanban{grid-template-columns:1fr}}
+  .np-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}
+  .np-field{display:flex;flex-direction:column;gap:5px}
+  .np-field span{font-weight:700;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em}
+  .np-field input,.np-field select{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 10px;font-family:inherit;font-size:13px}
+  .np-field input:focus,.np-field select:focus{outline:none;border-color:var(--accent)}
+  .np-field input[type=color]{padding:3px;height:38px;cursor:pointer}
+  .np-sm{max-width:170px}
 </style>
 </head>
 <body>
@@ -597,6 +608,30 @@
       <button class="btn ghost" onclick="publishFile(this)">baixar cópia (index.html)</button>
     </div>
     <div class="info-banner" style="margin-bottom:16px">Coloque os logos e clique em <b>Salvar no site</b> — eles ficam na planilha e aparecem pra todos. (Os logos são reduzidos automaticamente para carregar rápido.)</div>
+
+    <div class="card-title" style="margin-top:4px">Adicionar plataforma à home</div>
+    <p class="lead" style="margin-top:2px">Crie um novo card de plataforma — aparece na página inicial e fica salvo no banco. Para plataformas com público por query SQL, crie aqui e depois abra o card dela para colar a query.</p>
+    <div class="card" style="margin-bottom:18px">
+      <div class="np-grid">
+        <label class="np-field"><span>Nome</span><input id="np-nome" placeholder="Ex.: Nova Plataforma"></label>
+        <label class="np-field"><span>Nome interno (SEDUC)</span><input id="np-interno" placeholder="opcional"></label>
+        <label class="np-field np-sm"><span>Monograma</span><input id="np-mono" maxlength="2" placeholder="auto"></label>
+        <label class="np-field np-sm"><span>Cor do avatar</span><input type="color" id="np-cor" value="#4aa8f0"></label>
+        <label class="np-field np-sm"><span>Status</span><select id="np-status"><option value="ativa">Ativa</option><option value="parcial">Parcial</option><option value="off">Pausada</option></select></label>
+        <label class="np-field"><span>Tipo de integração</span><select id="np-src"><option value="sql">Público por query SQL</option><option value="teams">Microsoft Teams / programa próprio</option><option value="excel">Regras por planilha</option></select></label>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:13px;flex-wrap:wrap">
+        <button class="btn" onclick="addPlat()"><span style="font-size:15px;line-height:1">＋</span> Adicionar plataforma</button>
+        <span id="plat-add-status" style="font-size:12px"></span>
+      </div>
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:13px">
+        <div class="card-title" style="font-size:12.5px;margin-bottom:9px">Plataformas na home — clique no × para excluir</div>
+        <div id="plat-add-list" class="manage-chips"></div>
+        <div class="card-title" style="font-size:12.5px;margin:14px 0 9px">Ocultas — clique no ↺ para restaurar</div>
+        <div id="plat-hidden-list" class="manage-chips"></div>
+      </div>
+    </div>
+
     <div class="card-title" style="margin-top:4px">Carrossel da página inicial</div>
     <p class="lead" style="margin-top:2px">Slides que aparecem no topo da home. Você controla imagem, título e texto de cada um. A imagem é opcional — sem ela, o slide fica com um fundo gradiente. Aceita link do Google Drive (convertido sozinho).</p>
     <div class="card" id="car-admin" style="margin-bottom:18px"></div>
@@ -655,6 +690,8 @@ async function serverLoad(){
       if(cfg.sql&&cfg.sql.Turmas) SQL={...SQL,...cfg.sql};
       if(Array.isArray(cfg.materiais)){MATERIAIS.length=0;cfg.materiais.forEach(x=>MATERIAIS.push(x));}
       if(cfg.meta&&typeof cfg.meta==='object') META=Object.assign({},DATA.META||{},cfg.meta);
+      if(cfg.platAdds&&typeof cfg.platAdds==='object'){for(const kk in cfg.platAdds){PLAT_ADDS[kk]=cfg.platAdds[kk];if(!PLATS[kk])PLATS[kk]=Object.assign({},cfg.platAdds[kk]);}rebuildOrder();}
+      if(Array.isArray(cfg.delPlats)){DEL_PLATS=cfg.delPlats.slice();applyDelPlats();}
       if(cfg.platEdits&&typeof cfg.platEdits==='object'){for(const kk in cfg.platEdits){PLAT_EDITS[kk]=cfg.platEdits[kk];if(PLATS[kk])Object.assign(PLATS[kk],cfg.platEdits[kk]);}}
       if(cfg.tipos&&typeof cfg.tipos==='object') Object.assign(TIPOS,cfg.tipos);
       if(cfg.redes&&typeof cfg.redes==='object') Object.assign(REDES,cfg.redes);
@@ -676,7 +713,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -703,10 +740,14 @@ let CAROUSEL = Array.isArray(DATA.CAROUSEL) ? DATA.CAROUSEL.map(s=>Object.assign
 let CAR_I=0, CAR_TIMER=null;
 let KANBAN = Array.isArray(DATA.KANBAN) ? DATA.KANBAN.map(c=>Object.assign({},c)) : [];
 let PLAT_EDITS = (DATA.PLAT_EDITS&&typeof DATA.PLAT_EDITS==='object') ? DATA.PLAT_EDITS : {};
+let PLAT_ADDS = (DATA.PLAT_ADDS&&typeof DATA.PLAT_ADDS==='object') ? DATA.PLAT_ADDS : {};
+const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
+let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 const KCOLS=[['todo','A fazer'],['doing','Em andamento'],['pendente','Pendente'],['done','Concluído']];
 let K_EXPANDED=new Set();
 let META=DATA.META||{};
-const ORDER=Object.keys(PLATS).filter(k=>!PLATS[k].hide);
+let ORDER=Object.keys(PLATS).filter(k=>!PLATS[k].hide);
+function rebuildOrder(){ORDER=Object.keys(PLATS).filter(k=>!PLATS[k].hide);}
 
 /* logos persistidos (localStorage quando disponível) */
 let LOGOS={};
@@ -1390,6 +1431,75 @@ function setPlatEdit(k,field,val){
   renderGrid();
   postBank(()=>{},e=>alert('Não foi possível salvar no banco: '+e));
 }
+function slugKey(nome){
+  let base=(nome||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'');
+  if(!base)base='PLAT';
+  let k=base,i=2; while(PLATS[k]){k=base+i;i++;} return k;
+}
+function applyPlatAdds(){
+  for(const k in PLAT_ADDS){ if(!PLATS[k]) PLATS[k]=Object.assign({},PLAT_ADDS[k]); }
+  rebuildOrder();
+}
+function platAddRefresh(){
+  rebuildOrder(); rebuildIndex();
+  if(typeof renderGrid==='function')renderGrid();
+  if(typeof renderHeroStats==='function')renderHeroStats();
+  if(typeof renderKanban==='function')renderKanban();
+  renderPlatAdmin();
+}
+function addPlat(){
+  const g=id=>document.getElementById(id);
+  const nome=(g('np-nome').value||'').trim();
+  if(!nome){alert('Informe ao menos o nome da plataforma.');return;}
+  const interno=(g('np-interno').value||'').trim()||nome;
+  let mono=(g('np-mono').value||'').trim().toUpperCase().slice(0,2);
+  if(!mono){const parts=nome.replace(/[^A-Za-zÀ-ÿ ]/g,'').split(/\s+/).filter(Boolean);
+    mono=(parts.length>1?(parts[0][0]+parts[1][0]):nome.slice(0,2)).toUpperCase();}
+  const cor=g('np-cor').value||'#4aa8f0';
+  const status=g('np-status').value||'ativa';
+  const src=g('np-src').value||'teams';
+  const k=slugKey(nome);
+  const obj={nome,interno,mono,cor,status,src};
+  if(src==='teams')obj.note='Integração via Microsoft Teams / programa próprio. O público são os participantes do programa (professores/gestores); não há enturmação por query SQL.';
+  PLATS[k]=obj; PLAT_ADDS[k]=obj;
+  g('np-nome').value='';g('np-interno').value='';g('np-mono').value='';
+  platAddRefresh();
+  const st=g('plat-add-status'); if(st){st.style.color='#86e29a';st.textContent='✓ "'+nome+'" adicionada. '+(src==='sql'?'Abra o card dela para colar a query de público.':'');}
+  postBank(()=>{},e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e;}});
+}
+function applyDelPlats(){ DEL_PLATS.forEach(k=>{ if(PLATS[k]) delete PLATS[k]; }); rebuildOrder(); }
+function delPlat(k){
+  const nome=PLATS[k]?PLATS[k].nome:k;
+  if(!confirm('Excluir a plataforma "'+nome+'" da home?'+(PLAT_ADDS[k]?'':' (dá para restaurar depois)')))return;
+  if(PLAT_ADDS[k]){ delete PLAT_ADDS[k]; }
+  else { if(!DEL_PLATS.includes(k))DEL_PLATS.push(k); }
+  delete PLATS[k];
+  platAddRefresh();
+  postBank(()=>{},e=>alert('Não foi possível salvar no banco: '+e));
+}
+function restorePlat(k){
+  const i=DEL_PLATS.indexOf(k); if(i>=0)DEL_PLATS.splice(i,1);
+  if(PLATS_ORIG[k]){ PLATS[k]=Object.assign({},PLATS_ORIG[k]); if(PLAT_EDITS[k])Object.assign(PLATS[k],PLAT_EDITS[k]); }
+  platAddRefresh();
+  postBank(()=>{},e=>alert('Não foi possível salvar no banco: '+e));
+}
+function renderPlatAdmin(){
+  const box=document.getElementById('plat-add-list');
+  if(box){
+    box.innerHTML = ORDER.length ? ORDER.map(k=>{
+      const p=PLATS[k]; const tag=p.src==='teams'?'Teams':(p.src==='excel'?'Planilha':'SQL');
+      const mine=PLAT_ADDS[k]?' · sua':'';
+      return `<div class="manage-chip"><span>${esc(p.nome)} <small style="color:var(--ink-3)">(${tag}${mine})</small></span><button class="mc-del" onclick="delPlat('${k}')" title="Excluir da home">×</button></div>`;
+    }).join('') : '<div style="font-size:12px;color:var(--ink-3)">Nenhuma plataforma.</div>';
+  }
+  const hbox=document.getElementById('plat-hidden-list');
+  if(hbox){
+    const hidden=DEL_PLATS.filter(k=>PLATS_ORIG[k]);
+    hbox.innerHTML = hidden.length
+      ? hidden.map(k=>`<div class="manage-chip hidden-chip"><span>${esc(PLATS_ORIG[k].nome)}</span><button class="mc-del mc-restore" onclick="restorePlat('${k}')" title="Restaurar">↺</button></div>`).join('')
+      : '<div style="font-size:12px;color:var(--ink-3)">Nenhuma plataforma do sistema oculta.</div>';
+  }
+}
 function toggleCardExpand(id){
   if(K_EXPANDED.has(id))K_EXPANDED.delete(id);else K_EXPANDED.add(id);
   renderKanban();
@@ -1509,9 +1619,9 @@ async function publishFile(btn){
 }
 
 /* ============ init ============ */
-fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();
+fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();
 (function(){const fy=document.getElementById('foot-year');if(fy)fy.textContent=new Date().getFullYear();})();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban(); } })();
+(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin(); } })();
 </script>
 </body>
 </html>
