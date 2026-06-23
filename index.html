@@ -152,6 +152,10 @@
   .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:14px;margin:0 0 20px}
   .dash-group{background:var(--card-el);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow)}
   .dash-gtitle{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-bottom:10px}
+  .dash-ghead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .dash-toggle{display:flex;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:2px}
+  .dt-btn{background:none;border:0;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--ink-3);cursor:pointer;font-family:inherit}
+  .dt-btn.on{background:var(--accent);color:#fff}
   .dash-row{display:flex;gap:10px}
   .dash-card{flex:1;display:flex;flex-direction:column;gap:3px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
   .dash-card.clk{cursor:pointer;transition:transform .12s,box-shadow .12s}
@@ -534,6 +538,11 @@
   .kcol-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);display:flex;align-items:center;gap:8px}
   .kcol-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px var(--glass)}
   .kcol.todo .kcol-dot{background:var(--accent)} .kcol.doing .kcol-dot{background:var(--warn)} .kcol.pendente .kcol-dot{background:var(--tipo)} .kcol.done .kcol-dot{background:var(--ok)}
+  .kcol.todo .kcol-head{background:linear-gradient(90deg,rgba(74,168,240,.20),var(--card-el) 72%);border-color:rgba(74,168,240,.35)}
+  .kcol.doing .kcol-head{background:linear-gradient(90deg,rgba(245,180,80,.20),var(--card-el) 72%);border-color:rgba(245,180,80,.35)}
+  .kcol.pendente .kcol-head{background:linear-gradient(90deg,rgba(167,139,250,.20),var(--card-el) 72%);border-color:rgba(167,139,250,.35)}
+  .kcol.done .kcol-head{background:linear-gradient(90deg,rgba(94,211,153,.20),var(--card-el) 72%);border-color:rgba(94,211,153,.35)}
+  .kcol-head .kcol-title{font-weight:750}
   .kcol-count{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:1px 9px}
   .kcol-body{display:flex;flex-direction:column;gap:10px;min-height:72px;padding:10px;border-radius:13px;background:var(--rail);border:1px solid var(--line);transition:background .15s,border-color .15s}
   .kcol-body.dragover{border-color:var(--accent);background:var(--accent-soft)}
@@ -543,7 +552,9 @@
   .kcard-grip:active{cursor:grabbing}
   .kcard:last-child{margin-bottom:0}
   .kcard.dragging{opacity:.45}
-  .kcard.p-alta{border-left-color:var(--off)} .kcard.p-media{border-left-color:var(--warn)} .kcard.p-baixa{border-left-color:var(--ok)}
+  .kcard.p-alta{border-left-color:#ff5b5b;background:linear-gradient(180deg,rgba(255,91,91,.20),rgba(255,91,91,.08))}
+  .kcard.p-media{border-left-color:var(--warn);background:linear-gradient(180deg,rgba(245,180,80,.18),rgba(245,180,80,.07))}
+  .kcard.p-baixa{border-left-color:var(--ok);background:linear-gradient(180deg,rgba(94,211,153,.15),rgba(94,211,153,.06))}
   .kcard-title{width:100%;background:transparent;border:1px solid transparent;color:var(--ink);font-weight:700;font-size:14px;font-family:inherit;padding:2px 4px;margin:0 -4px 5px;border-radius:7px;resize:none;overflow:hidden;line-height:1.3;cursor:text;transition:border-color .15s,background .15s}
   .kcard-title:hover{border-color:var(--line)} .kcard-title:focus{outline:none;border-color:var(--accent);background:var(--panel)}
   .kcard-title:focus{outline:none}
@@ -599,6 +610,11 @@
   .ver-when{font-size:11px;color:var(--ink-3);font-family:"SF Mono",ui-monospace,monospace;margin-bottom:2px}
   .ver-text{font-size:13px;color:var(--ink-2);line-height:1.45}
   .ver-del{flex-shrink:0}
+  .pasta-list{display:flex;flex-direction:column;gap:8px}
+  .pasta-row{display:flex;align-items:center;gap:11px}
+  .pasta-tag{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--tipo);background:var(--accent-soft);border-radius:7px;padding:5px 10px;min-width:74px;text-align:center}
+  .pasta-desc{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 11px;font-family:inherit;font-size:13px}
+  .pasta-desc:focus{outline:none;border-color:var(--accent)}
   .ag-check{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
   .ag-check input{width:16px;height:16px;cursor:pointer}
   .agm-list{display:flex;flex-direction:column;gap:1px;max-height:340px;overflow:auto}
@@ -723,30 +739,70 @@
   </div>
 
   <div class="view" id="view-busca">
-    <h2>Tipos de ensino e redes — quem atende cada público</h2>
-    <p class="lead">Escolha um tipo de ensino ou rede (ou busque pelo código/nome) e veja <b>todas as plataformas que atendem aquele público</b>, e em quais perfis. Clique numa plataforma para abrir os detalhes dela.</p>
-    <div class="search-box">
-      <span class="ico">⌕</span>
-      <input type="text" id="ac-input" placeholder="ex: 101, novo ensino, profissional, itinerario..." autocomplete="off">
-      <div class="ac" id="ac-list"></div>
-    </div>
-    <div style="margin:14px 0 4px;display:flex;gap:12px;flex-wrap:wrap">
-      <select class="plat-select" id="tipo-select" style="min-width:300px;max-width:100%"><option value="">— escolher tipo de ensino —</option></select>
-      <select class="plat-select" id="rede-select" style="min-width:240px;max-width:100%"><option value="">— escolher rede de ensino —</option></select>
-    </div>
-    <details class="rules-acc" style="margin:8px 0 16px">
-      <summary><span>➕ Gerenciar tipos de ensino e redes (adicionar / remover)</span></summary>
-      <div class="acc-inner" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
-        <div><label class="resp-lbl">O que é</label><br>
-          <select id="add-kind" class="addfld" style="min-width:150px"><option value="tipo">Tipo de ensino</option><option value="rede">Rede de ensino</option></select></div>
-        <div><label class="resp-lbl">Código</label><br><input id="add-code" class="addfld" style="width:96px" placeholder="ex: 111" inputmode="numeric"></div>
-        <div style="flex:1;min-width:200px"><label class="resp-lbl">Nome</label><br><input id="add-name" class="addfld" style="width:100%" placeholder="nome do tipo / rede"></div>
-        <button class="btn pubbtn" onclick="addTipoRede(this)">💾 Adicionar e salvar</button>
-        <div id="add-status" style="font-size:12px;width:100%;min-height:14px"></div>
-        <div id="manage-list" style="width:100%"></div>
+    <h2>Cadastros e consulta</h2>
+    <div class="cfg-layout">
+      <nav class="cfg-nav">
+        <button data-cad="buscar" class="cfg-tab active">🔎 Quem atende</button>
+        <button data-cad="tipos" class="cfg-tab">🏷️ Tipos de ensino</button>
+        <button data-cad="professores" class="cfg-tab">👩‍🏫 Professores</button>
+        <button data-cad="pecs" class="cfg-tab">📁 Pastas (PEC)</button>
+        <button data-cad="disciplinas" class="cfg-tab">📚 Disciplinas</button>
+      </nav>
+      <div class="cfg-main">
+
+        <section class="cfg-panel" data-cadpanel="buscar">
+          <p class="lead" style="margin-top:0">Escolha um tipo de ensino ou rede (ou busque pelo código/nome) e veja <b>todas as plataformas que atendem aquele público</b>, e em quais perfis. Clique numa plataforma para abrir os detalhes dela.</p>
+          <div class="search-box">
+            <span class="ico">⌕</span>
+            <input type="text" id="ac-input" placeholder="ex: 101, novo ensino, profissional, itinerario..." autocomplete="off">
+            <div class="ac" id="ac-list"></div>
+          </div>
+          <div style="margin:14px 0 4px;display:flex;gap:12px;flex-wrap:wrap">
+            <select class="plat-select" id="tipo-select" style="min-width:300px;max-width:100%"><option value="">— escolher tipo de ensino —</option></select>
+            <select class="plat-select" id="rede-select" style="min-width:240px;max-width:100%"><option value="">— escolher rede de ensino —</option></select>
+          </div>
+          <div id="search-results"></div>
+        </section>
+
+        <section class="cfg-panel" data-cadpanel="tipos" hidden>
+          <div class="card-title" style="margin-top:0">Tipos de ensino e redes</div>
+          <p class="lead" style="margin-top:2px">Adicione ou remova tipos de ensino e redes usados nas regras das plataformas.</p>
+          <div class="card">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+              <div><label class="resp-lbl">O que é</label><br>
+                <select id="add-kind" class="addfld" style="min-width:150px"><option value="tipo">Tipo de ensino</option><option value="rede">Rede de ensino</option></select></div>
+              <div><label class="resp-lbl">Código</label><br><input id="add-code" class="addfld" style="width:96px" placeholder="ex: 111" inputmode="numeric"></div>
+              <div style="flex:1;min-width:200px"><label class="resp-lbl">Nome</label><br><input id="add-name" class="addfld" style="width:100%" placeholder="nome do tipo / rede"></div>
+              <button class="btn pubbtn" onclick="addTipoRede(this)">💾 Adicionar e salvar</button>
+              <div id="add-status" style="font-size:12px;width:100%;min-height:14px"></div>
+              <div id="manage-list" style="width:100%"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cfg-panel" data-cadpanel="pecs" hidden>
+          <div class="card-title" style="margin-top:0">Pastas de acesso — perfil PEC / administrativo</div>
+          <p class="lead" style="margin-top:2px">Cada pasta representa um conjunto de acesso do perfil admin (PEC). Descreva cada uma; depois dá para cruzar na consulta "quem atende" por pasta. (Você pode renomear/excluir e adicionar mais.)</p>
+          <div class="card">
+            <div id="pasta-list" class="pasta-list"></div>
+            <button class="btn ghost" style="margin-top:12px" onclick="addPasta()">＋ adicionar pasta</button>
+          </div>
+        </section>
+
+        <section class="cfg-panel" data-cadpanel="professores" hidden>
+          <div class="card-title" style="margin-top:0">Tipos de professor</div>
+          <p class="lead" style="margin-top:2px">Aqui entrarão os perfis/componentes de professor com acesso (ex.: Tecnologia e Inovação · 8466). Estrutura pronta — quando você subir os dados, eu conecto à consulta reversa.</p>
+          <div class="card"><div class="empty">Sem dados ainda. Me envie a lista (nome · código) que eu populo e ligo na busca.</div></div>
+        </section>
+
+        <section class="cfg-panel" data-cadpanel="disciplinas" hidden>
+          <div class="card-title" style="margin-top:0">Disciplinas</div>
+          <p class="lead" style="margin-top:2px">Lista de disciplinas (nome · código SED). Estrutura reservada — quando quiser, subimos os dados e cruzamos com as plataformas.</p>
+          <div class="card"><div class="empty">Sem dados ainda. Planejado para uma próxima etapa.</div></div>
+        </section>
+
       </div>
-    </details>
-    <div id="search-results"></div>
+    </div>
   </div>
 
   <div class="view" id="view-materiais">
@@ -951,6 +1007,7 @@ async function serverLoad(){
       if(Array.isArray(cfg.delPlats)){DEL_PLATS=cfg.delPlats.slice();applyDelPlats();}
       if(Array.isArray(cfg.log)) LOG=cfg.log.slice();
       if(Array.isArray(cfg.agenda)) AGENDA=cfg.agenda.slice();
+      if(Array.isArray(cfg.pastas)) PASTAS=cfg.pastas.slice();
       if(Array.isArray(cfg.versions)){VERSIONS=cfg.versions.slice();
         const have=new Set(VERSIONS.map(v=>v.ver));
         const missing=DEFAULT_VERSIONS.filter(dv=>!have.has(dv.ver));
@@ -977,7 +1034,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -1009,6 +1066,8 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'3.0',date:'2026-06-22',text:'Aba "Cadastros e consulta" com sub-menu lateral: quem atende (consulta reversa), tipos de ensino, professores, pastas PEC (12, editáveis) e disciplinas.'},
+  {ver:'2.9',date:'2026-06-22',text:'DevOps: fundo dos cards pela prioridade (Alta vermelho/Média âmbar/Baixa verde), cabeçalhos de coluna coloridos e contagem do painel por mês (com opção Mês/Total).'},
   {ver:'2.8',date:'2026-06-22',text:'Painel do sino agora inclui os cards do DevOps com prazo; item novo destacado em azul no painel.'},
   {ver:'2.7',date:'2026-06-22',text:'Distinção visual de itens novos (azul) vs. alertas de prazo (vermelho) no sino e na agenda; rastreio de "já visto".'},
   {ver:'2.6',date:'2026-06-22',text:'Visão reversa "público → plataformas" e painel de status no topo da home.'},
@@ -1022,6 +1081,7 @@ const DEFAULT_VERSIONS=[
   {ver:'1.0',date:'2026-06-18',text:'Hub público: catálogo de plataformas, regras de público a partir das queries e tipos de ensino.'}
 ];
 let VERSIONS = Array.isArray(DATA.versions) ? DATA.versions : DEFAULT_VERSIONS.slice();
+let PASTAS = Array.isArray(DATA.pastas) ? DATA.pastas : Array.from({length:12},(_,i)=>({n:i+1,desc:''}));
 let EDITOR_NAME = ''; try{EDITOR_NAME=localStorage.getItem('hubEditor')||'';}catch(e){}
 let LAST_BACKUP=0;
 function logChange(text){
@@ -1031,6 +1091,32 @@ function logChange(text){
   if(typeof renderLog==='function')renderLog();
 }
 function setEditorName(v){EDITOR_NAME=(v||'').trim();try{localStorage.setItem('hubEditor',EDITOR_NAME);}catch(e){}}
+function renderPastas(){
+  const box=document.getElementById('pasta-list');if(!box)return;
+  if(!PASTAS.length){box.innerHTML='<div class="empty">Nenhuma pasta. Clique em adicionar.</div>';return;}
+  box.innerHTML=PASTAS.map((p,i)=>
+    '<div class="pasta-row"><span class="pasta-tag">Pasta '+(p.n||i+1)+'</span>'
+    +'<input class="pasta-desc" value="'+esc(p.desc||'')+'" placeholder="descrição do acesso desta pasta" onblur="setPasta('+i+',this.value)">'
+    +'<button class="mc-del" title="Excluir" onclick="delPasta('+i+')">×</button></div>'
+  ).join('');
+}
+function setPasta(i,desc){
+  if(!PASTAS[i])return; if((PASTAS[i].desc||'')===(desc||'').trim())return;
+  PASTAS[i].desc=(desc||'').trim();
+  logChange('Pasta '+(PASTAS[i].n||i+1)+' editada');
+  postBank(()=>{},e=>alert('Não foi possível salvar: '+e));
+}
+function addPasta(){
+  const n=(PASTAS.reduce((m,p)=>Math.max(m,p.n||0),0))+1;
+  PASTAS.push({n:n,desc:''});renderPastas();
+  postBank(()=>{},()=>{});
+}
+function delPasta(i){
+  if(!PASTAS[i])return;
+  if(!confirm('Excluir a Pasta '+(PASTAS[i].n||i+1)+'?'))return;
+  PASTAS.splice(i,1);renderPastas();
+  postBank(()=>{},e=>alert('Não foi possível salvar: '+e));
+}
 function renderVersions(){
   const box=document.getElementById('ver-list');if(!box)return;
   if(!VERSIONS.length){box.innerHTML='<div style="font-size:12px;color:var(--ink-3)">Nenhuma versão registrada.</div>';return;}
@@ -2307,6 +2393,7 @@ function agRelative(d,u){
   return 'Em '+days+' dias';
 }
 let HOME_AG_OPEN=false;
+let DASH_MONTH=(function(){try{return localStorage.getItem('hubDashMonth')!=='0';}catch(e){return true;}})();
 function toggleHomeAgenda(){HOME_AG_OPEN=!HOME_AG_OPEN;renderHomeAgenda();}
 function goView(name){
   document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
@@ -2320,19 +2407,26 @@ function renderDashboard(){
   const box=document.getElementById('dashboard');if(!box)return;
   let ativa=0,parcial=0,off=0;
   ORDER.forEach(k=>{const s=PLATS[k].status||'ativa';if(s==='ativa')ativa++;else if(s==='off')off++;else parcial++;});
-  const c=col=>KANBAN.filter(x=>x.col===col).length;
+  const now=new Date();
+  const inMonth=due=>{const d=agParseDate(due);return !!d&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();};
+  const base = DASH_MONTH ? KANBAN.filter(x=>inMonth(x.due)) : KANBAN;
+  const c=col=>base.filter(x=>x.col===col).length;
   const todo=c('todo'),doing=c('doing'),done=c('done');
-  const totalK=KANBAN.length;const pct=totalK?Math.round(done/totalK*100):0;
+  const totalK=base.length;const pct=totalK?Math.round(done/totalK*100):0;
   const alerts=alertCount();
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const escopo = DASH_MONTH ? meses[now.getMonth()] : 'Total';
   const dc=(num,lbl,cls,click)=>'<div class="dash-card '+(cls||'')+(click?' clk':'')+'"'+(click?' onclick="'+click+'"':'')+'><span class="dash-num">'+num+'</span><span class="dash-lbl">'+lbl+'</span></div>';
+  const tg='<div class="dash-toggle"><button class="dt-btn'+(DASH_MONTH?' on':'')+'" onclick="setDashMonth(true)">Mês</button><button class="dt-btn'+(!DASH_MONTH?' on':'')+'" onclick="setDashMonth(false)">Total</button></div>';
   box.innerHTML=
     '<div class="dash-group"><div class="dash-gtitle">Plataformas</div><div class="dash-row">'
       +dc(ativa,'Ativas','d-ok','')+dc(parcial,'Parciais','d-warn','')+dc(off,'Pausadas','d-off','')+'</div></div>'
-    +'<div class="dash-group"><div class="dash-gtitle">DevOps · '+pct+'% concluído</div><div class="dash-row">'
+    +'<div class="dash-group"><div class="dash-ghead"><span class="dash-gtitle" style="margin:0">DevOps · '+escopo+' · '+pct+'%</span>'+tg+'</div><div class="dash-row">'
       +dc(todo,'A fazer','','goDevops()')+dc(doing,'Em andamento','','goDevops()')+dc(done,'Concluído','d-ok','goDevops()')+'</div></div>'
     +'<div class="dash-group"><div class="dash-gtitle">Alertas</div><div class="dash-row">'
       +dc(alerts,'Prazos no radar',alerts>0?'d-alert':'','toggleAgenda(event)')+'</div></div>';
 }
+function setDashMonth(v){DASH_MONTH=v;try{localStorage.setItem('hubDashMonth',v?'1':'0');}catch(e){}renderDashboard();}
 function renderHomeAgenda(){
   const box=document.getElementById('home-agenda');if(!box)return;
   const items=[];
@@ -2401,12 +2495,18 @@ function cfgShow(name){
   v.querySelectorAll('.cfg-tab').forEach(b=>b.classList.toggle('active',b.getAttribute('data-cfg')===name));
 }
 (function(){var v=document.getElementById('view-personalizar');if(v)v.querySelectorAll('.cfg-tab').forEach(b=>{b.onclick=function(){cfgShow(b.getAttribute('data-cfg'));};});})();
+function cadShow(name){
+  const v=document.getElementById('view-busca');if(!v)return;
+  v.querySelectorAll('.cfg-panel').forEach(p=>{p.hidden=p.getAttribute('data-cadpanel')!==name;});
+  v.querySelectorAll('.cfg-tab').forEach(b=>b.classList.toggle('active',b.getAttribute('data-cad')===name));
+}
+(function(){var v=document.getElementById('view-busca');if(v)v.querySelectorAll('.cfg-tab').forEach(b=>{b.onclick=function(){cadShow(b.getAttribute('data-cad'));};});})();
 
-fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();
+fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();
 (function(){const fy=document.getElementById('foot-year');if(fy)fy.textContent=new Date().getFullYear();})();
 (function(){var en=document.getElementById('editor-name');if(en)en.value=EDITOR_NAME;})();
 renderBell();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
+(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
   const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
   await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
   if(SEEN_FIRST)markAgendaSeen();
