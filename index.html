@@ -129,7 +129,8 @@
   .bell-new{position:absolute;bottom:-3px;left:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 0 0 2px var(--bg)}
   .bell-badge[hidden],.bell-new[hidden]{display:none}
   .ag-new{font-size:9.5px;font-weight:800;color:#fff;background:var(--accent);border-radius:20px;padding:2px 8px;letter-spacing:.04em;text-transform:uppercase;box-shadow:0 0 0 3px var(--accent-soft)}
-  .ag-item.is-new{box-shadow:inset 3px 0 0 var(--accent)}
+  .ag-item.is-new{box-shadow:inset 3px 0 0 var(--accent);background:var(--accent-soft);border-color:var(--accent)}
+  .ag-top-tags{display:flex;align-items:center;gap:6px;flex-shrink:0}
   .ag-line.is-new .ag-line-task::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-left:7px;vertical-align:middle}
   .agenda-panel{position:fixed;top:72px;right:24px;width:344px;max-width:calc(100vw - 32px);max-height:72vh;overflow:auto;background:var(--card-el);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-hover);z-index:90}
   .agenda-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;color:var(--ink);position:sticky;top:0;background:var(--card-el);border-radius:16px 16px 0 0}
@@ -1008,6 +1009,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'2.8',date:'2026-06-22',text:'Painel do sino agora inclui os cards do DevOps com prazo; item novo destacado em azul no painel.'},
   {ver:'2.7',date:'2026-06-22',text:'Distinção visual de itens novos (azul) vs. alertas de prazo (vermelho) no sino e na agenda; rastreio de "já visto".'},
   {ver:'2.6',date:'2026-06-22',text:'Visão reversa "público → plataformas" e painel de status no topo da home.'},
   {ver:'2.5',date:'2026-06-22',text:'Prazo nos cards do DevOps com alerta de cor; sino e agenda unificados por urgência (pulso nos urgentes).'},
@@ -1840,7 +1842,7 @@ function renderKanban(){
     </div>`;
   }).join('');
   board.querySelectorAll('.kcard-title,.kcard-note').forEach(t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px';});
-  renderDashboard();
+  renderDashboard();renderBell();renderHomeAgenda();renderAgenda();
 }
 function setCard(id,field,val){
   const c=KANBAN.find(x=>x.id===id);if(!c)return;
@@ -2229,6 +2231,15 @@ function agBuckets(){
     else if(d<=wk)b.prox.push(o);else b.prox.push(o);});
   [b.atras,b.hoje,b.prox].forEach(arr=>arr.sort((x,y)=>(x.d?x.d:0)-(y.d?y.d:0)));
   return b;}
+function radarBuckets(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const b={atras:[],hoje:[],prox:[],semdata:[]};
+  const push=(o)=>{const d=o.d;if(!d){b.semdata.push(o);return;}
+    if(d<today)b.atras.push(o);else if(d.getTime()===today.getTime())b.hoje.push(o);else b.prox.push(o);};
+  AGENDA.forEach(a=>{if(a.feito)return;push({a:a,d:agParseDate(a.data)});});
+  cardAlertItems().forEach(it=>{push({a:{id:it.card.id,tarefa:it.card.title||'(sem título)',detalhe:'',devops:false,fromCard:true,prio:it.card.prio},d:it.d});});
+  [b.atras,b.hoje,b.prox].forEach(arr=>arr.sort((x,y)=>(x.d?x.d.getTime():0)-(y.d?y.d.getTime():0)));
+  return b;}
 function agRefresh(){renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();}
 function addReminder(){
   const g=id=>document.getElementById(id);
@@ -2351,13 +2362,13 @@ function renderHomeAgenda(){
 }
 function agRow(o){
   const a=o.a;const det=a.detalhe?('<div class="ag-det">'+esc(a.detalhe)+'</div>'):'';
-  const dv=a.devops?'<span class="ag-tag">DevOps</span>':'';
+  const dv=a.fromCard?'<span class="ag-tag">📋 card</span>':(a.devops?'<span class="ag-tag">DevOps</span>':'');
   const nw=isNew(a.id)?'<span class="ag-new">novo</span>':'';
-  return '<div class="ag-item'+(isNew(a.id)?' is-new':'')+'"><div class="ag-top"><span class="ag-when">'+(o.d?agFmt(o.d):'sem data')+'</span>'+nw+dv+'</div><div class="ag-task">'+esc(a.tarefa)+'</div>'+det+'</div>';
+  return '<div class="ag-item'+(isNew(a.id)?' is-new':'')+'"><div class="ag-top"><span class="ag-when">'+(o.d?agFmt(o.d):'sem data')+'</span><span class="ag-top-tags">'+nw+dv+'</span></div><div class="ag-task">'+esc(a.tarefa)+'</div>'+det+'</div>';
 }
 function renderAgenda(){
   const body=document.getElementById('agenda-body');if(!body)return;
-  const b=agBuckets();let h='';
+  const b=radarBuckets();let h='';
   const sec=(t,arr,cls)=>arr.length?('<div class="ag-sec '+cls+'"><div class="ag-sec-h">'+t+' ('+arr.length+')</div>'+arr.map(agRow).join('')+'</div>'):'';
   h+=sec('Atrasados',b.atras,'is-late');
   h+=sec('Hoje',b.hoje,'is-today');
