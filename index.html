@@ -148,18 +148,41 @@
   .ha-title{font-weight:700;font-size:14.5px;color:var(--ink)}
   .ha-all{background:none;border:0;color:var(--accent-2);font-size:12.5px;font-weight:600;cursor:pointer;padding:0}
   .ha-all:hover{text-decoration:underline}
-  .ha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:10px}
-  .ha-card{position:relative;background:var(--card-el);border:1px solid var(--line);border-left:4px solid var(--line-2);border-radius:11px;padding:10px 13px;box-shadow:var(--shadow);transition:transform .14s,box-shadow .14s}
-  .ha-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover)}
-  .ha-late{border-left-color:#ff6b6b}
-  .ha-today{border-left-color:var(--warn)}
-  .ha-next{border-left-color:var(--accent)}
-  .ha-when{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-3);margin-bottom:4px}
-  .ha-late .ha-when{color:#ff6b6b}
-  .ha-today .ha-when{color:var(--warn)}
-  .ha-next .ha-when{color:var(--accent-2)}
-  .ha-task{font-size:13px;color:var(--ink);font-weight:600;line-height:1.3}
-  .ha-tag{display:inline-block;margin-top:7px;font-size:10px;font-weight:700;color:var(--accent-2);border:1px solid var(--line-2);border-radius:6px;padding:1px 6px}
+  .ag-list{display:flex;flex-direction:column;gap:8px}
+  .ag-line{display:flex;align-items:stretch;gap:14px;padding:11px 15px;border:1px solid var(--line);border-left:5px solid var(--line-2);border-radius:11px;background:var(--card-el);box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s}
+  .ag-line:hover{transform:translateX(2px);box-shadow:var(--shadow-hover)}
+  /* urgência = borda esquerda */
+  .ag-line.u-late{border-left-color:#ff5b5b}
+  .ag-line.u-soon{border-left-color:var(--warn)}
+  .ag-line.u-today{border-left-color:var(--warn)}
+  .ag-line.u-next{border-left-color:var(--accent)}
+  @keyframes agpulseLate{0%,100%{box-shadow:var(--shadow),0 0 0 0 rgba(255,91,91,.55)}50%{box-shadow:var(--shadow),0 0 0 5px rgba(255,91,91,0)}}
+  @keyframes agpulseSoon{0%,100%{box-shadow:var(--shadow),0 0 0 0 rgba(245,180,80,.5)}50%{box-shadow:var(--shadow),0 0 0 5px rgba(245,180,80,0)}}
+  .ag-line.u-late{animation:agpulseLate 1.9s ease-in-out infinite}
+  .ag-line.u-soon{animation:agpulseSoon 2.3s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.ag-line.u-late,.ag-line.u-soon{animation:none}}
+  /* prioridade = fundo + etiqueta */
+  .ag-line.p-alta{background:linear-gradient(90deg,rgba(255,91,91,.16),var(--card-el) 55%)}
+  .ag-line.p-media{background:linear-gradient(90deg,rgba(245,180,80,.14),var(--card-el) 55%)}
+  .ag-line-when{flex:0 0 104px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .ag-line-rel{font-size:12px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.02em}
+  .ag-line.u-late .ag-line-rel{color:#ff5b5b}
+  .ag-line.u-soon .ag-line-rel{color:var(--warn)}
+  .ag-line.u-today .ag-line-rel{color:var(--warn)}
+  .ag-line.u-next .ag-line-rel{color:var(--accent-2)}
+  .ag-line-date{font-size:10.5px;color:var(--ink-3);font-family:"SF Mono",ui-monospace,monospace}
+  .ag-line-main{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .ag-line-task{font-size:14px;font-weight:600;color:var(--ink);line-height:1.3}
+  .ag-line-det{font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.35}
+  .ag-line-tags{flex:0 0 auto;display:flex;align-items:center;gap:7px}
+  .ag-prio{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.04em;white-space:nowrap}
+  .prio-alta{background:#ff5b5b;color:#fff;box-shadow:0 1px 6px rgba(255,91,91,.45)}
+  .prio-media{background:rgba(245,180,80,.22);color:var(--warn)}
+  .prio-baixa{background:var(--panel-2);color:var(--ink-3)}
+  .ag-dev{font-size:10px;font-weight:700;color:var(--accent-2);border:1px solid var(--line-2);border-radius:6px;padding:1px 6px;white-space:nowrap}
+  .ag-more{margin-top:10px;background:none;border:1px solid var(--line);border-radius:9px;padding:8px 16px;color:var(--accent-2);font-weight:600;font-size:12.5px;cursor:pointer;font-family:inherit}
+  .ag-more:hover{background:var(--glass-hover);border-color:var(--accent)}
+  @media(max-width:560px){.ag-line-when{flex-basis:80px}.ag-line-tags{flex-direction:column;gap:4px}}
   .owner{display:flex;align-items:center;gap:11px;background:var(--glass);border:1px solid var(--line);
     border-radius:13px;padding:9px 14px 9px 11px;flex-shrink:0}
   .owner .oav{width:40px;height:40px;border-radius:11px;overflow:hidden;background:linear-gradient(135deg,#4aa8f0,#2b6db0);color:#fff;
@@ -181,6 +204,18 @@
     box-shadow:0 5px 16px rgba(28,86,150,.4)}
   .nav-gear{margin-left:auto;font-size:16px;padding:8px 13px;line-height:1}
   @media(max-width:680px){.nav-gear{margin-left:0}}
+  .cfg-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .cfg-layout{display:flex;gap:22px;align-items:flex-start}
+  .cfg-nav{flex:0 0 198px;position:sticky;top:78px;display:flex;flex-direction:column;gap:3px;background:var(--card-el);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
+  .cfg-tab{text-align:left;background:none;border:0;border-radius:9px;padding:10px 12px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:inherit;transition:background .12s,color .12s;white-space:nowrap}
+  .cfg-tab:hover{background:var(--glass-hover)}
+  .cfg-tab.active{background:var(--accent-soft);color:var(--accent-2)}
+  .cfg-main{flex:1;min-width:0}
+  @media(max-width:760px){
+    .cfg-layout{flex-direction:column;gap:14px}
+    .cfg-nav{position:static;flex-direction:row;flex-wrap:wrap;width:100%;flex:none;top:auto}
+    .cfg-tab{flex:1 1 auto;text-align:center}
+  }
   .btn.pubbtn{background:linear-gradient(135deg,#22c55e,#15a34a);box-shadow:0 6px 18px rgba(20,140,70,.3)}
   .btn.pubbtn:hover{filter:brightness(1.06)}
   code{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;font-family:"SF Mono",ui-monospace,monospace}
@@ -494,6 +529,13 @@
   .kmini-title{font-weight:700;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kcard-mini.is-done .kmini-title{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--ink-3)}
   .kmini-note{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .due-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .due-ok{background:var(--panel-2);color:var(--ink-3)}
+  .due-soon{background:rgba(245,180,80,.22);color:var(--warn)}
+  .due-today,.due-late{background:#ff5b5b;color:#fff;box-shadow:0 1px 6px rgba(255,91,91,.4)}
+  .kmini-due{margin-top:5px}
+  .kcard-due{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12px}
+  .kcard-due-row{margin-top:8px}
   .kmini-sub{font-size:10.5px;color:var(--ink-3);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kcard-mini .kcard-ops{margin-top:0;flex-shrink:0}
   .kcard-ops button{border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:7px;cursor:pointer;font-size:12px;font-family:inherit;padding:3px 8px;line-height:1.3}
@@ -517,6 +559,25 @@
   .log-when{flex:0 0 auto;font-family:"SF Mono",ui-monospace,monospace;font-size:11px;color:var(--ink-3);min-width:122px}
   .log-text{flex:1;font-size:12.5px;color:var(--ink-2);line-height:1.4}
   .log-text b{color:var(--ink);font-weight:600}
+  .ag-check{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
+  .ag-check input{width:16px;height:16px;cursor:pointer}
+  .agm-list{display:flex;flex-direction:column;gap:1px;max-height:340px;overflow:auto}
+  .agm-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--hairline)}
+  .agm-row:last-child{border-bottom:0}
+  .agm-chk{background:none;border:0;cursor:pointer;font-size:17px;line-height:1;color:var(--accent-2);flex-shrink:0;padding:0}
+  .agm-when{flex:0 0 auto;font-family:"SF Mono",ui-monospace,monospace;font-size:11.5px;color:var(--ink-3);min-width:84px}
+  .agm-task{flex:1;font-size:13px;color:var(--ink);line-height:1.35}
+  .agm-del{flex-shrink:0}
+  .agm-row.is-done .agm-task{text-decoration:line-through;color:var(--ink-3)}
+  .agm-row.is-done .agm-when{opacity:.6}
+  .ag-help,.ag-manual{margin-top:12px;font-size:12.5px;color:var(--ink-2)}
+  .ag-help summary,.ag-manual summary{cursor:pointer;font-weight:600;color:var(--accent-2);padding:4px 0;list-style:revert}
+  .ag-help ol{margin:8px 0 4px;padding-left:20px;line-height:1.65}
+  .ag-help li{margin-bottom:3px}
+  .ag-manual summary{font-size:13px}
+  .ag-steps{margin:4px 0 0;padding-left:20px;line-height:1.7;font-size:13px;color:var(--ink-2)}
+  .ag-steps li{margin-bottom:4px}
+  .ag-steps b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -553,7 +614,7 @@
 <div id="agenda-panel" class="agenda-panel" hidden>
   <div class="agenda-head"><span>🔔 Lembretes</span><button class="ag-x" onclick="closeAgenda()" title="Fechar">×</button></div>
   <div id="agenda-body" class="agenda-body"></div>
-  <div class="agenda-foot">Para adicionar/editar, use a aba <b>“agenda”</b> da planilha. Marque <b>Criar no DevOps</b> para virar tarefa.</div>
+  <div class="agenda-foot">Para adicionar ou editar lembretes, vá em <b>⚙ → Agenda / lembretes</b>.</div>
 </div>
 
 <div class="nav">
@@ -561,7 +622,7 @@
   <button data-view="busca">Tipos de Ensino</button>
   <button data-view="materiais">Materiais</button>
   <button data-view="devops">DevOps</button>
-  <button data-view="personalizar" class="nav-gear" title="Logos &amp; aparência" aria-label="Logos e aparência">⚙</button>
+  <button data-view="personalizar" class="nav-gear" title="Configurações" aria-label="Configurações">⚙</button>
 </div>
 
 <div class="wrap">
@@ -654,18 +715,26 @@
   </div>
 
   <div class="view" id="view-personalizar">
-    <h2>Logos &amp; aparência</h2>
-    <p class="lead">Cole o link do logo (inclusive o link de compartilhar do Google Drive — ele é convertido sozinho) ou envie um arquivo. Sem logo, fica um monograma colorido. Depois clique em <b>Salvar no site</b> para valer para todos.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <h2>⚙ Configurações</h2>
+    <div class="cfg-bar">
+      <button class="btn pubbtn" onclick="serverSave(this)">💾 Salvar no site</button>
       <button class="btn ghost" id="exp-btn">Exportar configuração (JSON)</button>
       <label class="btn ghost" style="cursor:pointer">Importar configuração<input type="file" id="imp-file" accept="application/json" hidden></label>
-      <button class="btn pubbtn" onclick="serverSave(this)">💾 Salvar no site</button>
       <button class="btn ghost" id="clr-btn">Limpar logos</button>
       <button class="btn ghost" onclick="publishFile(this)">baixar cópia (index.html)</button>
     </div>
-    <div class="info-banner" style="margin-bottom:16px">Coloque os logos e clique em <b>Salvar no site</b> — eles ficam na planilha e aparecem pra todos. (Os logos são reduzidos automaticamente para carregar rápido.)</div>
-
-    <div class="card-title" style="margin-top:4px">Adicionar plataforma à home</div>
+    <div class="cfg-layout">
+      <nav class="cfg-nav">
+        <button data-cfg="plataformas" class="cfg-tab active">🧩 Plataformas</button>
+        <button data-cfg="agenda" class="cfg-tab">🔔 Agenda</button>
+        <button data-cfg="inicial" class="cfg-tab">🖼️ Página inicial</button>
+        <button data-cfg="aparencia" class="cfg-tab">🎨 Logos &amp; aparência</button>
+        <button data-cfg="historico" class="cfg-tab">🕑 Histórico</button>
+        <button data-cfg="backups" class="cfg-tab">💾 Backups</button>
+      </nav>
+      <div class="cfg-main">
+      <section class="cfg-panel" data-panel="plataformas">
+    <div class="card-title" style="margin-top:0">Adicionar plataforma à home</div>
     <p class="lead" style="margin-top:2px">Crie um novo card de plataforma — aparece na página inicial e fica salvo no banco. Para plataformas com público por query SQL, crie aqui e depois abra o card dela para colar a query.</p>
     <div class="card" style="margin-bottom:18px">
       <div class="np-grid">
@@ -689,23 +758,78 @@
       </div>
     </div>
 
-    <div class="card-title" style="margin-top:4px">Histórico de alterações</div>
+      </section>
+      <section class="cfg-panel" data-panel="agenda" hidden>
+    <div class="card-title" style="margin-top:0">Agenda / lembretes</div>
+    <p class="lead" style="margin-top:2px">Você anota numa planilha e o site avisa: mostra no sino 🔔, no bloco da página inicial, e — se marcar <b>Criar no DevOps</b> — vira cartão no painel.</p>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title" style="font-size:12.5px;margin-bottom:7px">📊 Sua planilha de agenda</div>
+      <p class="lead" style="margin:0 0 10px">A planilha <b>já está vinculada</b> ao site: <a href="https://docs.google.com/spreadsheets/d/1Rh8ohO9frZsa55QeMHf0Q38oSFOd-kFloBFs823lpHs/edit" target="_blank" rel="noopener" style="color:var(--accent-2)">abrir “Hub - Agenda” ↗</a>. É nela que você escreve o dia a dia (Data, Tarefa, Detalhe, Criar no DevOps, Feito). Só falta <b>liberar a leitura</b> uma vez:</p>
+      <ol class="ag-steps">
+        <li>Abra a planilha (link acima) e clique em <b>Compartilhar</b> (botão verde, canto superior direito).</li>
+        <li>Em <b>“Acesso geral”</b>, troque de “Restrito” para <b>Qualquer pessoa com o link</b>.</li>
+        <li>Deixe o papel como <b>Leitor</b> e clique em <b>Concluído</b>.</li>
+      </ol>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn" onclick="reloadAgenda()">Recarregar agenda agora</button>
+        <span id="ag-csv-status" style="font-size:12px"></span>
+      </div>
+      <details class="ag-help" style="margin-top:12px">
+        <summary>Usar outra planilha / link manual (avançado)</summary>
+        <label class="np-field" style="margin:9px 0"><span>URL publicada em CSV (.../pub?output=csv)</span><input id="ag-csv-url" placeholder="opcional — só se quiser outra planilha"></label>
+        <button class="btn ghost" onclick="setAgendaCsvUrl()">Conectar este link</button>
+      </details>
+    </div>
+
+    <details class="ag-manual"><summary>Ou adicione um lembrete direto aqui (sem planilha)</summary>
+    <div class="card" style="margin:10px 0 18px">
+      <div class="np-grid">
+        <label class="np-field np-sm"><span>Data</span><input type="date" id="ag-data"></label>
+        <label class="np-field"><span>Lembrete / tarefa</span><input id="ag-nome" placeholder="Ex.: Renovar contrato Alura"></label>
+        <label class="np-field"><span>Detalhe (opcional)</span><input id="ag-det" placeholder="observação"></label>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">
+        <label class="ag-check"><input type="checkbox" id="ag-devops"> <span>Criar tarefa no DevOps</span></label>
+        <button class="btn" onclick="addReminder()"><span style="font-size:15px;line-height:1">＋</span> Adicionar lembrete</button>
+        <span id="ag-add-status" style="font-size:12px"></span>
+      </div>
+      <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:13px">
+        <div class="card-title" style="font-size:12.5px;margin-bottom:9px">Lembretes adicionados aqui</div>
+        <div id="ag-admin-list" class="agm-list"></div>
+      </div>
+    </div>
+    </details>
+
+      </section>
+      <section class="cfg-panel" data-panel="historico" hidden>
+    <div class="card-title" style="margin-top:0">Histórico de alterações</div>
     <p class="lead" style="margin-top:2px">Registro automático das mudanças (status, plataformas, edições). Preencha seu nome para aparecer ao lado de cada alteração que você fizer.</p>
     <div class="card" style="margin-bottom:18px">
       <label class="np-field" style="max-width:280px;margin-bottom:12px"><span>Seu nome (aparece no histórico)</span><input id="editor-name" placeholder="Ex.: Denys" onblur="setEditorName(this.value)"></label>
       <div id="log-list" class="log-box"></div>
     </div>
 
-    <div class="card-title" style="margin-top:4px">Backups automáticos</div>
+      </section>
+      <section class="cfg-panel" data-panel="backups" hidden>
+    <div class="card-title" style="margin-top:0">Backups automáticos</div>
     <p class="lead" style="margin-top:2px">Cada vez que você salva, uma cópia da configuração é guardada <b>neste navegador</b> (as 8 mais recentes) — clique no ⭳ para baixar qualquer uma. Para uma cópia diária automática <b>fora da planilha</b> (no seu Google Drive), há a função de backup no Apps Script. Para restaurar, baixe um backup e use <b>Importar configuração</b> acima.</p>
     <div class="card" style="margin-bottom:18px">
       <div id="backup-list" class="manage-chips"></div>
     </div>
 
-    <div class="card-title" style="margin-top:4px">Carrossel da página inicial</div>
+      </section>
+      <section class="cfg-panel" data-panel="inicial" hidden>
+    <div class="card-title" style="margin-top:0">Carrossel da página inicial</div>
     <p class="lead" style="margin-top:2px">Slides que aparecem no topo da home. Você controla imagem, título e texto de cada um. A imagem é opcional — sem ela, o slide fica com um fundo gradiente. Aceita link do Google Drive (convertido sozinho).</p>
     <div class="card" id="car-admin" style="margin-bottom:18px"></div>
+      </section>
+      <section class="cfg-panel" data-panel="aparencia" hidden>
+    <p class="lead" style="margin-top:0">Cole o link do logo (inclusive o link de compartilhar do Google Drive — ele é convertido sozinho) ou envie um arquivo. Sem logo, fica um monograma colorido. Depois clique em <b>Salvar no site</b> para valer para todos.</p>
+    <div class="info-banner" style="margin-bottom:16px">Os logos ficam na planilha e aparecem pra todos. (São reduzidos automaticamente para carregar rápido.)</div>
     <div class="card" id="cust-list"></div>
+      </section>
+      </div>
+    </div>
   </div>
 
   <div class="view" id="view-devops">
@@ -765,13 +889,15 @@ async function serverLoad(){
       if(cfg.platAdds&&typeof cfg.platAdds==='object'){for(const kk in cfg.platAdds){PLAT_ADDS[kk]=cfg.platAdds[kk];if(!PLATS[kk])PLATS[kk]=Object.assign({},cfg.platAdds[kk]);}rebuildOrder();}
       if(Array.isArray(cfg.delPlats)){DEL_PLATS=cfg.delPlats.slice();applyDelPlats();}
       if(Array.isArray(cfg.log)) LOG=cfg.log.slice();
+      if(Array.isArray(cfg.agenda)) AGENDA=cfg.agenda.slice();
+      if(typeof cfg.agendaCsvUrl==='string') AGENDA_CSV_URL=cfg.agendaCsvUrl;
       if(cfg.platEdits&&typeof cfg.platEdits==='object'){for(const kk in cfg.platEdits){PLAT_EDITS[kk]=cfg.platEdits[kk];if(PLATS[kk])Object.assign(PLATS[kk],cfg.platEdits[kk]);}}
       if(cfg.tipos&&typeof cfg.tipos==='object') Object.assign(TIPOS,cfg.tipos);
       if(cfg.redes&&typeof cfg.redes==='object') Object.assign(REDES,cfg.redes);
       if(Array.isArray(cfg.delTipos)){DEL_TIPOS=cfg.delTipos.slice();DEL_TIPOS.forEach(c=>delete TIPOS[c]);}
       if(Array.isArray(cfg.delRedes)){DEL_REDES=cfg.delRedes.slice();DEL_REDES.forEach(c=>delete REDES[c]);}
       if(Array.isArray(cfg.carousel))CAROUSEL=cfg.carousel.map(s=>Object.assign({img:'',title:'',text:'',link:''},s));
-      if(Array.isArray(cfg.kanban))KANBAN=cfg.kanban.map(c=>Object.assign({id:'',title:'',desc:'',resp:'',prio:'media',plat:'',col:'todo',updated:0},c));
+      if(Array.isArray(cfg.kanban))KANBAN=cfg.kanban.map(c=>Object.assign({id:'',title:'',desc:'',resp:'',prio:'media',plat:'',col:'todo',updated:0,due:''},c));
       if(cfg.status&&typeof cfg.status==='object') for(const k in cfg.status){if(PLATS[k])PLATS[k].status=cfg.status[k];}
       rebuildIndex();
       PARSED=parseAll();
@@ -786,7 +912,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -1452,6 +1578,7 @@ function kanbanCard(c){
       <div class="kmini-main" onclick="toggleCardExpand('${c.id}')" title="Clique para expandir">
         <div class="kmini-title">${esc(c.title||'(sem título)')}</div>
         ${noteHtml}
+        ${c.due?`<div class="kmini-due">${dueBadge(c.due)}</div>`:''}
         <div class="kmini-sub">${prDot} ${c.resp?esc(c.resp)+' · ':''}${c.plat&&PLATS[c.plat]?esc(PLATS[c.plat].nome)+' · ':''}${c.updated?kfmt(c.updated):''}</div>
       </div>
       <div class="kcard-ops">
@@ -1476,7 +1603,9 @@ function kanbanCard(c){
       </select>
       <input class="kcard-resp" placeholder="Responsável" value="${esc(c.resp||'')}" onblur="setCard('${c.id}','resp',this.value.trim())">
       <select onchange="setCard('${c.id}','plat',this.value)" title="Plataforma vinculada">${kanbanPlatOpts(c.plat||'')}</select>
+      <input type="date" class="kcard-due" value="${c.due||''}" onchange="setCard('${c.id}','due',this.value)" title="Prazo do cartão">
     </div>
+    ${c.due?`<div class="kcard-due-row">${dueBadge(c.due)}</div>`:''}
     <textarea class="kcard-note" rows="1" placeholder="Notas (opcional)"
       oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
       onblur="setCard('${c.id}','note',this.value.trim())">${esc(c.note||'')}</textarea>
@@ -1488,6 +1617,36 @@ function kanbanCard(c){
       <button class="kc-del" onclick="delCard('${c.id}')" title="Excluir">🗑</button>
     </div>
   </div>`;
+}
+function toISO(s){const d=agParseDate(s);if(!d)return '';return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function dueStatus(s){
+  const d=agParseDate(s);if(!d)return null;
+  const t=new Date();t.setHours(0,0,0,0);
+  const days=Math.round((d-t)/86400000);
+  if(days<0)return {cls:'due-late',label:'atrasado '+Math.abs(days)+'d',days:days};
+  if(days===0)return {cls:'due-today',label:'vence hoje',days:0};
+  if(days<=3)return {cls:'due-soon',label:'vence em '+days+'d',days:days};
+  return {cls:'due-ok',label:agFmt(d),days:days};
+}
+function dueBadge(s){const st=dueStatus(s);if(!st)return '';return '<span class="due-badge '+st.cls+'">⏱ '+st.label+'</span>';}
+function cardAlertItems(){
+  const out=[];
+  KANBAN.forEach(c=>{
+    if(c.col==='done'||!c.due)return;
+    if(c.id&&c.id.indexOf('ag-')===0)return;   // os da agenda já entram pela agenda
+    const st=dueStatus(c.due);if(!st)return;
+    if(st.days>3)return;                         // só alerta: ≤3 dias ou atrasado
+    out.push({card:c,d:agParseDate(c.due),days:st.days});
+  });
+  return out;
+}
+function alertCount(){
+  const t=new Date();t.setHours(0,0,0,0);
+  let n=0;
+  AGENDA.forEach(a=>{if(a.feito)return;const d=agParseDate(a.data);if(!d)return;
+    if(Math.round((d-t)/86400000)<=3)n++;});
+  n+=cardAlertItems().length;
+  return n;
 }
 function kfmt(ts){if(!ts)return'';const d=new Date(ts);const p=n=>String(n).padStart(2,'0');
   return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -1512,7 +1671,7 @@ function setCard(id,field,val){
   const c=KANBAN.find(x=>x.id===id);if(!c)return;
   if((c[field]||'')===(val||''))return;
   c[field]=val;c.updated=Date.now();
-  if(field==='prio'){renderKanban();}
+  if(field==='prio'||field==='due'){renderKanban();renderBell();renderHomeAgenda();}
   else{
     const card=document.querySelector('.kcard[data-id="'+id+'"]');
     const d=card&&card.querySelector('.kcard-date');
@@ -1753,8 +1912,133 @@ async function publishFile(btn){
 }
 
 /* ============ agenda / lembretes ============ */
-let AGENDA=[];
-function aghash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return 'ag'+(h>>>0).toString(36);}
+let AGENDA = Array.isArray(DATA.agenda) ? DATA.agenda : [];
+let AGENDA_CSV_URL = (typeof DATA.agendaCsvUrl==='string') ? DATA.agendaCsvUrl : '';
+function agHash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return 'csv'+(h>>>0).toString(36);}
+function parseCSV(txt){
+  const rows=[];let i=0,f='',row=[],q=false;
+  while(i<txt.length){const c=txt[i];
+    if(q){if(c==='"'){if(txt[i+1]==='"'){f+='"';i+=2;continue;}q=false;i++;continue;}f+=c;i++;continue;}
+    if(c==='"'){q=true;i++;continue;}
+    if(c===','){row.push(f);f='';i++;continue;}
+    if(c==='\r'){i++;continue;}
+    if(c==='\n'){row.push(f);rows.push(row);row=[];f='';i++;continue;}
+    f+=c;i++;}
+  if(f.length||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function agColMap(headers){
+  const norm=(headers||[]).map(h=>String(h||'').toLowerCase());
+  const find=(...keys)=>{for(let i=0;i<norm.length;i++)for(const k of keys)if(norm[i].indexOf(k)>=0)return i;return -1;};
+  const m={data:find('data','prazo','venc'),tarefa:find('tarefa','lembrete','titulo','título','assunto'),
+    detalhe:find('detalhe','obs','descri'),devops:find('devops','kanban'),feito:find('feito','concl','done'),prio:find('prior','urg')};
+  if(m.data<0)m.data=0; if(m.tarefa<0)m.tarefa=1;
+  return m;
+}
+function agPrio(v){v=String(v||'').toLowerCase();
+  if(v.indexOf('alt')>=0)return 'alta';
+  if(v.indexOf('baix')>=0)return 'baixa';
+  if(v.indexOf('med')>=0||v.indexOf('méd')>=0)return 'media';
+  return '';}
+function csvToAgenda(txt){
+  const rows=parseCSV(txt).filter(r=>r.some(c=>String(c).trim()!==''));
+  if(!rows.length)return [];
+  const h0=(rows[0]||[]).join(' ').toLowerCase();
+  const hasHeader=(h0.indexOf('tarefa')>=0||h0.indexOf('data')>=0);
+  const map=agColMap(hasHeader?rows[0]:['data','tarefa','detalhe','devops','feito','prioridade']);
+  const start=hasHeader?1:0;
+  const out=[];
+  for(let i=start;i<rows.length;i++){const c=rows[i];
+    const g=k=>map[k]>=0?String(c[map[k]]||'').trim():'';
+    const tarefa=g('tarefa');if(!tarefa)continue;
+    out.push({id:agHash(g('data')+'|'+tarefa+'|'+i),data:g('data'),tarefa:tarefa,detalhe:g('detalhe'),
+      devops:/^\s*s/i.test(g('devops')),feito:/^\s*s/i.test(g('feito')),prio:agPrio(g('prio'))});
+  }
+  return out;
+}
+const AGENDA_SHEET_ID='1Rh8ohO9frZsa55QeMHf0Q38oSFOd-kFloBFs823lpHs';
+function jsonpAgenda(){
+  return new Promise(resolve=>{
+    const id=AGENDA_SHEET_ID;
+    const fn='__agcb'+Math.floor(Math.random()*1e9);
+    let done=false;
+    const s=document.createElement('script');
+    const cleanup=()=>{try{delete window[fn];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);};
+    window[fn]=function(resp){
+      done=true;
+      try{
+        const tbl=(resp&&resp.table)||{};
+        const cols=(tbl.cols||[]).map(c=>c.label||'');
+        const map=agColMap(cols);
+        const rows=tbl.rows||[];
+        const out=[];
+        rows.forEach((r,idx)=>{
+          const cells=r.c||[];
+          const val=i=>{if(i<0)return '';const c=cells[i];return c?(c.f!=null?c.f:(c.v!=null?c.v:'')):'';};
+          const tarefa=String(val(map.tarefa)||'').trim();if(!tarefa)return;
+          out.push({id:agHash(String(val(map.data))+'|'+tarefa+'|'+idx),data:String(val(map.data)||'').trim(),tarefa:tarefa,detalhe:String(val(map.detalhe)||'').trim(),devops:/^\s*s/i.test(String(val(map.devops)||'')),feito:/^\s*s/i.test(String(val(map.feito)||'')),prio:agPrio(val(map.prio))});
+        });
+        AGENDA=out;cleanup();resolve(true);
+      }catch(e){cleanup();resolve(false);}
+    };
+    s.src='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?headers=1&tqx=responseHandler:'+fn;
+    s.onerror=function(){if(!done){cleanup();resolve(false);}};
+    document.body.appendChild(s);
+    setTimeout(()=>{if(!done){cleanup();resolve(false);}},9000);
+  });
+}
+function looksLikeCsv(t){
+  if(!t)return false; const s=t.trim();
+  if(s[0]==='<')return false;                 // página HTML (login/erro), não CSV
+  if(s.toLowerCase().indexOf('<html')>=0)return false;
+  return s.indexOf(',')>=0 && s.length>3;
+}
+async function fetchAgendaCsv(){
+  if(await jsonpAgenda())return true;
+  const gviz='https://docs.google.com/spreadsheets/d/'+AGENDA_SHEET_ID+'/gviz/tq?tqx=out:csv';
+  const attempts=[gviz];
+  if(AGENDA_CSV_URL){
+    attempts.push(AGENDA_CSV_URL,
+      'https://corsproxy.io/?url='+encodeURIComponent(AGENDA_CSV_URL),
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(AGENDA_CSV_URL),
+      'https://api.allorigins.win/raw?url='+encodeURIComponent(gviz));
+  }
+  for(let i=0;i<attempts.length;i++){
+    try{const r=await fetch(attempts[i],{cache:'no-store',redirect:'follow'});
+      if(!r||!r.ok)continue;
+      const txt=await r.text();
+      if(looksLikeCsv(txt)){AGENDA=csvToAgenda(txt);return true;}
+    }catch(e){}
+  }
+  return false;
+}
+function reloadAgenda(){
+  const st=document.getElementById('ag-csv-status');
+  if(st){st.style.color='var(--ink-3)';st.textContent='Carregando…';}
+  fetchAgendaCsv().then(ok=>{
+    agRefresh();syncAgendaToKanban();
+    if(!st)return;
+    if(ok&&AGENDA.length){st.style.color='#86e29a';st.textContent='✓ '+AGENDA.length+' lembrete(s) lido(s) da planilha';}
+    else if(ok){st.style.color='#ffce6b';st.textContent='Conectou, mas não achei linhas válidas (precisa de Data + Tarefa preenchidos).';}
+    else{st.style.color='#ff9b9b';st.textContent='Ainda não consegui ler. Confira se liberou “Qualquer pessoa com o link · Leitor”.';}
+  });
+}
+function setAgendaCsvUrl(){
+  const inp=document.getElementById('ag-csv-url');if(!inp)return;
+  AGENDA_CSV_URL=(inp.value||'').trim();
+  const st=document.getElementById('ag-csv-status');
+  if(st){st.style.color='var(--ink-3)';st.textContent='Carregando…';}
+  logChange('Planilha da agenda '+(AGENDA_CSV_URL?'conectada':'desconectada'));
+  postBank(()=>{},e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar a URL: '+e;}});
+  if(!AGENDA_CSV_URL){AGENDA=Array.isArray(DATA.agenda)?DATA.agenda:[];agRefresh();if(st)st.textContent='Planilha desconectada.';return;}
+  fetchAgendaCsv().then(ok=>{agRefresh();syncAgendaToKanban();
+    if(!st)return;
+    if(ok&&AGENDA.length){st.style.color='#86e29a';st.textContent='✓ '+AGENDA.length+' lembrete(s) lido(s) da planilha';}
+    else if(ok){st.style.color='#ffce6b';st.textContent='Conectou, mas não achei linhas válidas (precisa de Data + Tarefa).';}
+    else{st.style.color='#ff9b9b';st.textContent='Não consegui ler. Confira se você publicou como CSV (passo a passo abaixo).';}
+  });
+}
+function agId(){return 'r'+Date.now().toString(36)+Math.floor(Math.random()*46656).toString(36);}
 function agParseDate(s){s=String(s||'').trim();let m;
   if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))return new Date(+m[1],+m[2]-1,+m[3]);
   if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))return new Date(+m[3],+m[2]-1,+m[1]);
@@ -1770,38 +2054,96 @@ function agBuckets(){
     else if(d<=wk)b.prox.push(o);else b.prox.push(o);});
   [b.atras,b.hoje,b.prox].forEach(arr=>arr.sort((x,y)=>(x.d?x.d:0)-(y.d?y.d:0)));
   return b;}
-async function fetchAgenda(){
-  if(!hasServer)return;
-  try{const sep=SERVER_URL.indexOf('?')>=0?'&':'?';
-    const r=await fetch(SERVER_URL+sep+'agenda=1');const j=await r.json();
-    if(Array.isArray(j))AGENDA=j;}catch(e){}
+function agRefresh(){renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();}
+function addReminder(){
+  const g=id=>document.getElementById(id);
+  const tarefa=(g('ag-nome').value||'').trim();
+  if(!tarefa){alert('Escreva o que é o lembrete.');return;}
+  const data=(g('ag-data').value||'').trim();
+  const detalhe=(g('ag-det').value||'').trim();
+  const devops=g('ag-devops').checked;
+  AGENDA.unshift({id:agId(),data:data,tarefa:tarefa,detalhe:detalhe,devops:devops,feito:false});
+  g('ag-nome').value='';g('ag-data').value='';g('ag-det').value='';g('ag-devops').checked=false;
+  logChange('Lembrete adicionado: '+tarefa);
+  agRefresh();syncAgendaToKanban();
+  const st=g('ag-add-status');if(st){st.style.color='#86e29a';st.textContent='✓ lembrete adicionado';setTimeout(()=>{if(st)st.textContent='';},2500);}
+  postBank(()=>{},e=>{if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+e;}});
+}
+function delReminder(id){
+  const it=AGENDA.find(a=>a.id===id);if(!it)return;
+  if(!confirm('Excluir o lembrete "'+it.tarefa+'"?'))return;
+  AGENDA=AGENDA.filter(a=>a.id!==id);
+  logChange('Lembrete excluído: '+it.tarefa);
+  agRefresh();
+  postBank(()=>{},e=>alert('Não foi possível salvar: '+e));
+}
+function toggleReminderDone(id){
+  const it=AGENDA.find(a=>a.id===id);if(!it)return;
+  it.feito=!it.feito;
+  agRefresh();
+  postBank(()=>{},()=>{});
+}
+function renderAgendaAdmin(){
+  const box=document.getElementById('ag-admin-list');if(!box)return;
+  if(!AGENDA.length){box.innerHTML='<div style="font-size:12px;color:var(--ink-3)">Nenhum lembrete ainda. Adicione um acima.</div>';return;}
+  const sorted=AGENDA.slice().sort((a,b)=>{const da=agParseDate(a.data),db=agParseDate(b.data);return (da?da.getTime():8e15)-(db?db.getTime():8e15);});
+  box.innerHTML=sorted.map(a=>{
+    const d=agParseDate(a.data);
+    return '<div class="agm-row'+(a.feito?' is-done':'')+'">'
+      +'<button class="agm-chk" title="'+(a.feito?'Reabrir':'Marcar como feito')+'" onclick="toggleReminderDone(\''+a.id+'\')">'+(a.feito?'☑':'☐')+'</button>'
+      +'<span class="agm-when">'+(d?agFmt(d):(a.data?esc(a.data):'sem data'))+'</span>'
+      +'<span class="agm-task">'+esc(a.tarefa)+(a.devops?' <span class="ag-tag">DevOps</span>':'')+'</span>'
+      +'<button class="mc-del agm-del" title="Excluir" onclick="delReminder(\''+a.id+'\')">×</button></div>';
+  }).join('');
 }
 function renderBell(){
   const badge=document.getElementById('bell-badge');if(!badge)return;
-  const b=agBuckets();const n=b.atras.length+b.hoje.length;
+  const n=alertCount();
   if(n>0){badge.textContent=n;badge.hidden=false;}else{badge.hidden=true;}
 }
+function urgClass(d){
+  if(!d)return 'next';
+  const t=new Date();t.setHours(0,0,0,0);
+  const days=Math.round((d-t)/86400000);
+  if(days<=0)return 'late';   // vencido ou hoje → vermelho
+  if(days<=3)return 'soon';   // 1-3 dias → âmbar
+  return 'next';              // azul
+}
 function agRelative(d,u){
-  if(u==='today')return 'Hoje';
-  if(!d)return '';
+  if(!d)return 'sem data';
   const t=new Date();t.setHours(0,0,0,0);
   const days=Math.round((d-t)/86400000);
   if(days<0)return 'Atrasado '+Math.abs(days)+(Math.abs(days)===1?' dia':' dias');
+  if(days===0)return 'Hoje';
   if(days===1)return 'Amanhã';
   return 'Em '+days+' dias';
 }
+let HOME_AG_OPEN=false;
+function toggleHomeAgenda(){HOME_AG_OPEN=!HOME_AG_OPEN;renderHomeAgenda();}
 function renderHomeAgenda(){
   const box=document.getElementById('home-agenda');if(!box)return;
+  const items=[];
   const b=agBuckets();
-  const all=b.atras.map(o=>({o,u:'late'})).concat(b.hoje.map(o=>({o,u:'today'}))).concat(b.prox.map(o=>({o,u:'next'})));
-  if(!all.length){box.hidden=true;box.innerHTML='';return;}
-  const show=all.slice(0,6);const more=all.length-show.length;
-  box.innerHTML='<div class="ha-head"><span class="ha-title">🔔 Agenda — próximas datas</span>'
-    +(more>0?'<button class="ha-all" onclick="toggleAgenda(event)">ver todos (+'+more+')</button>':'')+'</div>'
-    +'<div class="ha-grid">'+show.map(({o,u})=>{const a=o.a;
-      return '<div class="ha-card ha-'+u+'"><div class="ha-when">'+agRelative(o.d,u)+(o.d?' · '+agFmt(o.d):'')+'</div>'
-        +'<div class="ha-task">'+esc(a.tarefa)+'</div>'+(a.devops?'<span class="ha-tag">DevOps</span>':'')+'</div>';
-    }).join('')+'</div>';
+  b.atras.concat(b.hoje).concat(b.prox).forEach(o=>{items.push({tarefa:o.a.tarefa,detalhe:o.a.detalhe,devops:o.a.devops,prio:o.a.prio,d:o.d});});
+  cardAlertItems().forEach(it=>{items.push({tarefa:it.card.title||'(sem título)',detalhe:'',devops:false,fromCard:true,prio:it.card.prio,d:it.d});});
+  if(!items.length){box.hidden=true;box.innerHTML='';return;}
+  items.sort((x,y)=>(x.d?x.d.getTime():8e15)-(y.d?y.d.getTime():8e15));
+  const LIM=4;
+  const show=HOME_AG_OPEN?items:items.slice(0,LIM);
+  const plbl={alta:'ALTA',media:'MÉDIA',baixa:'BAIXA'};
+  const lines=show.map(a=>{const u=urgClass(a.d);const p=a.prio||'';
+    const tag=a.fromCard?'<span class="ag-dev">📋 card</span>':(a.devops?'<span class="ag-dev">DevOps</span>':'');
+    return '<div class="ag-line u-'+u+(p?' p-'+p:'')+'">'
+      +'<div class="ag-line-when"><span class="ag-line-rel">'+agRelative(a.d)+'</span><span class="ag-line-date">'+(a.d?agFmt(a.d):'sem data')+'</span></div>'
+      +'<div class="ag-line-main"><div class="ag-line-task">'+esc(a.tarefa)+'</div>'+(a.detalhe?'<div class="ag-line-det">'+esc(a.detalhe)+'</div>':'')+'</div>'
+      +'<div class="ag-line-tags">'+(p?'<span class="ag-prio prio-'+p+'">'+plbl[p]+'</span>':'')+tag+'</div>'
+      +'</div>';
+  }).join('');
+  const moreBtn = items.length>LIM
+    ? '<button class="ag-more" onclick="toggleHomeAgenda()">'+(HOME_AG_OPEN?'ver menos ▲':('ver mais '+(items.length-LIM)+' ▼'))+'</button>'
+    : '';
+  box.innerHTML='<div class="ha-head"><span class="ha-title">🔔 Agenda</span><button class="ha-all" onclick="toggleAgenda(event)">painel completo ↗</button></div>'
+    +'<div class="ag-list">'+lines+'</div>'+moreBtn;
   box.hidden=false;
 }
 function agRow(o){
@@ -1817,7 +2159,7 @@ function renderAgenda(){
   h+=sec('Hoje',b.hoje,'is-today');
   h+=sec('Próximos',b.prox,'is-next');
   h+=sec('Sem data',b.semdata,'is-none');
-  body.innerHTML = h || '<div class="ag-empty">Nenhum lembrete na agenda. Adicione na aba “agenda” da planilha.</div>';
+  body.innerHTML = h || '<div class="ag-empty">Nenhum lembrete. Adicione em ⚙ → Agenda / lembretes.</div>';
 }
 function toggleAgenda(e){if(e){e.stopPropagation();}const p=document.getElementById('agenda-panel');if(!p)return;
   if(p.hidden){renderAgenda();p.hidden=false;setTimeout(()=>document.addEventListener('click',agOutside),0);}else closeAgenda();}
@@ -1828,21 +2170,31 @@ function syncAgendaToKanban(){
   let added=0;
   AGENDA.forEach(a=>{
     if(!a.devops||a.feito||!a.tarefa)return;
-    const id=aghash(a.data+'|'+a.tarefa);
+    const id='ag-'+a.id;
     if(KANBAN.some(c=>c.id===id))return;
     const prazo=a.data?(' · Prazo: '+a.data):'';
-    KANBAN.push({id:id,title:a.tarefa,desc:(a.detalhe||'')+prazo,resp:'',prio:'media',plat:'',col:'todo',updated:Date.now()});
+    KANBAN.push({id:id,title:a.tarefa,desc:(a.detalhe||'')+prazo,resp:'',prio:(a.prio||'media'),plat:'',col:'todo',updated:Date.now(),due:toISO(a.data)});
     added++;
   });
   if(added){renderKanban();logChange(added+' tarefa(s) da agenda → DevOps');postBank(()=>{},()=>{});}
 }
 
 /* ============ init ============ */
+function cfgShow(name){
+  const v=document.getElementById('view-personalizar');if(!v)return;
+  v.querySelectorAll('.cfg-panel').forEach(p=>{p.hidden=p.getAttribute('data-panel')!==name;});
+  v.querySelectorAll('.cfg-tab').forEach(b=>b.classList.toggle('active',b.getAttribute('data-cfg')===name));
+}
+(function(){var v=document.getElementById('view-personalizar');if(v)v.querySelectorAll('.cfg-tab').forEach(b=>{b.onclick=function(){cfgShow(b.getAttribute('data-cfg'));};});})();
+
 fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();
 (function(){const fy=document.getElementById('foot-year');if(fy)fy.textContent=new Date().getFullYear();})();
 (function(){var en=document.getElementById('editor-name');if(en)en.value=EDITOR_NAME;})();
-renderBell();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups(); } await fetchAgenda(); renderBell(); renderAgenda(); renderHomeAgenda(); syncAgendaToKanban(); })();
+renderBell();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
+(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban(); }
+  const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
+  await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
+})();
 </script>
 </body>
 </html>
