@@ -645,11 +645,58 @@
   .repbadge{font-size:10.5px;font-weight:700;border-radius:7px;padding:3px 8px;border:1px solid var(--line);white-space:nowrap}
   .repbadge.yes{color:#1f7a4d;background:rgba(31,160,90,.12)}
   .repbadge.no{color:#b23b3b;background:rgba(220,70,70,.12)}
+  .rep-ic{font-size:14px;font-weight:800;line-height:1;cursor:default;margin-left:2px}
+  .rep-ic.yes{color:#2ba85f}
+  .rep-ic.no{color:#d24b4b;text-decoration:line-through}
+  .acct-out{display:inline-flex;align-items:center;justify-content:center;padding:0}
+  .acct-out svg{display:block}
+  .owner .oav span svg{display:block}
   body.guest .nav-gear{display:none!important}
   body.guest .admin-only{display:none!important}
+  html:not([data-theme="light"]) .pcard{background:linear-gradient(150deg,#314364 0%,#1f2a3b 45%,#141b27 100%)}
+  html:not([data-theme="light"]) .pcard:hover{background:linear-gradient(150deg,#3a4f73 0%,#243247 48%,#161e2b 100%)}
+  .avatar.has-logo img{object-fit:contain;padding:5px}
+  .dash-card{background:var(--panel-2)!important;border:1px solid var(--line-2)!important;box-shadow:var(--shadow)}
+  .dash-card.d-doing{background:rgba(245,180,80,.12)!important;border-color:rgba(245,180,80,.34)!important}
+  .dash-card.d-doing .dash-num{color:#e0a13a}
+  .dash-card.d-ok{background:rgba(43,168,95,.12)!important;border-color:rgba(43,168,95,.34)!important}
+  .acct-wrap{position:relative;display:flex;align-items:center}
+  .acct-avatar{width:40px;height:40px;border-radius:50%;padding:0;border:1px solid var(--line);background:var(--glass);cursor:pointer;overflow:hidden;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+  .acct-avatar:hover{transform:scale(1.06);border-color:var(--accent);box-shadow:0 6px 18px rgba(74,168,240,.28)}
+  .oav-sm{width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4aa8f0,#2b6db0);color:#fff;font-weight:800;font-size:16px}
+  .oav-sm img{width:100%;height:100%;object-fit:cover;display:block}
+  .acct-menu{position:fixed;top:60px;right:24px;min-width:208px;background:var(--card-el);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow-hover);z-index:120;padding:7px;animation:acctIn .12s ease}
+  @keyframes acctIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .acct-menu-head{display:flex;align-items:center;gap:10px;padding:8px 9px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .acct-menu-head .oav-sm{width:38px;height:38px;flex:0 0 auto}
+  .am-name{font-weight:700;color:var(--head);font-size:14px;line-height:1.2}
+  .am-role{font-size:11px;color:#2ba85f;font-weight:600;margin-top:2px}
+  .acct-menu-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;color:var(--ink);font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+  .acct-menu-item:hover{background:var(--glass-hover)}
+  .acct-menu-item.danger{color:#e07171}
+  .acct-menu-item.danger:hover{background:rgba(220,70,70,.1)}
+  .acct-login{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;border-radius:20px;border:1px solid var(--line);background:var(--glass);color:var(--ink);font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+  .acct-login:hover{transform:scale(1.04);border-color:var(--accent);box-shadow:0 6px 18px rgba(74,168,240,.25);color:var(--head)}
+  .sync-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#4aa8f0,#2b6db0);z-index:200;border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(74,168,240,.6);transition:width .4s ease,opacity .5s ease;opacity:0}
+  .sync-bar.go{opacity:1;width:90%}
+  .sync-bar.done{opacity:0;width:100%}
+  .sync-pill{position:fixed;bottom:18px;right:18px;z-index:200;display:flex;align-items:center;gap:9px;background:var(--card-el);border:1px solid var(--line);border-radius:20px;padding:8px 15px;font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow-hover);opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:none}
+  .sync-pill.show{opacity:1;transform:none}
+  .sync-pill .spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:hubspin .7s linear infinite;flex:0 0 auto}
+  @keyframes hubspin{to{transform:rotate(360deg)}}
+  @media(max-width:560px){
+    .plat-grid{grid-template-columns:1fr}
+    .acct-login span{display:none}
+    .acct-login{padding:0;width:40px;justify-content:center}
+    .acct-menu{left:8px;right:8px;min-width:0;width:auto}
+    .topbar .owners{gap:7px}
+    .sync-pill{bottom:12px;right:12px;left:12px;justify-content:center}
+  }
 </style>
 </head>
 <body class="guest">
+<div id="sync-bar" class="sync-bar" aria-hidden="true"></div>
+<div id="sync-pill" class="sync-pill"><span class="spin"></span><span>Sincronizando…</span></div>
 
 <div class="brandmark" aria-hidden="true"></div>
 
@@ -721,7 +768,7 @@
           <input class="nm d-edit" id="d-nome" placeholder="Nome da plataforma">
           <div class="pub"><span class="d-edit-lbl">Nome interno (SEDUC):</span> <input class="d-edit d-edit-sm" id="d-interno" placeholder="nome interno"></div>
           <div class="field"><span class="d-edit-lbl" id="d-field-lbl"></span> <input class="d-edit d-edit-sm" id="d-field" placeholder="campo"></div>
-          <div class="field"><span class="d-edit-lbl">URL de redirecionamento:</span> <input class="d-edit d-edit-url" id="d-url" placeholder="https://… (opcional)"> <a id="d-url-open" class="url-open" target="_blank" rel="noopener">↗ abrir</a></div>
+          <div class="field"><span class="d-edit-lbl">URL de redirecionamento:</span> <input class="d-edit d-edit-url" id="d-url" placeholder="https://… (opcional)"> <button id="d-url-copy" class="url-open" type="button" onclick="copyDUrl(this)" title="Copiar a URL (ela depende de token, não abre direto)">⧉ copiar</button></div>
           <div class="cli" id="d-cli"></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
@@ -729,7 +776,7 @@
           <select id="d-status-edit" class="sel-badge cl-na" title="Alterar status (salva no banco)">
             <option value="ativa">Ativa</option><option value="parcial">Parcial / aguardando</option><option value="off">Pausada</option>
           </select>
-          <label class="d-edit-lbl" style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap">Reprocessa no Log da SED?
+          <label class="d-edit-lbl" style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap">Dá pra reprocessar na tela de Log?
             <select id="d-reproc" class="sel-badge cl-na" title="Esta plataforma pode ser reprocessada na tela de Log da SED?">
               <option value="sim">Sim</option><option value="nao">Não</option>
             </select>
@@ -1026,6 +1073,7 @@ function saveSQL(){try{localStorage.setItem('hubSQL',JSON.stringify(SQL))}catch(
 
 const SERVER_URL = "https://script.google.com/macros/s/AKfycbzDFq57Z3dwS7rkSoTM5tyATTPUCWYPu9EHm7UTrR5sNIryCAcn0zXs9O_y9iymq-xy/exec";
 const hasServer = SERVER_URL && SERVER_URL.indexOf('http')===0;
+let BANK_LOADED=false;
 async function serverLoad(){
   if(!hasServer) return false;
   try{
@@ -1060,6 +1108,7 @@ async function serverLoad(){
       if(cfg.status&&typeof cfg.status==='object') for(const k in cfg.status){if(PLATS[k])PLATS[k].status=cfg.status[k];}
       rebuildIndex();
       PARSED=parseAll();
+      BANK_LOADED=true;
       return true;
     }
   }catch(e){console.warn('Falha ao ler do servidor:',e);}
@@ -1076,6 +1125,7 @@ function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
   if(!hasServer){onerr&&onerr('servidor não configurado');return;}
+  if(!BANK_LOADED){onerr&&onerr('Os dados do servidor ainda não terminaram de carregar — recarregue a página e tente de novo (proteção para não sobrescrever o banco).');return;}
   const secret=getSecret(); if(!secret){onerr&&onerr('sem senha');return;}
   const hex=hexEnc(JSON.stringify(bankPayload()));
   fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,payload:hex})})
@@ -1105,6 +1155,13 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'4.3',date:'2026-06-23',text:'CORREÇÃO CRÍTICA (perda de dados): o login fazia uma gravação no banco para "verificar" a senha — se isso rodasse antes da sincronização terminar, sobrescrevia o banco com dados incompletos (logos e edições sumiam). Agora o login NÃO grava nada (a senha é validada só ao salvar de verdade) e o app se RECUSA a salvar enquanto os dados do servidor não terminarem de carregar. Isso impede a sobrescrita acidental do banco.'},
+  {ver:'4.2',date:'2026-06-23',text:'Correção: logos não somem mais — o quadradinho do logo agora tem fundo branco (antes era transparente e logos claros desapareciam). Dashboard com contraste real: os boxes "A fazer", "Em andamento" (âmbar) e "Concluído" (verde) ficam sempre visíveis, mesmo zerados. Gradiente do modo escuro voltou a ser só nos cards da home (não em todos os cards).'},
+  {ver:'4.1',date:'2026-06-23',text:'Menu da conta não fica mais cortado pela borda do topo (passou a ser posicionado de forma fixa a partir do avatar). Loading state: barra fina no topo + pílula "Sincronizando…" enquanto o site busca os dados do servidor. Polimento responsivo no celular: grid de plataformas em coluna única, botão Entrar compacto, menu de conta ajustado à largura da tela.'},
+  {ver:'4.0',date:'2026-06-23',text:'Conta de admin redesenhada: em vez do cartão grande e do botão de sair solto, agora é só um avatar redondo (do tamanho dos outros ícones) que abre um menu com nome, Configurações e Sair. Botão "Entrar" virou uma pílula compacta. Bem mais proporcional no topo.'},
+  {ver:'3.9',date:'2026-06-23',text:'Gradiente dos cards no modo escuro reforçado: topo em azul-ardósia mais claro descendo para o fundo escuro, bem mais perceptível e uniforme.'},
+  {ver:'3.8',date:'2026-06-23',text:'URL de redirecionamento: botão "abrir" virou "copiar" (a URL depende de token e não abre direto). Modo escuro: cards da home e demais cards ganharam um gradiente uniforme, mais bonitos e menos "pretos chapados" (sem afetar o tema claro).'},
+  {ver:'3.7',date:'2026-06-23',text:'Ajustes visuais: ícone de reprocesso no card virou um indicador discreto (↻) com a pergunta "Dá pra reprocessar na tela de Log?" no tooltip; login com ícones modernos (usuário para entrar, porta para sair, proporcionais); rótulo do reprocesso no detalhe reescrito como pergunta.'},
   {ver:'3.6',date:'2026-06-23',text:'Selo "Log SED: Sim/Não" (reprocesso na tela de Log de integrações da SED) agora aparece no card de cada plataforma, além do controle no cadastro. Login do topo redesenhado como cartão responsivo com hover (tanto "Entrar" quanto o estado logado). Aba Professores agora é recolhível e mostra o logo de cada plataforma; a identificação do papel professor continua na busca "Quem atende".'},
   {ver:'3.5',date:'2026-06-23',text:'Login de administrador no topo (substitui as identificações fixas): "Entrar" pede a senha do site e, ao logar, mostra o botão de admin com nome/foto. Nova aba Conta na engrenagem para definir nome e foto. A engrenagem de Configurações só aparece logado. Lista de plataformas na home agora é recolhível, e a aba Professores passou a derivar automaticamente das queries a regra de acesso (todos vs por disciplina).'},
   {ver:'3.4',date:'2026-06-23',text:'Quem atende: além do campo de busca, agora há dropdowns visíveis para escolher disciplina e pasta PEC (ao lado dos de tipo de ensino e rede). Lista de "Tipos de ensino / Redes cadastrados" agora é recolhível (puxar/ocultar).'},
@@ -1337,8 +1394,8 @@ function driveDireto(u){
   return u; // não é Drive: mantém como está (outro host)
 }
 function avatarHTML(k,big){const p=PLATS[k];const logo=LOGOS[k]||p.logo;
-  const st=`background:${logo?'transparent':p.cor}`;
-  return `<div class="avatar" style="${st}">${logo?`<img src="${esc(logo)}" alt="">`:esc(p.mono||k.slice(0,2))}</div>`;}
+  const st=`background:${logo?'#ffffff':p.cor}`;
+  return `<div class="avatar${logo?' has-logo':''}" style="${st}">${logo?`<img src="${esc(logo)}" alt="">`:esc(p.mono||k.slice(0,2))}</div>`;}
 
 function publicosDe(k){const map={Turmas:'turmas',Alunos:'alunos',Professores:'professores'};const out=[];
   for(const r of ['Turmas','Alunos','Professores']){const v=PARSED[r][k];if(v&&(v.mode==='rules'||v.mode==='allactive'))out.push(map[r]);}
@@ -1597,7 +1654,7 @@ function renderGrid(){const g=document.getElementById('plat-grid');
     return `<div class="pcard" data-k="${k}">
       <div class="row1">${avatarHTML(k)}<div><div class="nm">${esc(p.nome)}</div><div class="pub">Nome interno: ${esc(p.interno||p.nome)}</div><div class="src">${p.src==='teams'?'via Microsoft Teams':(p.src==='excel'?'via planilha de regras':'campo: '+esc(k))}</div></div></div>
       <div class="foot"><span class="st ${p.status}"><span class="dot"></span>${stTxt}</span>
-      <span class="repbadge ${p.reprocessaLog==='nao'?'no':'yes'}" title="Reprocessa na tela de Log de integrações da SED?">Log SED: ${p.reprocessaLog==='nao'?'Não':'Sim'}</span>
+      <span class="rep-ic ${p.reprocessaLog==='nao'?'no':'yes'}" title="Dá pra reprocessar na tela de Log? ${p.reprocessaLog==='nao'?'Não':'Sim'}">↻</span>
       <span class="srcbadge ${p.src==='excel'?'excel':(p.src==='teams'?'teams':'')}">${p.src==='excel'?'Planilha':(p.src==='teams'?'Teams':'SQL')}</span></div></div>`;}).join('');
   g.querySelectorAll('.pcard').forEach(el=>el.onclick=()=>openPlat(el.dataset.k));
   const sm=document.getElementById('plat-collapse-sum');if(sm)sm.textContent='🧩 Plataformas ('+list.length+')';}
@@ -2073,10 +2130,18 @@ function setPlatEdit(k,field,val){
 }
 function normUrl(u){u=(u||'').trim();if(!u)return '';if(!/^https?:\/\//i.test(u))u='https://'+u;return u;}
 function updateUrlOpen(k){
-  const a=document.getElementById('d-url-open');if(!a)return;
-  const u=PLATS[k]&&PLATS[k].url;
-  if(u){a.href=normUrl(u);a.style.display='';} else {a.style.display='none';}
+  const a=document.getElementById('d-url-copy');if(!a)return;
+  const inp=document.getElementById('d-url');
+  const has=(inp&&inp.value.trim())||(PLATS[k]&&PLATS[k].url);
+  a.style.display=has?'':'none';
 }
+function copyDUrl(btn){
+  const inp=document.getElementById('d-url');const u=normUrl(inp?inp.value:'');if(!u)return;
+  const done=()=>{btn.textContent='✓ copiado';setTimeout(()=>{btn.textContent='⧉ copiar';},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,()=>fallbackCopy(u,done));
+  else fallbackCopy(u,done);
+}
+function fallbackCopy(text,cb){try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);cb&&cb();}catch(e){alert('Copie manualmente: '+text);}}
 function slugKey(nome){
   let base=(nome||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'');
   if(!base)base='PLAT';
@@ -2517,7 +2582,7 @@ function renderDashboard(){
     '<div class="dash-group"><div class="dash-gtitle">Plataformas</div><div class="dash-row">'
       +dc(ativa,'Ativas','d-ok','')+dc(parcial,'Parciais','d-warn','')+dc(off,'Pausadas','d-off','')+'</div></div>'
     +'<div class="dash-group"><div class="dash-ghead"><span class="dash-gtitle" style="margin:0">DevOps · '+escopo+' · '+pct+'%</span>'+tg+'</div><div class="dash-row">'
-      +dc(todo,'A fazer','','goDevops()')+dc(doing,'Em andamento','','goDevops()')+dc(done,'Concluído','d-ok','goDevops()')+'</div></div>'
+      +dc(todo,'A fazer','','goDevops()')+dc(doing,'Em andamento','d-doing','goDevops()')+dc(done,'Concluído','d-ok','goDevops()')+'</div></div>'
     +'<div class="dash-group"><div class="dash-gtitle">Alertas</div><div class="dash-row">'
       +dc(alerts,'Prazos no radar',alerts>0?'d-alert':'','toggleAgenda(event)')+'</div></div>';
 }
@@ -2596,26 +2661,35 @@ function renderAcct(){
   if(AUTHED){
     document.body.classList.remove('guest');document.body.classList.add('authed');
     const ph=PROFILE.photo?`<img src="${esc(driveDireto(PROFILE.photo))}" alt="">`:`<span>${esc((PROFILE.name||'A').slice(0,1).toUpperCase())}</span>`;
-    box.innerHTML=`<button class="owner ownerlink" type="button" onclick="goConfig()" title="Você está logado — abrir Configurações">
-        <div class="oav">${ph}</div>
-        <div class="otext"><div class="olbl">✓ Logado · Admin</div><div class="onm">${esc(PROFILE.name||'Administrador')}</div></div>
-      </button>
-      <button class="theme-toggle" type="button" title="Sair" onclick="logout()">⎋</button>`;
+    const nm=esc(PROFILE.name||'Administrador');
+    box.innerHTML=`<div class="acct-wrap">
+        <button class="acct-avatar" type="button" onclick="toggleAcctMenu(event)" title="Conta de ${nm}" aria-haspopup="true"><div class="oav-sm">${ph}</div></button>
+        <div class="acct-menu" id="acct-menu" hidden>
+          <div class="acct-menu-head"><div class="oav-sm">${ph}</div><div class="amh-txt"><div class="am-name">${nm}</div><div class="am-role">✓ Administrador</div></div></div>
+          <button class="acct-menu-item" type="button" onclick="closeAcctMenu();goConfig()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurações</button>
+          <button class="acct-menu-item danger" type="button" onclick="logout()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sair</button>
+        </div>
+      </div>`;
   }else{
     document.body.classList.add('guest');document.body.classList.remove('authed');
-    box.innerHTML=`<button class="owner ownerlink" type="button" onclick="login()" title="Entrar como administrador">
-        <div class="oav"><span>🔑</span></div>
-        <div class="otext"><div class="olbl">Acesso</div><div class="onm">Entrar</div></div>
-      </button>`;
+    box.innerHTML=`<button class="acct-login" type="button" onclick="login()" title="Entrar como administrador"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.7"/><path d="M5 20c0-3.6 3.2-5.5 7-5.5s7 1.9 7 5.5"/></svg><span>Entrar</span></button>`;
   }
 }
+function startSync(){const b=document.getElementById('sync-bar'),p=document.getElementById('sync-pill');if(b){b.classList.remove('done');b.classList.add('go');}if(p)p.classList.add('show');}
+function endSync(){const b=document.getElementById('sync-bar'),p=document.getElementById('sync-pill');if(p)p.classList.remove('show');if(b){b.classList.remove('go');b.classList.add('done');setTimeout(()=>{b.classList.remove('done');b.style.width='';},600);}}
+function toggleAcctMenu(e){if(e)e.stopPropagation();const m=document.getElementById('acct-menu');if(!m)return;
+  const show=m.hidden;m.hidden=!m.hidden;
+  if(show){const btn=(e&&e.currentTarget.closest('.acct-wrap')||document.querySelector('.acct-wrap')).querySelector('.acct-avatar');
+    if(btn){const r=btn.getBoundingClientRect();m.style.top=(r.bottom+8)+'px';m.style.right=Math.max(8,(window.innerWidth-r.right))+'px';}}
+}
+function closeAcctMenu(){const m=document.getElementById('acct-menu');if(m)m.hidden=true;}
+document.addEventListener('click',function(e){const w=e.target.closest('.acct-wrap');if(!w)closeAcctMenu();});
+window.addEventListener('scroll',closeAcctMenu,true);window.addEventListener('resize',closeAcctMenu);
 function goConfig(){const b=document.querySelector('.nav button[data-view="personalizar"]');if(b)b.click();}
 function login(){
   const s=prompt('Senha de administrador (a mesma de edição do site):');if(!s)return;
-  try{sessionStorage.setItem('hubSecret',s)}catch(e){}
-  const box=document.getElementById('acct-box');if(box)box.style.opacity='.6';
-  postBank(()=>{AUTHED=true;try{sessionStorage.setItem('hubAuthed','1')}catch(e){}if(box)box.style.opacity='';renderAcct();},
-    e=>{AUTHED=false;try{sessionStorage.removeItem('hubSecret');sessionStorage.removeItem('hubAuthed')}catch(_){}if(box)box.style.opacity='';renderAcct();alert('Não foi possível entrar: '+e+'\n(verifique a senha e a conexão com o banco)');});
+  try{sessionStorage.setItem('hubSecret',s);sessionStorage.setItem('hubAuthed','1')}catch(e){}
+  AUTHED=true;renderAcct();
 }
 function logout(){AUTHED=false;try{sessionStorage.removeItem('hubSecret');sessionStorage.removeItem('hubAuthed')}catch(e){}
   const cur=document.querySelector('.view.active');if(cur&&cur.id==='view-personalizar'){const b=document.querySelector('.nav button[data-view="plataformas"]');if(b)b.click();}
@@ -2669,10 +2743,11 @@ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fill
 (function(){const fy=document.getElementById('foot-year');if(fy)fy.textContent=new Date().getFullYear();})();
 (function(){var en=document.getElementById('editor-name');if(en)en.value=EDITOR_NAME;})();
 renderBell();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban();
-(async()=>{ const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
+(async()=>{ startSync(); const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
   const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
   await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
   if(SEEN_FIRST)markAgendaSeen();
+  endSync();
 })();
 </script>
 </body>
