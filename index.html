@@ -530,7 +530,9 @@
   /* kanban / devops */
   .kanban-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;justify-content:space-between;flex-wrap:wrap}
   .kbar-left{display:flex;align-items:center;gap:10px}
-  .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+  .kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+  .kanban .kcol{min-width:0}
+  .kanban .kcol.collapsed{align-self:start}
   .kcol{display:flex;flex-direction:column;gap:10px}
   .kcol.dragover{}
   .kcol-head{position:sticky;top:8px;z-index:3;display:flex;align-items:center;justify-content:space-between;
@@ -544,6 +546,9 @@
   .kcol.done .kcol-head{background:linear-gradient(90deg,rgba(94,211,153,.20),var(--card-el) 72%);border-color:rgba(94,211,153,.35)}
   .kcol-head .kcol-title{font-weight:750}
   .kcol-count{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:1px 9px}
+  .kcol-head{cursor:pointer;user-select:none}
+  .kcol-chev{font-size:10px;color:var(--ink-3);display:inline-block;width:11px;transition:transform .12s}
+  .kcol.collapsed .kcol-body{display:none}
   .kcol-body{display:flex;flex-direction:column;gap:10px;min-height:72px;padding:10px;border-radius:13px;background:var(--rail);border:1px solid var(--line);transition:background .15s,border-color .15s}
   .kcol-body.dragover{border-color:var(--accent);background:var(--accent-soft)}
   .kcard{background:var(--card-el);border:1px solid var(--line);border-radius:11px;padding:11px 12px 11px 26px;margin-bottom:0;cursor:grab;position:relative;border-left:3px solid var(--line);box-shadow:0 1px 2px rgba(20,40,70,.06),0 3px 8px rgba(20,40,70,.08)}
@@ -587,8 +592,8 @@
   .kcol-add{width:100%;border:1px dashed var(--line);background:transparent;color:var(--ink-3);border-radius:9px;padding:8px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;transition:border-color .15s,color .15s}
   .kcol-add:hover{border-color:var(--accent);color:var(--accent-2)}
   .kanban-empty{font-size:12px;color:var(--ink-3);text-align:center;padding:14px 0}
-  @media(max-width:1000px){.kanban{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:560px){.kanban{grid-template-columns:1fr}}
+  @media(max-width:1000px){.kanban{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.kanban{grid-template-columns:minmax(0,1fr)}}
   .np-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}
   .np-field{display:flex;flex-direction:column;gap:5px}
   .np-field span{font-weight:700;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em}
@@ -680,7 +685,7 @@
   .sync-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#4aa8f0,#2b6db0);z-index:200;border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(74,168,240,.6);transition:width .4s ease,opacity .5s ease;opacity:0}
   .sync-bar.go{opacity:1;width:90%}
   .sync-bar.done{opacity:0;width:100%}
-  .sync-pill{position:fixed;bottom:18px;right:18px;z-index:200;display:flex;align-items:center;gap:9px;background:var(--card-el);border:1px solid var(--line);border-radius:20px;padding:8px 15px;font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow-hover);opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:none}
+  .sync-pill{position:fixed;top:72px;right:18px;z-index:200;display:flex;align-items:center;gap:9px;background:var(--card-el);border:1px solid var(--line);border-radius:20px;padding:8px 15px;font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow-hover);opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;pointer-events:none}
   .sync-pill.show{opacity:1;transform:none}
   .sync-pill .spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:hubspin .7s linear infinite;flex:0 0 auto}
   @keyframes hubspin{to{transform:rotate(360deg)}}
@@ -690,7 +695,7 @@
     .acct-login{padding:0;width:40px;justify-content:center}
     .acct-menu{left:8px;right:8px;min-width:0;width:auto}
     .topbar .owners{gap:7px}
-    .sync-pill{bottom:12px;right:12px;left:12px;justify-content:center}
+    .sync-pill{top:64px;right:12px;left:12px;justify-content:center}
   }
 </style>
 </head>
@@ -1017,11 +1022,6 @@
       <button class="btn pubbtn" id="drive-backup-btn" onclick="backupToDrive(this)">☁ Fazer backup no Drive agora</button>
       <span id="drive-backup-status" style="font-size:12px;color:var(--ink-3);margin-left:10px"></span>
     </div>
-    <div class="card-title" style="font-size:14px">Cópias rápidas neste navegador</div>
-    <p class="lead" style="margin-top:2px;font-size:12.5px">Conveniência local: as 8 últimas vezes que você salvou, guardadas só neste navegador (clique no ⭳ para baixar). Não é uma rede de segurança — para recuperar de verdade, use o backup do Drive ou o histórico de versões da planilha.</p>
-    <div class="card" style="margin-bottom:18px">
-      <div id="backup-list" class="manage-chips"></div>
-    </div>
 
       </section>
       <section class="cfg-panel" data-panel="inicial" hidden>
@@ -1046,7 +1046,8 @@
         <button class="btn" onclick="addCard('todo')"><span style="font-size:15px;line-height:1">＋</span> Nova tarefa</button>
         <span id="kanban-status" style="font-size:12px"></span>
       </div>
-      <button class="btn ghost xls" style="margin-left:auto" onclick="exportKanban()" title="Exportar para Excel">⬇ Exportar para Excel</button>
+      <input id="kanban-search" class="ac-input" style="max-width:280px;height:38px" placeholder="🔎 buscar chamado…" oninput="kanbanSearch(this.value)">
+      <button class="btn ghost xls" onclick="exportKanban()" title="Exportar para Excel">⬇ Exportar para Excel</button>
     </div>
     <div class="kanban" id="kanban-board"></div>
   </div>
@@ -1064,7 +1065,7 @@
     </div>
     <div class="foot-credit">
       <p>Concebido e desenvolvido por <a href="https://www.linkedin.com/in/denys-ricucci-43b36823/" target="_blank" rel="noopener">Denys Ricucci</a></p>
-      <p class="foot-rights">© <span id="foot-year">2026</span> Denys Ricucci · Todos os direitos reservados</p>
+      <p class="foot-rights">© <span id="foot-year">2026</span> Denys Ricucci · Todos os direitos reservados <span id="foot-ver" style="opacity:.6;font-weight:600"></span></p>
     </div>
   </div>
   <div class="foot-base"><span class="foot-pin">◍</span> Conectando plataformas, ampliando o acesso à educação · São Paulo, Brasil</div>
@@ -1161,6 +1162,11 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'4.9',date:'2026-06-24',text:'Correção do recolher por coluna: as colunas agora têm largura fixa (1/4 cada) e não esticam mais quando uma coluna é recolhida — recolher só esconde os cartões daquela coluna, sem mexer no tamanho ou na posição das outras.'},
+  {ver:'4.8',date:'2026-06-24',text:'Recolher por coluna: clique no título de cada coluna do DevOps para fechá-la ou abri-la. Correção da 2ª planilha (Status Report): lida por JSONP, igual à primeira, então os chamados aparecem de verdade.'},
+  {ver:'4.7',date:'2026-06-24',text:'DevOps ganhou campo de busca de chamados (filtra por título, comentário, responsável ou plataforma, mostrando a contagem filtrada por coluna).'},
+  {ver:'4.6',date:'2026-06-24',text:'DevOps agora também é alimentado pela planilha "Status Report - Integrações" (as duas planilhas alimentam ao mesmo tempo). Cada chamado vira cartão, com alerta na home e na agenda. O Status da planilha (Em andamento / Pendente / Concluído) já joga o cartão na coluna certa do quadro, e atualiza a coluna quando o status muda. Chamados já concluídos antigos não inundam o quadro. Número da versão agora aparece no rodapé.'},
+  {ver:'4.5',date:'2026-06-24',text:'Painel de Backups limpo: removidas as "cópias rápidas no navegador" (que confundiam e não eram rede de segurança real) — fica só o backup no Drive. A pílula "Sincronizando…" passou do rodapé para o topo da tela.'},
   {ver:'4.4',date:'2026-06-24',text:'Botão "Fazer backup no Drive agora" na aba Backups: gera uma cópia do banco no seu Google Drive (pasta "Hub - Backups") com um clique — operação só de leitura, não altera a configuração. O backup local do navegador virou apenas conveniência secundária, com aviso claro de que a rede de segurança real é o Drive + histórico de versões da planilha.'},
   {ver:'4.3',date:'2026-06-23',text:'CORREÇÃO CRÍTICA (perda de dados): o login fazia uma gravação no banco para "verificar" a senha — se isso rodasse antes da sincronização terminar, sobrescrevia o banco com dados incompletos (logos e edições sumiam). Agora o login NÃO grava nada (a senha é validada só ao salvar de verdade) e o app se RECUSA a salvar enquanto os dados do servidor não terminarem de carregar. Isso impede a sobrescrita acidental do banco.'},
   {ver:'4.2',date:'2026-06-23',text:'Correção: logos não somem mais — o quadradinho do logo agora tem fundo branco (antes era transparente e logos claros desapareciam). Dashboard com contraste real: os boxes "A fazer", "Em andamento" (âmbar) e "Concluído" (verde) ficam sempre visíveis, mesmo zerados. Gradiente do modo escuro voltou a ser só nos cards da home (não em todos os cards).'},
@@ -1227,6 +1233,7 @@ function delPasta(i){
   postBank(()=>{},e=>alert('Não foi possível salvar: '+e));
 }
 function renderVersions(){
+  const fv=document.getElementById('foot-ver');if(fv&&VERSIONS&&VERSIONS[0])fv.textContent='· v'+(VERSIONS[0].ver||'');
   const box=document.getElementById('ver-list');if(!box)return;
   if(!VERSIONS.length){box.innerHTML='<div style="font-size:12px;color:var(--ink-3)">Nenhuma versão registrada.</div>';return;}
   box.innerHTML=VERSIONS.map((v,i)=>{
@@ -2088,23 +2095,34 @@ function markAgendaSeen(){
 }
 function kfmt(ts){if(!ts)return'';const d=new Date(ts);const p=n=>String(n).padStart(2,'0');
   return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
-function renderKanban(){
+let KQUERY='';
+let KCOL_COLLAPSED=new Set();
+function cardMatches(c,q){
+  const platNome=c.plat&&PLATS[c.plat]?PLATS[c.plat].nome:'';
+  return ((c.title||'')+' '+(c.note||'')+' '+(c.desc||'')+' '+(c.resp||'')+' '+platNome).toLowerCase().indexOf(q)>=0;
+}
+function kanbanSearch(v){KQUERY=(v||'').trim().toLowerCase();renderKanban(true);}
+function toggleCol(col){if(KCOL_COLLAPSED.has(col))KCOL_COLLAPSED.delete(col);else KCOL_COLLAPSED.add(col);renderKanban(true);}
+function renderKanban(skipSide){
   const board=document.getElementById('kanban-board');if(!board)return;
   board.innerHTML=KCOLS.map(([col,label])=>{
-    const cards=KANBAN.filter(c=>c.col===col);
-    return `<div class="kcol ${col}">
-      <div class="kcol-head">
-        <span class="kcol-title"><span class="kcol-dot"></span>${label}</span>
-        <span class="kcol-count">${cards.length}</span>
+    const all=KANBAN.filter(c=>c.col===col);
+    const cards=KQUERY?all.filter(c=>cardMatches(c,KQUERY)):all;
+    const cnt=KQUERY?(cards.length+'/'+all.length):String(all.length);
+    const isc=KCOL_COLLAPSED.has(col);
+    return `<div class="kcol ${col}${isc?' collapsed':''}">
+      <div class="kcol-head" onclick="toggleCol('${col}')" title="${isc?'Expandir':'Recolher'} coluna">
+        <span class="kcol-title"><span class="kcol-chev">${isc?'▸':'▾'}</span><span class="kcol-dot"></span>${label}</span>
+        <span class="kcol-count">${cnt}</span>
       </div>
       <div class="kcol-body" data-col="${col}" ondragover="kDragOver(event)" ondragleave="kDragLeave(event)" ondrop="kDrop(event,'${col}')">
-        ${cards.map(kanbanCard).join('')||'<div class="kanban-empty">Sem tarefas</div>'}
+        ${cards.map(kanbanCard).join('')||'<div class="kanban-empty">'+(KQUERY?'Nenhum chamado encontrado':'Sem tarefas')+'</div>'}
         <button class="kcol-add" onclick="addCard('${col}')">+ nova tarefa</button>
       </div>
     </div>`;
   }).join('');
   board.querySelectorAll('.kcard-title,.kcard-note').forEach(t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px';});
-  renderDashboard();renderBell();renderHomeAgenda();renderAgenda();
+  if(!skipSide){renderDashboard();renderBell();renderHomeAgenda();renderAgenda();}
 }
 function setCard(id,field,val){
   const c=KANBAN.find(x=>x.id===id);if(!c)return;
@@ -2378,7 +2396,8 @@ function agColMap(headers){
   const norm=(headers||[]).map(h=>String(h||'').toLowerCase());
   const find=(...keys)=>{for(let i=0;i<norm.length;i++)for(const k of keys)if(norm[i].indexOf(k)>=0)return i;return -1;};
   const m={data:find('data','prazo','venc'),tarefa:find('tarefa','lembrete','titulo','título','assunto'),
-    detalhe:find('detalhe','obs','descri'),devops:find('devops','kanban'),feito:find('feito','concl','done'),prio:find('prior','urg')};
+    detalhe:find('detalhe','obs','descri','coment'),devops:find('devops','kanban'),feito:find('feito','concl','done'),prio:find('prior','urg'),
+    status:find('status','situa'),plat:find('plataforma','sistema')};
   if(m.data<0)m.data=0; if(m.tarefa<0)m.tarefa=1;
   return m;
 }
@@ -2387,26 +2406,32 @@ function agPrio(v){v=String(v||'').toLowerCase();
   if(v.indexOf('baix')>=0)return 'baixa';
   if(v.indexOf('med')>=0||v.indexOf('méd')>=0)return 'media';
   return '';}
+function agItem(g, hasStatus, idx){
+  const tarefa=g('tarefa'); if(!tarefa) return null;
+  const statusRaw=g('status'), plat=g('plat');
+  const devops = hasStatus ? true : /^\s*s/i.test(g('devops'));
+  const feito  = hasStatus ? /conclu/i.test(statusRaw) : /^\s*s/i.test(g('feito'));
+  const id = hasStatus ? agHash(g('data')+'|'+plat+'|'+tarefa) : agHash(g('data')+'|'+tarefa+'|'+idx);
+  return {id:id,data:g('data'),tarefa:tarefa,detalhe:g('detalhe'),devops:devops,feito:feito,prio:agPrio(g('prio')),status:statusRaw,plat:plat};
+}
 function csvToAgenda(txt){
   const rows=parseCSV(txt).filter(r=>r.some(c=>String(c).trim()!==''));
   if(!rows.length)return [];
   const h0=(rows[0]||[]).join(' ').toLowerCase();
-  const hasHeader=(h0.indexOf('tarefa')>=0||h0.indexOf('data')>=0);
+  const hasHeader=(h0.indexOf('tarefa')>=0||h0.indexOf('data')>=0||h0.indexOf('assunto')>=0);
   const map=agColMap(hasHeader?rows[0]:['data','tarefa','detalhe','devops','feito','prioridade']);
   const start=hasHeader?1:0;
   const out=[];
   for(let i=start;i<rows.length;i++){const c=rows[i];
     const g=k=>map[k]>=0?String(c[map[k]]||'').trim():'';
-    const tarefa=g('tarefa');if(!tarefa)continue;
-    out.push({id:agHash(g('data')+'|'+tarefa+'|'+i),data:g('data'),tarefa:tarefa,detalhe:g('detalhe'),
-      devops:/^\s*s/i.test(g('devops')),feito:/^\s*s/i.test(g('feito')),prio:agPrio(g('prio'))});
+    const it=agItem(g, map.status>=0, i);
+    if(it)out.push(it);
   }
   return out;
 }
 const AGENDA_SHEET_ID='1Rh8ohO9frZsa55QeMHf0Q38oSFOd-kFloBFs823lpHs';
-function jsonpAgenda(){
+function jsonpSheet(id){
   return new Promise(resolve=>{
-    const id=AGENDA_SHEET_ID;
     const fn='__agcb'+Math.floor(Math.random()*1e9);
     let done=false;
     const s=document.createElement('script');
@@ -2422,16 +2447,17 @@ function jsonpAgenda(){
         rows.forEach((r,idx)=>{
           const cells=r.c||[];
           const val=i=>{if(i<0)return '';const c=cells[i];return c?(c.f!=null?c.f:(c.v!=null?c.v:'')):'';};
-          const tarefa=String(val(map.tarefa)||'').trim();if(!tarefa)return;
-          out.push({id:agHash(String(val(map.data))+'|'+tarefa+'|'+idx),data:String(val(map.data)||'').trim(),tarefa:tarefa,detalhe:String(val(map.detalhe)||'').trim(),devops:/^\s*s/i.test(String(val(map.devops)||'')),feito:/^\s*s/i.test(String(val(map.feito)||'')),prio:agPrio(val(map.prio))});
+          const g=k=>String(val(map[k])||'').trim();
+          const it=agItem(g, map.status>=0, idx);
+          if(it)out.push(it);
         });
-        AGENDA=out;cleanup();resolve(true);
-      }catch(e){cleanup();resolve(false);}
+        cleanup();resolve(out);
+      }catch(e){cleanup();resolve(null);}
     };
     s.src='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?headers=1&tqx=responseHandler:'+fn;
-    s.onerror=function(){if(!done){cleanup();resolve(false);}};
+    s.onerror=function(){if(!done){cleanup();resolve(null);}};
     document.body.appendChild(s);
-    setTimeout(()=>{if(!done){cleanup();resolve(false);}},9000);
+    setTimeout(()=>{if(!done){cleanup();resolve(null);}},9000);
   });
 }
 function looksLikeCsv(t){
@@ -2441,24 +2467,31 @@ function looksLikeCsv(t){
   return s.indexOf(',')>=0 && s.length>3;
 }
 async function fetchAgendaCsv(){
-  if(await jsonpAgenda())return true;
-  const gviz='https://docs.google.com/spreadsheets/d/'+AGENDA_SHEET_ID+'/gviz/tq?tqx=out:csv';
-  const attempts=[gviz];
-  if(AGENDA_CSV_URL){
-    attempts.push(AGENDA_CSV_URL,
-      'https://corsproxy.io/?url='+encodeURIComponent(AGENDA_CSV_URL),
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(AGENDA_CSV_URL),
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(gviz));
+  let primary=await jsonpSheet(AGENDA_SHEET_ID);
+  if(primary===null){
+    primary=[];
+    const gviz='https://docs.google.com/spreadsheets/d/'+AGENDA_SHEET_ID+'/gviz/tq?tqx=out:csv';
+    const attempts=[gviz];
+    if(AGENDA_CSV_URL){
+      attempts.push(AGENDA_CSV_URL,
+        'https://corsproxy.io/?url='+encodeURIComponent(AGENDA_CSV_URL),
+        'https://api.allorigins.win/raw?url='+encodeURIComponent(AGENDA_CSV_URL),
+        'https://api.allorigins.win/raw?url='+encodeURIComponent(gviz));
+    }
+    for(let i=0;i<attempts.length;i++){
+      try{const r=await fetch(attempts[i],{cache:'no-store',redirect:'follow'});
+        if(!r||!r.ok)continue;
+        const txt=await r.text();
+        if(looksLikeCsv(txt)){primary=csvToAgenda(txt);break;}
+      }catch(e){}
+    }
   }
-  for(let i=0;i<attempts.length;i++){
-    try{const r=await fetch(attempts[i],{cache:'no-store',redirect:'follow'});
-      if(!r||!r.ok)continue;
-      const txt=await r.text();
-      if(looksLikeCsv(txt)){AGENDA=csvToAgenda(txt);return true;}
-    }catch(e){}
-  }
-  return false;
+  let second=await jsonpSheet(STATUS_SHEET_ID);
+  if(second===null)second=[];
+  AGENDA=(primary||[]).concat(second);
+  return AGENDA.length>0;
 }
+const STATUS_SHEET_ID='1UfSmQm4pV7nxrhNVmSZplq4n2b1lCIlovwtp12WewK0';
 function reloadAgenda(){
   const st=document.getElementById('ag-csv-status');
   if(st){st.style.color='var(--ink-3)';st.textContent='Carregando…';}
@@ -2659,15 +2692,35 @@ function toggleAgenda(e){if(e){e.stopPropagation();}const p=document.getElementB
 function closeAgenda(){const p=document.getElementById('agenda-panel');if(p)p.hidden=true;document.removeEventListener('click',agOutside);markAgendaSeen();}
 function agOutside(ev){const p=document.getElementById('agenda-panel');const b=document.getElementById('bell-btn');
   if(p&&!p.contains(ev.target)&&b&&!b.contains(ev.target))closeAgenda();}
+function statusToCol(s){
+  s=String(s||'').toLowerCase();
+  if(/conclu|finaliz|encerr/.test(s))return 'done';
+  if(/andamento|progress|execu/.test(s))return 'doing';
+  if(/pend|aguard|espera|bloque/.test(s))return 'pendente';
+  return 'todo';
+}
 function syncAgendaToKanban(){
   let added=0;
   AGENDA.forEach(a=>{
-    if(!a.devops||a.feito||!a.tarefa)return;
+    if(!a.devops||!a.tarefa)return;
     const id='ag-'+a.id;
-    if(KANBAN.some(c=>c.id===id))return;
-    const prazo=a.data?(' · Prazo: '+a.data):'';
-    KANBAN.push({id:id,title:a.tarefa,desc:(a.detalhe||'')+prazo,resp:'',prio:(a.prio||'media'),plat:'',col:'todo',updated:Date.now(),due:toISO(a.data)});
-    added++;
+    const hasStatus=!!a.status;
+    const existing=KANBAN.find(c=>c.id===id);
+    if(hasStatus){
+      const col=statusToCol(a.status);
+      if(existing){ if(existing.col!==col){existing.col=col;existing.updated=Date.now();added++;} return; }
+      if(col==='done')return; // não inunda o quadro com chamados já concluídos antigos
+      const prazo=a.data?(' · '+a.data):'';
+      const desc=(a.plat?'['+a.plat+'] ':'')+(a.detalhe||'')+prazo;
+      KANBAN.push({id:id,title:a.tarefa,desc:desc,resp:'',prio:(a.prio||'media'),plat:'',col:col,updated:Date.now(),due:toISO(a.data)});
+      added++;
+    }else{
+      if(a.feito)return;
+      if(existing)return;
+      const prazo=a.data?(' · Prazo: '+a.data):'';
+      KANBAN.push({id:id,title:a.tarefa,desc:(a.detalhe||'')+prazo,resp:'',prio:(a.prio||'media'),plat:'',col:'todo',updated:Date.now(),due:toISO(a.data)});
+      added++;
+    }
   });
   if(added){renderKanban();logChange(added+' tarefa(s) da agenda → DevOps');postBank(()=>{},()=>{});}
 }
