@@ -1011,8 +1011,14 @@
 
       </section>
       <section class="cfg-panel" data-panel="backups" hidden>
-    <div class="card-title" style="margin-top:0">Backups automáticos</div>
-    <p class="lead" style="margin-top:2px">Cada vez que você salva, uma cópia da configuração é guardada <b>neste navegador</b> (as 8 mais recentes) — clique no ⭳ para baixar qualquer uma. Para uma cópia diária automática <b>fora da planilha</b> (no seu Google Drive), há a função de backup no Apps Script. Para restaurar, baixe um backup e use <b>Importar configuração</b> acima.</p>
+    <div class="card-title" style="margin-top:0">Backups</div>
+    <p class="lead" style="margin-top:2px">O backup de verdade fica no <b>seu Google Drive</b> (pasta "Hub - Backups"). Clique no botão abaixo para gerar uma cópia do banco agora — ela é só leitura, <b>não altera</b> nada da configuração. Há também a cópia diária automática e o histórico de versões da planilha.</p>
+    <div class="card" style="margin-bottom:18px">
+      <button class="btn pubbtn" id="drive-backup-btn" onclick="backupToDrive(this)">☁ Fazer backup no Drive agora</button>
+      <span id="drive-backup-status" style="font-size:12px;color:var(--ink-3);margin-left:10px"></span>
+    </div>
+    <div class="card-title" style="font-size:14px">Cópias rápidas neste navegador</div>
+    <p class="lead" style="margin-top:2px;font-size:12.5px">Conveniência local: as 8 últimas vezes que você salvou, guardadas só neste navegador (clique no ⭳ para baixar). Não é uma rede de segurança — para recuperar de verdade, use o backup do Drive ou o histórico de versões da planilha.</p>
     <div class="card" style="margin-bottom:18px">
       <div id="backup-list" class="manage-chips"></div>
     </div>
@@ -1155,6 +1161,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'4.4',date:'2026-06-24',text:'Botão "Fazer backup no Drive agora" na aba Backups: gera uma cópia do banco no seu Google Drive (pasta "Hub - Backups") com um clique — operação só de leitura, não altera a configuração. O backup local do navegador virou apenas conveniência secundária, com aviso claro de que a rede de segurança real é o Drive + histórico de versões da planilha.'},
   {ver:'4.3',date:'2026-06-23',text:'CORREÇÃO CRÍTICA (perda de dados): o login fazia uma gravação no banco para "verificar" a senha — se isso rodasse antes da sincronização terminar, sobrescrevia o banco com dados incompletos (logos e edições sumiam). Agora o login NÃO grava nada (a senha é validada só ao salvar de verdade) e o app se RECUSA a salvar enquanto os dados do servidor não terminarem de carregar. Isso impede a sobrescrita acidental do banco.'},
   {ver:'4.2',date:'2026-06-23',text:'Correção: logos não somem mais — o quadradinho do logo agora tem fundo branco (antes era transparente e logos claros desapareciam). Dashboard com contraste real: os boxes "A fazer", "Em andamento" (âmbar) e "Concluído" (verde) ficam sempre visíveis, mesmo zerados. Gradiente do modo escuro voltou a ser só nos cards da home (não em todos os cards).'},
   {ver:'4.1',date:'2026-06-23',text:'Menu da conta não fica mais cortado pela borda do topo (passou a ser posicionado de forma fixa a partir do avatar). Loading state: barra fina no topo + pílula "Sincronizando…" enquanto o site busca os dados do servidor. Polimento responsivo no celular: grid de plataformas em coluna única, botão Entrar compacto, menu de conta ajustado à largura da tela.'},
@@ -1253,6 +1260,23 @@ function renderLog(){
   box.innerHTML = LOG.length
     ? LOG.slice(0,100).map(e=>`<div class="log-row"><span class="log-when">${kfmt(e.ts)}</span><span class="log-text">${e.who?'<b>'+esc(e.who)+'</b> · ':''}${esc(e.text)}</span></div>`).join('')
     : '<div style="font-size:12px;color:var(--ink-3)">Nenhuma alteração registrada ainda.</div>';
+}
+function backupToDrive(btn){
+  const st=document.getElementById('drive-backup-status');
+  if(!hasServer){if(st)st.textContent='Servidor não configurado.';return;}
+  if(!BANK_LOADED){if(st)st.textContent='Espere o carregamento terminar e tente de novo.';return;}
+  const secret=getSecret(); if(!secret){if(st)st.textContent='Senha necessária.';return;}
+  if(btn){btn.disabled=true;btn.textContent='☁ Enviando ao Drive…';}
+  if(st){st.style.color='var(--ink-3)';st.textContent='';}
+  // Enviamos action:'backup' (o backend só CRIA um arquivo no Drive, não toca na config).
+  // O payload vai junto só como cinto de segurança caso o Apps Script ainda não tenha a ação nova.
+  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,action:'backup',payload:bankPayload()})})
+    .then(r=>r.json()).then(res=>{
+      if(btn){btn.disabled=false;btn.textContent='☁ Fazer backup no Drive agora';}
+      if(res&&res.ok){if(st){st.style.color='#2ba85f';st.textContent='✓ Backup salvo no Drive'+(res.backup?(': '+res.backup):'')+'.';}}
+      else{if(st){st.style.color='#e07171';st.textContent='Não deu certo: '+((res&&res.error)||'erro');}}
+    })
+    .catch(e=>{if(btn){btn.disabled=false;btn.textContent='☁ Fazer backup no Drive agora';}if(st){st.style.color='#e07171';st.textContent='Falha de conexão: '+e;}});
 }
 function saveBackupSnapshot(force){
   try{
