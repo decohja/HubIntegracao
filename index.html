@@ -1801,7 +1801,8 @@ function renderGrid(){const g=document.getElementById('plat-grid');
 function openPlat(k){const p=PLATS[k];
   document.getElementById('plat-overview').style.display='none';
   document.getElementById('plat-detail').style.display='block';
-  document.getElementById('d-avatar').outerHTML=avatarHTML(k).replace('class="avatar"','class="avatar" id="d-avatar"');
+  const dav=document.getElementById('d-avatar');
+  if(dav){const tmp=document.createElement('div');tmp.innerHTML=avatarHTML(k);const newAv=tmp.firstElementChild;newAv.id='d-avatar';dav.parentNode.replaceChild(newAv,dav);}
   const dn=document.getElementById('d-nome');dn.value=p.nome||'';dn.onblur=()=>setPlatEdit(k,'nome',dn.value.trim());
   const di=document.getElementById('d-interno');di.value=p.interno||p.nome||'';di.onblur=()=>setPlatEdit(k,'interno',di.value.trim());
   const fl=document.getElementById('d-field-lbl');const df=document.getElementById('d-field');
