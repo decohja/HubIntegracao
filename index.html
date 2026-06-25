@@ -650,9 +650,12 @@
   .repbadge{font-size:10.5px;font-weight:700;border-radius:7px;padding:3px 8px;border:1px solid var(--line);white-space:nowrap}
   .repbadge.yes{color:#1f7a4d;background:rgba(31,160,90,.12)}
   .repbadge.no{color:#b23b3b;background:rgba(220,70,70,.12)}
-  .rep-ic{font-size:14px;font-weight:800;line-height:1;cursor:default;margin-left:2px}
-  .rep-ic.yes{color:#2ba85f}
-  .rep-ic.no{color:#d24b4b;text-decoration:line-through}
+  .reproc-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;border:1px solid var(--line);white-space:nowrap;letter-spacing:.01em}
+  .reproc-pill.yes{color:#1a7a48;background:rgba(31,160,90,.10);border-color:rgba(31,160,90,.25)}
+  .reproc-pill.no{color:#a03030;background:rgba(220,70,70,.10);border-color:rgba(220,70,70,.25)}
+  .reproc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .reproc-pill.yes .reproc-dot{background:#2ba85f}
+  .reproc-pill.no .reproc-dot{background:#d24b4b}
   .acct-out{display:inline-flex;align-items:center;justify-content:center;padding:0}
   .acct-out svg{display:block}
   .owner .oav span svg{display:block}
@@ -682,12 +685,10 @@
   .acct-menu-item.danger:hover{background:rgba(220,70,70,.1)}
   .acct-login{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;border-radius:20px;border:1px solid var(--line);background:var(--glass);color:var(--ink);font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
   .acct-login:hover{transform:scale(1.04);border-color:var(--accent);box-shadow:0 6px 18px rgba(74,168,240,.25);color:var(--head)}
-  .sync-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#4aa8f0,#2b6db0);z-index:200;border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(74,168,240,.6);transition:width .4s ease,opacity .5s ease;opacity:0}
-  .sync-bar.go{opacity:1;width:90%}
-  .sync-bar.done{opacity:0;width:100%}
-  .sync-pill{position:fixed;top:72px;right:18px;z-index:200;display:flex;align-items:center;gap:9px;background:var(--card-el);border:1px solid var(--line);border-radius:20px;padding:8px 15px;font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow-hover);opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;pointer-events:none}
-  .sync-pill.show{opacity:1;transform:none}
-  .sync-pill .spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:hubspin .7s linear infinite;flex:0 0 auto}
+  .sync-overlay{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .35s ease}
+  .sync-overlay.show{opacity:1;pointer-events:all}
+  .sync-ring{width:54px;height:54px;border-radius:50%;border:4px solid rgba(74,168,240,.2);border-top-color:#4aa8f0;animation:hubspin .8s linear infinite}
+  .sync-label{font-size:14px;font-weight:600;color:#fff;letter-spacing:.04em;opacity:.9}
   @keyframes hubspin{to{transform:rotate(360deg)}}
   @media(max-width:560px){
     .plat-grid{grid-template-columns:1fr}
@@ -695,13 +696,11 @@
     .acct-login{padding:0;width:40px;justify-content:center}
     .acct-menu{left:8px;right:8px;min-width:0;width:auto}
     .topbar .owners{gap:7px}
-    .sync-pill{top:64px;right:12px;left:12px;justify-content:center}
   }
 </style>
 </head>
 <body class="guest">
-<div id="sync-bar" class="sync-bar" aria-hidden="true"></div>
-<div id="sync-pill" class="sync-pill"><span class="spin"></span><span>Sincronizando…</span></div>
+<div id="sync-overlay" class="sync-overlay"><div class="sync-ring"></div><span class="sync-label">Sincronizando…</span></div>
 
 <div class="brandmark" aria-hidden="true"></div>
 
@@ -1041,10 +1040,14 @@
   <div class="view" id="view-devops">
     <h2>DevOps</h2>
     <p class="lead">Painel de trabalho do time. Organize as demandas em colunas, arraste os cartões entre elas e acompanhe o andamento. Tudo fica salvo no banco para todos.</p>
-    <details class="rules-acc" id="analise" open style="margin-bottom:14px">
-      <summary>📊 Análise dos chamados</summary>
-      <div class="acc-inner">
-        <div class="admin-only" style="margin-bottom:14px">
+    <div id="analise-panel" style="margin-bottom:14px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none" onclick="toggleAnalise()">
+        <span style="font-weight:700;font-size:14px;color:var(--head)">📊 Análise dos chamados</span>
+        <span id="analise-toggle-btn" style="font-size:12px;color:var(--accent);font-weight:600">ver detalhes ▾</span>
+      </div>
+      <div id="analise-donuts" style="padding:0 16px 14px"></div>
+      <div id="analise-details" style="display:none;padding:0 16px 14px;border-top:1px solid var(--line)">
+        <div class="admin-only" style="margin:12px 0 10px">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <input id="ai-q" class="ac-input" style="flex:1;min-width:240px" placeholder="Pergunte à IA: o que está travando mais? quais plataformas têm chamados parados? resuma os padrões…" onkeydown="if(event.key==='Enter')askAI()">
             <button class="btn" id="ai-btn" onclick="askAI()">✦ Perguntar à IA</button>
@@ -1053,7 +1056,7 @@
         </div>
         <div id="analise-body"></div>
       </div>
-    </details>
+    </div>
     <div class="kanban-bar">
       <div class="kbar-left">
         <button class="btn" onclick="addCard('todo')"><span style="font-size:15px;line-height:1">＋</span> Nova tarefa</button>
@@ -1176,7 +1179,11 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
-  {ver:'5.2',date:'2026-06-24',text:'Camada 2 (IA): caixa "Perguntar à IA" no painel Análise do DevOps (só admin). Pergunte em linguagem natural ("o que está travando mais?", "resuma os padrões") e o Gemini responde com base nos chamados. A chave fica no Apps Script (servidor), nunca na página. Requer colar o novo código do Apps Script e reimplantar.'},
+  {ver:'5.6',date:'2026-06-25',text:'Donuts redesenhados: rosca grossa com gradiente de cor e brilho (glow), número grande centralizado, estilo dashboard moderno. Plataformas na Análise agora mostram o logo de cada uma (ou iniciais se não tiver logo). Ícone de reprocessamento no card virou pílula discreta com dot colorido (verde/vermelho) no rodapé — integrado ao conjunto do card.'},
+  {ver:'5.5',date:'2026-06-25',text:'Painel Análise: donuts sempre visíveis no topo, detalhes recolhidos por padrão (expandir com "ver detalhes"). Loading "Sincronizando" virou overlay centralizado com fundo desfocado estilo web moderno. Datas da Status Report tratadas como abertura (não prazo): badge mostra "Xd aberto", não "atrasado".'},
+  {ver:'5.4',date:'2026-06-25',text:'Painel Análise redesenhado: 4 donuts SVG animados (abertos, concluídos, aguardando terceiros, parados +14d); plataformas em pills coloridas; lista de parados com badge vermelho; layout estilo dashboard.'},
+  {ver:'5.3',date:'2026-06-24',text:'Blindagem da IA: a chamada "Perguntar à IA" agora leva junto os dados atuais como rede de segurança e só dispara com o banco carregado — assim, se o Apps Script novo ainda não estiver implantado, a chamada NÃO esvazia o banco. Mensagem clara quando o servidor responde sem texto (sinal de que falta reimplantar o script da IA).'},
+  {ver:'5.2',date:'2026-06-24',text:'Camada 2 (IA): caixa "Perguntar à IA" no painel Análise do DevOps (só admin), respondendo com base nos chamados via Gemini, com a chave guardada no Apps Script.'},
   {ver:'5.1',date:'2026-06-24',text:'DevOps: todos os chamados da Status Report vão para o quadro (inclusive concluídos). Botão "🔄 Atualizar" puxa as planilhas na hora, sem recarregar a página.'},
   {ver:'5.0',date:'2026-06-24',text:'Novo painel "Análise dos chamados" no topo do DevOps (camada 1, sem IA, só leitura): resumo de abertos/concluídos/aguardando terceiros/parados; ranking de plataformas com mais chamados abertos; chamados parados há mais de 14 dias; gargalo externo (aguardando retorno de terceiros); e temas recorrentes nos títulos.'},
   {ver:'4.9',date:'2026-06-24',text:'Correção do recolher por coluna: as colunas agora têm largura fixa (1/4 cada) e não esticam mais quando uma coluna é recolhida.'},
@@ -1702,7 +1709,7 @@ function renderGrid(){const g=document.getElementById('plat-grid');
     return `<div class="pcard" data-k="${k}">
       <div class="row1">${avatarHTML(k)}<div><div class="nm">${esc(p.nome)}</div><div class="pub">Nome interno: ${esc(p.interno||p.nome)}</div><div class="src">${p.src==='teams'?'via Microsoft Teams':(p.src==='excel'?'via planilha de regras':'campo: '+esc(k))}</div></div></div>
       <div class="foot"><span class="st ${p.status}"><span class="dot"></span>${stTxt}</span>
-      <span class="rep-ic ${p.reprocessaLog==='nao'?'no':'yes'}" title="Dá pra reprocessar na tela de Log? ${p.reprocessaLog==='nao'?'Não':'Sim'}">↻</span>
+      <span class="reproc-pill ${p.reprocessaLog==='nao'?'no':'yes'}" title="Reprocessa na tela de Log?"><span class="reproc-dot"></span>${p.reprocessaLog==='nao'?'Não reprocessa':'Reprocessa no Log'}</span>
       <span class="srcbadge ${p.src==='excel'?'excel':(p.src==='teams'?'teams':'')}">${p.src==='excel'?'Planilha':(p.src==='teams'?'Teams':'SQL')}</span></div></div>`;}).join('');
   g.querySelectorAll('.pcard').forEach(el=>el.onclick=()=>openPlat(el.dataset.k));
   const sm=document.getElementById('plat-collapse-sum');if(sm)sm.textContent='🧩 Plataformas ('+list.length+')';}
@@ -2124,6 +2131,7 @@ function askAI(){
   const inp=document.getElementById('ai-q'),ans=document.getElementById('ai-answer'),btn=document.getElementById('ai-btn');
   const q=inp?inp.value.trim():''; if(!q)return;
   if(!hasServer){if(ans){ans.style.display='';ans.innerHTML='<div class="src">Servidor não configurado.</div>';}return;}
+  if(!BANK_LOADED){if(ans){ans.style.display='';ans.innerHTML='<div class="src">Espere o carregamento terminar e tente de novo.</div>';}return;}
   const secret=getSecret(); if(!secret){alert('Entre como administrador para usar a IA.');return;}
   if(ans){ans.style.display='';ans.innerHTML='<div class="src">✦ Pensando…</div>';}
   if(btn){btn.disabled=true;}
@@ -2132,47 +2140,127 @@ function askAI(){
     return '- ['+(a.plat||'?')+'] '+a.tarefa+' | status: '+st+' | data: '+(a.data||'?')+(a.detalhe?' | obs: '+a.detalhe:'');
   }).join('\n');
   const prompt='Você é um analista do time de Integrações Educacionais da SEDUC-SP. Com base APENAS na lista de chamados abaixo, responda em português de forma objetiva, prática e direta. Quando fizer sentido, cite plataformas e quantidades. Não invente dados que não estejam na lista.\n\nCHAMADOS:\n'+ctx+'\n\nPERGUNTA: '+q;
-  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret:secret,action:'ai',prompt:prompt})})
+  const safe=BANK_LOADED?bankPayload():undefined;
+  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret:secret,action:'ai',prompt:prompt,payload:safe})})
     .then(r=>r.json()).then(res=>{
       if(btn)btn.disabled=false;
-      if(res&&res.ok){ans.innerHTML='<div style="background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:var(--ink)">'+esc(res.text).replace(/\n/g,'<br>')+'</div>';}
+      if(res&&res.ok&&res.text){ans.innerHTML='<div style="background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:var(--ink)">'+esc(res.text).replace(/\n/g,'<br>')+'</div>';}
+      else if(res&&res.ok&&!res.text){ans.innerHTML='<div class="src" style="color:#e0a13a">O servidor respondeu sem texto — provavelmente o Apps Script novo (com a IA) ainda não foi implantado na URL que o site usa. Reimplante a versão nova e tente de novo.</div>';}
       else{ans.innerHTML='<div class="src" style="color:#e07171">Não deu certo: '+esc((res&&res.error)||'erro')+'</div>';}
     })
     .catch(e=>{if(btn)btn.disabled=false;ans.innerHTML='<div class="src" style="color:#e07171">Falha de conexão: '+esc(String(e))+'</div>';});
 }
+function toggleAnalise(){
+  const det=document.getElementById('analise-details'),btn=document.getElementById('analise-toggle-btn');
+  if(!det)return;
+  const isOpen=det.style.display==='block';
+  det.style.display=isOpen?'none':'block';
+  if(btn)btn.textContent=isOpen?'ver detalhes \u25be':'ocultar \u25b4';
+}
 function renderAnalise(){
-  const box=document.getElementById('analise-body');if(!box)return;
+  const donutBox=document.getElementById('analise-donuts');
+  const box=document.getElementById('analise-body');
+  if(!donutBox)return;
   const items=(AGENDA||[]).filter(a=>a&&a.tarefa);
   const open=items.filter(a=>!a.feito);
   const done=items.length-open.length;
-  if(!items.length){box.innerHTML='<div class="empty">Sem chamados carregados ainda.</div>';return;}
   const now=Date.now();
   const byPlat={};
-  open.forEach(a=>{const p=a.plat||'(sem plataforma)';byPlat[p]=(byPlat[p]||0)+1;});
+  open.forEach(a=>{const p=a.plat||'';if(p)byPlat[p]=(byPlat[p]||0)+1;});
   const platRank=Object.entries(byPlat).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxPlat=platRank.length?platRank[0][1]:1;
-  const aging=open.map(a=>{const d=agParseDate(a.data);return {a:a,dias:d?Math.floor((now-d.getTime())/864e5):null};})
-    .filter(x=>x.dias!=null&&x.dias>=14).sort((a,b)=>b.dias-a.dias).slice(0,6);
+  const withAge=open.map(a=>{const d=agParseDate(a.data);return{a,dias:d?Math.floor((now-d.getTime())/864e5):null};});
+  const aging=withAge.filter(x=>x.dias!=null&&x.dias>=14).sort((a,b)=>b.dias-a.dias).slice(0,6);
   const stop=new Set(['de','da','do','dos','das','para','com','sobre','e','a','o','os','as','no','na','em','um','uma','por','que','integracao','time','alinhamento','retorno','sistema','plataforma']);
   const freq={};
   open.forEach(a=>{String(a.tarefa).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/[^a-z0-9]+/).forEach(w=>{if(w.length>=4&&!stop.has(w))freq[w]=(freq[w]||0)+1;});});
   const recur=Object.entries(freq).filter(x=>x[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const ext=open.filter(a=>/aguard|retorno|depende|terceiro|prossegui/i.test(a.detalhe||''));
-  const sec=(t,inner)=>`<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px"><div style="font-weight:700;color:var(--head);font-size:13.5px;margin-bottom:8px">${t}</div>${inner}</div>`;
-  let h='';
-  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-    <span class="repbadge" style="font-size:12px">📌 ${open.length} abertos</span>
-    <span class="repbadge yes" style="font-size:12px">✓ ${done} concluídos</span>
-    <span class="repbadge" style="font-size:12px">⚠ ${ext.length} aguardando terceiros</span>
-    <span class="repbadge no" style="font-size:12px">⏳ ${aging.length} parados +14d</span></div>`;
-  h+=sec('Plataformas com mais chamados abertos', platRank.length?platRank.map(([p,n])=>
-    `<div style="display:flex;align-items:center;gap:10px;margin:5px 0"><div style="width:170px;font-size:13px;color:var(--ink)">${esc(p)}</div>
-     <div style="flex:1;background:var(--rail);border-radius:6px;height:14px;overflow:hidden"><div style="width:${Math.round(n/maxPlat*100)}%;height:100%;background:linear-gradient(90deg,#4aa8f0,#2b6db0)"></div></div>
-     <div style="width:28px;text-align:right;font-weight:700;font-size:13px">${n}</div></div>`).join(''):'<div class="src">nenhum chamado aberto</div>');
-  h+=sec('Parados há mais tempo (sem atualização)', aging.length?aging.map(x=>
-    `<div style="display:flex;justify-content:space-between;gap:10px;margin:5px 0;font-size:13px"><span style="color:var(--ink)">${esc(x.a.tarefa)}${x.a.plat?' · <span style="color:var(--ink-3)">'+esc(x.a.plat)+'</span>':''}</span><span class="repbadge no" style="font-size:11px;white-space:nowrap">${x.dias}d</span></div>`).join(''):'<div class="src">nada parado há mais de 14 dias 👍</div>');
-  h+=sec('Gargalo externo (dependendo de terceiros)', ext.length?'<div class="src" style="margin-bottom:6px">Chamados em que o gargalo não é interno — está aguardando retorno da plataforma/terceiro:</div>'+ext.slice(0,6).map(a=>`<div style="font-size:13px;margin:3px 0;color:var(--ink)">• ${esc(a.tarefa)}${a.plat?' <span style="color:var(--ink-3)">('+esc(a.plat)+')</span>':''}</div>`).join(''):'<div class="src">nenhum chamado aguardando terceiros</div>');
-  h+=sec('Temas recorrentes', recur.length?'<div style="display:flex;flex-wrap:wrap;gap:6px">'+recur.map(([w,n])=>`<span class="tag disc">${esc(w)} · ${n}</span>`).join('')+'</div>':'<div class="src">sem repetições relevantes</div>');
+  const total=items.length||1;
+
+  // --- DONUTS modernos (rosca grossa, gradiente, número grande) ---
+  const donut=(val,tot,cor,cor2,label,sub)=>{
+    const r=38,cx=50,cy=50,sw=11,circ=2*Math.PI*r;
+    const pct=tot>0?Math.min(val/tot,1):0;
+    const dash=(pct*circ).toFixed(2),gap=(circ*(1-pct)).toFixed(2);
+    const uid='d'+Math.random().toString(36).slice(2,7);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:110px">
+      <svg width="100" height="100" viewBox="0 0 100 100" style="overflow:visible">
+        <defs><linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${cor}"/><stop offset="100%" stop-color="${cor2}"/>
+        </linearGradient></defs>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--rail)" stroke-width="${sw}" stroke-linecap="round"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#${uid})" stroke-width="${sw}"
+          stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${(circ/4).toFixed(2)}" stroke-linecap="round"
+          style="filter:drop-shadow(0 0 4px ${cor}66)"/>
+        <text x="${cx}" y="${cy+3}" text-anchor="middle" dominant-baseline="middle" fill="var(--head)"
+          font-size="24" font-weight="800" font-family="inherit">${val}</text>
+      </svg>
+      <div style="text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--head);line-height:1.2">${label}</div>
+        <div style="font-size:10.5px;color:var(--ink-3);margin-top:2px">${sub}</div>
+      </div>
+    </div>`;
+  };
+
+  if(!items.length){donutBox.innerHTML='<div class="empty">Sem chamados ainda.</div>';if(box)box.innerHTML='';return;}
+  donutBox.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:stretch;padding:4px 0 8px">
+    ${donut(open.length,total,'#4aa8f0','#2b6db0','Abertos','de '+total+' total')}
+    ${donut(done,total,'#4caf82','#2e8a5a','Concluídos','de '+total+' total')}
+    ${donut(ext.length,open.length||1,'#e0a13a','#c47a1e','Aguard. 3º','dos abertos')}
+    ${donut(aging.length,open.length||1,'#e07171','#b03030','Abertos +14d','dos abertos')}
+  </div>`;
+
+  // --- DETALHES ---
+  if(!box)return;
+  const sec=(t,inner)=>`<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+    <div style="font-weight:700;color:var(--head);font-size:13px;margin-bottom:10px">${t}</div>${inner}</div>`;
+
+  // Plataformas com logo
+  const cores=['#4aa8f0','#7c6ff7','#4caf82','#e0a13a','#e07171','#a78bfa'];
+  const platHtml=platRank.length
+    ?`<div style="display:flex;flex-direction:column;gap:8px">`+platRank.map(([pName,n],i)=>{
+        // tenta achar a chave da plataforma pelo nome
+        const PLAT_ALIAS={'trivium':'SPEAKER','speaker progress':'SPEAKER','speaker':'SPEAKER',
+          'preparasp':'PREPARASP','preparasp/eja':'PREPARASP','prepara sp':'PREPARASP','jovens genios':'PREPARASP',
+          'ceeja':'AVACEEJA','ava ceeja':'AVACEEJA','meu diploma':'AVACEEJA',
+          'guri':'MUSICALIDADE','musicalidade':'MUSICALIDADE',
+          'multiplica':'MULTIPLICA','multiplica sp':'MULTIPLICA',
+          'alura':'ALURA','matific':'MATIFIC','canva':'CANVA','khan':'KHAN','khan academy':'KHAN',
+          'iptv':'IPTV','vivo':'VIVO','pda':'MOODLEPDA','epp':'MOODLE','educacao profissional':'MOODLE',
+          'elefante letrado':'ELEFANTE','leasp':'LEISP','leiasp':'LEASP',
+          'education first':'EFIRST','speak':'EFIRST','efirst':'EFIRST',
+          'dreamshaper':'SHAPER','empreendedorismo':'SHAPER',
+          'click saber':'SABER','sao paulo em acao':'SABER',
+          'wadhwani':'WADHWANI','expansao':'EXPANSAO','expansao noturno':'EXPANSAO',
+          'escola de gestao':'ESCOLAGESTAO','integracao':'ESCOLAGESTAO'};
+        const pn=pName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const pk=PLAT_ALIAS[pn]||Object.keys(PLATS||{}).find(k=>{
+          const n=(PLATS[k].nome||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+          const ni=(PLATS[k].interno||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+          return n===pn||ni===pn||n.includes(pn)||pn.includes(n);
+        })||null;
+        const logo=pk&&LOGOS[pk]?`<img src="${esc(LOGOS[pk])}" alt="" style="width:22px;height:22px;object-fit:contain;border-radius:4px">`:
+          `<div style="width:22px;height:22px;border-radius:6px;background:${cores[i%cores.length]};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${pName.slice(0,2).toUpperCase()}</div>`;
+        const bar=`<div style="flex:1;background:var(--rail);border-radius:4px;height:6px;overflow:hidden;min-width:60px"><div style="width:${Math.round(n/(platRank[0][1]||1)*100)}%;height:100%;background:${cores[i%cores.length]};border-radius:4px"></div></div>`;
+        return `<div style="display:flex;align-items:center;gap:10px">${logo}<span style="font-size:13px;color:var(--ink);min-width:120px">${esc(pName)}</span>${bar}<span style="font-weight:800;font-size:13px;color:${cores[i%cores.length]};min-width:16px;text-align:right">${n}</span></div>`;
+      }).join('')+`</div>`
+    :'<div class="src">nenhum aberto</div>';
+  let h=sec('Plataformas com mais chamados abertos',platHtml);
+
+  h+=sec('Mais tempo em aberto',
+    aging.length
+      ?aging.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px">
+          <span style="color:var(--ink)">${esc(x.a.tarefa)}${x.a.plat?` <span style="color:var(--ink-3)">· ${esc(x.a.plat)}</span>`:''}</span>
+          <span style="background:#e07171;color:#fff;border-radius:999px;padding:2px 10px;font-size:11px;white-space:nowrap;font-weight:700">${x.dias}d</span>
+        </div>`).join('')
+      :'<div class="src">todos abertos há menos de 14 dias \ud83d\udc4d</div>');
+
+  if(ext.length) h+=sec('Aguardando terceiros',
+    ext.slice(0,5).map(a=>`<div style="font-size:13px;padding:4px 0;color:var(--ink)">• ${esc(a.tarefa)}${a.plat?` <span style="color:var(--ink-3)">(${esc(a.plat)})</span>`:''}</div>`).join(''));
+
+  if(recur.length) h+=sec('Temas recorrentes',
+    `<div style="display:flex;flex-wrap:wrap;gap:6px">`+recur.map(([w,n])=>`<span class="tag disc">${esc(w)} <strong>${n}x</strong></span>`).join('')+`</div>`);
+
   box.innerHTML=h;
 }
 function renderKanban(skipSide){
@@ -2833,8 +2921,8 @@ function renderAcct(){
     box.innerHTML=`<button class="acct-login" type="button" onclick="login()" title="Entrar como administrador"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.7"/><path d="M5 20c0-3.6 3.2-5.5 7-5.5s7 1.9 7 5.5"/></svg><span>Entrar</span></button>`;
   }
 }
-function startSync(){const b=document.getElementById('sync-bar'),p=document.getElementById('sync-pill');if(b){b.classList.remove('done');b.classList.add('go');}if(p)p.classList.add('show');}
-function endSync(){const b=document.getElementById('sync-bar'),p=document.getElementById('sync-pill');if(p)p.classList.remove('show');if(b){b.classList.remove('go');b.classList.add('done');setTimeout(()=>{b.classList.remove('done');b.style.width='';},600);}}
+function startSync(){const o=document.getElementById('sync-overlay');if(o)o.classList.add('show');}
+function endSync(){const o=document.getElementById('sync-overlay');if(o){o.classList.remove('show');}}
 function toggleAcctMenu(e){if(e)e.stopPropagation();const m=document.getElementById('acct-menu');if(!m)return;
   const show=m.hidden;m.hidden=!m.hidden;
   if(show){const btn=(e&&e.currentTarget.closest('.acct-wrap')||document.querySelector('.acct-wrap')).querySelector('.acct-avatar');
