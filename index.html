@@ -735,6 +735,7 @@
   <button data-view="busca">Tipos de Ensino</button>
   <button data-view="materiais">Materiais</button>
   <button data-view="devops">DevOps</button>
+  <button data-view="memoria" class="admin-only" id="nav-memoria">🧠 Memória</button>
   <button data-view="personalizar" class="nav-gear" title="Configurações" aria-label="Configurações">⚙</button>
 </div>
 
@@ -884,6 +885,77 @@
     <div id="materiais-list"></div>
   </div>
 
+  <div class="view" id="view-memoria">
+    <h2>🧠 Memória do Time</h2>
+    <p class="lead">Registre reuniões, decisões e pontos de atenção. A IA usa tudo isso para responder perguntas sobre o trabalho.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
+      <button class="btn" onclick="abrirNovaEntrada()">＋ Nova entrada</button>
+      <select id="mem-filtro" class="sel-badge cl-na" onchange="renderMemoria()">
+        <option value="">Todos os tipos</option>
+        <option value="reuniao">Reuniões</option>
+        <option value="decisao">Decisões</option>
+        <option value="atencao">Pontos de atenção</option>
+        <option value="outro">Outros</option>
+      </select>
+      <input id="mem-busca" class="ac-input" style="max-width:260px;height:38px" placeholder="🔎 buscar na memória…" oninput="renderMemoria()">
+    </div>
+    <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px">
+      <div style="font-weight:700;color:var(--head);font-size:13.5px;margin-bottom:10px">✦ Perguntar à IA sobre o trabalho</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="mem-ai-q" class="ac-input" style="flex:1;min-width:240px" placeholder="Ex: quais foram as decisões sobre a Trivium? o que ficou pendente na última reunião?" onkeydown="if(event.key==='Enter')askMemoriaAI()">
+        <button class="btn" id="mem-ai-btn" onclick="askMemoriaAI()">✦ Perguntar</button>
+      </div>
+      <div id="mem-ai-answer" style="display:none;margin-top:12px"></div>
+    </div>
+    <div id="mem-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+      <div style="background:var(--card-el);border:1px solid var(--line);border-radius:16px;padding:24px;width:min(560px,94vw);max-height:90vh;overflow-y:auto">
+        <div style="font-weight:800;font-size:16px;color:var(--head);margin-bottom:16px" id="mem-modal-title">Nova entrada</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Tipo</label>
+            <select id="mem-tipo" class="sel-badge cl-na" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)">
+              <option value="reuniao">📋 Reunião</option>
+              <option value="decisao">✅ Decisão</option>
+              <option value="atencao">⚠ Ponto de atenção</option>
+              <option value="outro">📝 Outro</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Título</label>
+            <input id="mem-titulo" class="ac-input" style="width:100%;box-sizing:border-box" placeholder="Ex: Reunião com Trivium sobre integração Teams">
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Data</label>
+            <input id="mem-data" type="date" class="ac-input" style="width:100%;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Conteúdo</label>
+            <textarea id="mem-conteudo" class="ac-input" style="width:100%;box-sizing:border-box;min-height:120px;resize:vertical;font-family:inherit" placeholder="Descreva o que foi discutido, decidido ou observado…"></textarea>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Importar arquivo (PDF ou TXT — extrai o texto automaticamente)</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--ink-2)">
+                📎 Escolher arquivo
+                <input type="file" id="mem-file" accept=".pdf,.txt,.md" style="display:none" onchange="importarArquivoMem(this)">
+              </label>
+              <span id="mem-file-name" style="font-size:12px;color:var(--ink-3)">nenhum arquivo selecionado</span>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--ink-2);font-weight:600;display:block;margin-bottom:4px">Tags (separadas por vírgula)</label>
+            <input id="mem-tags" class="ac-input" style="width:100%;box-sizing:border-box" placeholder="Ex: trivium, teams, integracao">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+          <button class="btn ghost" onclick="fecharMemModal()">Cancelar</button>
+          <button class="btn" onclick="salvarEntrada()" id="mem-salvar-btn">Salvar</button>
+        </div>
+        <div id="mem-modal-err" style="display:none;color:#e07171;font-size:12px;margin-top:8px;text-align:center"></div>
+      </div>
+    </div>
+    <div id="mem-lista"></div>
+  </div>
   <div class="view" id="view-personalizar">
     <h2>⚙ Configurações</h2>
     <div class="cfg-bar">
@@ -1179,6 +1251,8 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'5.8',date:'2026-06-25',text:'Memória: importação de PDF e TXT direto no modal — o texto é extraído automaticamente no browser e preenchido no campo conteúdo (até 15.000 caracteres, 80 páginas). Sem passar pelo servidor.'},
+  {ver:'5.7',date:'2026-06-25',text:'Aba Memória do Time (só admin): registre reuniões, decisões e pontos de atenção. Dados salvos no Supabase (banco externo, separado do Drive). IA da Memória usa contexto completo: entradas + chamados abertos. IA do DevOps mantida focada só nos chamados.'},
   {ver:'5.6',date:'2026-06-25',text:'Donuts redesenhados: rosca grossa com gradiente de cor e brilho (glow), número grande centralizado, estilo dashboard moderno. Plataformas na Análise agora mostram o logo de cada uma (ou iniciais se não tiver logo). Ícone de reprocessamento no card virou pílula discreta com dot colorido (verde/vermelho) no rodapé — integrado ao conjunto do card.'},
   {ver:'5.5',date:'2026-06-25',text:'Painel Análise: donuts sempre visíveis no topo, detalhes recolhidos por padrão (expandir com "ver detalhes"). Loading "Sincronizando" virou overlay centralizado com fundo desfocado estilo web moderno. Datas da Status Report tratadas como abertura (não prazo): badge mostra "Xd aberto", não "atrasado".'},
   {ver:'5.4',date:'2026-06-25',text:'Painel Análise redesenhado: 4 donuts SVG animados (abertos, concluídos, aguardando terceiros, parados +14d); plataformas em pills coloridas; lista de parados com badge vermelho; layout estilo dashboard.'},
@@ -1664,7 +1738,7 @@ function renderAdmins(p){
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');document.getElementById('view-'+b.dataset.view).classList.add('active');
+  b.classList.add('active');document.getElementById('view-'+b.dataset.view).classList.add('active');if(b.dataset.view==='memoria')loadMemoria();
 });
 function goHome(){
   document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
@@ -2989,6 +3063,178 @@ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fill
 (function(){const fy=document.getElementById('foot-year');if(fy)fy.textContent=new Date().getFullYear();})();
 (function(){var en=document.getElementById('editor-name');if(en)en.value=EDITOR_NAME;})();
 renderBell();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban();
+
+// ============================================================
+// MEMORIA DO TIME — Supabase
+// ============================================================
+const SB_URL='https://luwydfqynxdviwciwukk.supabase.co';
+const SB_KEY='sb_publishable_887HSYbG0h14v88lcbgM1Q_kOepoxM-';
+let MEMORIA=[];
+let MEM_EDIT_ID=null;
+
+
+async function importarArquivoMem(input){
+  const file=input.files[0];if(!file)return;
+  const nameEl=document.getElementById('mem-file-name');
+  if(nameEl)nameEl.textContent='Lendo '+file.name+'…';
+  const ext=file.name.split('.').pop().toLowerCase();
+  // Preenche título se estiver vazio
+  const tituloEl=document.getElementById('mem-titulo');
+  if(tituloEl&&!tituloEl.value.trim()){
+    tituloEl.value=file.name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ');
+  }
+  try{
+    if(ext==='pdf'){
+      // Lê PDF como ArrayBuffer e extrai texto via PDF.js (CDN)
+      const buf=await file.arrayBuffer();
+      if(!window.pdfjsLib){
+        await new Promise((res,rej)=>{
+          const s=document.createElement('script');
+          s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          s.onload=res;s.onerror=rej;document.head.appendChild(s);
+        });
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+      const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+      let txt='';
+      for(let i=1;i<=Math.min(pdf.numPages,80);i++){
+        const pg=await pdf.getPage(i);
+        const tc=await pg.getTextContent();
+        txt+=tc.items.map(x=>x.str).join(' ')+'\n';
+      }
+      const el=document.getElementById('mem-conteudo');
+      if(el)el.value=txt.trim().slice(0,15000);
+      if(nameEl)nameEl.textContent=file.name+' ('+pdf.numPages+' pág.)';
+    }else{
+      // TXT / MD
+      const txt=await file.text();
+      const el=document.getElementById('mem-conteudo');
+      if(el)el.value=txt.slice(0,15000);
+      if(nameEl)nameEl.textContent=file.name;
+    }
+  }catch(e){
+    if(nameEl)nameEl.textContent='Erro ao ler arquivo: '+String(e);
+  }
+}
+async function loadMemoria(){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/memoria?order=data.desc,criado_em.desc&limit=200',
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const data=await r.json();
+    if(Array.isArray(data))MEMORIA=data;
+    else MEMORIA=[];
+  }catch(e){MEMORIA=[];}
+  renderMemoria();
+}
+function renderMemoria(){
+  const box=document.getElementById('mem-lista');if(!box)return;
+  const filtro=document.getElementById('mem-filtro');
+  const busca=(document.getElementById('mem-busca')||{}).value||'';
+  const ft=filtro?filtro.value:'';
+  const bq=busca.toLowerCase();
+  const tipoLabel={reuniao:'📋 Reunião',decisao:'✅ Decisão',atencao:'⚠ Ponto de atenção',outro:'📝 Outro'};
+  const tipoCor={reuniao:'#4aa8f0',decisao:'#4caf82',atencao:'#e0a13a',outro:'#a78bfa'};
+  let items=MEMORIA.filter(m=>(!ft||m.tipo===ft)&&(!bq||(m.titulo||'').toLowerCase().includes(bq)||(m.conteudo||'').toLowerCase().includes(bq)||(m.tags||'').toLowerCase().includes(bq)));
+  if(!items.length){box.innerHTML='<div class="empty">Nenhuma entrada encontrada.</div>';return;}
+  box.innerHTML=items.map(m=>{
+    const cor=tipoCor[m.tipo]||'#888';
+    const tags=(m.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+    return `<div style="background:var(--panel-2);border:1px solid var(--line);border-left:3px solid ${cor};border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-size:11px;font-weight:700;color:${cor};background:${cor}18;border:1px solid ${cor}44;border-radius:6px;padding:2px 8px">${tipoLabel[m.tipo]||m.tipo}</span>
+            ${m.data?`<span style="font-size:11px;color:var(--ink-3)">${m.data}</span>`:''}
+          </div>
+          <div style="font-weight:700;font-size:14px;color:var(--head);margin-bottom:6px">${esc(m.titulo||'')}</div>
+          ${m.conteudo?`<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap">${esc(m.conteudo)}</div>`:''}
+          ${tags.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${tags.map(t=>`<span class="tag disc" style="font-size:11px">${esc(t)}</span>`).join('')}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn ghost" style="font-size:11px;padding:4px 10px" onclick="editarEntrada('${m.id}')">✏ Editar</button>
+          <button class="btn ghost" style="font-size:11px;padding:4px 10px;color:#e07171;border-color:#e07171" onclick="deletarEntrada('${m.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function abrirNovaEntrada(){
+  MEM_EDIT_ID=null;
+  document.getElementById('mem-modal-title').textContent='Nova entrada';
+  document.getElementById('mem-tipo').value='reuniao';
+  document.getElementById('mem-titulo').value='';
+  document.getElementById('mem-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('mem-conteudo').value='';
+  document.getElementById('mem-tags').value='';
+  const err=document.getElementById('mem-modal-err');if(err){err.style.display='none';}
+  const modal=document.getElementById('mem-modal');if(modal)modal.style.display='flex';
+}
+function editarEntrada(id){
+  const m=MEMORIA.find(x=>x.id===id);if(!m)return;
+  MEM_EDIT_ID=id;
+  document.getElementById('mem-modal-title').textContent='Editar entrada';
+  document.getElementById('mem-tipo').value=m.tipo||'outro';
+  document.getElementById('mem-titulo').value=m.titulo||'';
+  document.getElementById('mem-data').value=m.data||'';
+  document.getElementById('mem-conteudo').value=m.conteudo||'';
+  document.getElementById('mem-tags').value=m.tags||'';
+  const err=document.getElementById('mem-modal-err');if(err){err.style.display='none';}
+  const modal=document.getElementById('mem-modal');if(modal)modal.style.display='flex';
+}
+function fecharMemModal(){
+  const modal=document.getElementById('mem-modal');if(modal)modal.style.display='none';
+}
+async function salvarEntrada(){
+  const btn=document.getElementById('mem-salvar-btn');
+  const err=document.getElementById('mem-modal-err');
+  const titulo=(document.getElementById('mem-titulo').value||'').trim();
+  if(!titulo){if(err){err.textContent='Título obrigatório.';err.style.display='block';}return;}
+  const entry={tipo:document.getElementById('mem-tipo').value,titulo:titulo,
+    data:document.getElementById('mem-data').value||null,
+    conteudo:(document.getElementById('mem-conteudo').value||'').trim()||null,
+    tags:(document.getElementById('mem-tags').value||'').trim()||null};
+  if(btn){btn.disabled=true;btn.textContent='Salvando…';}
+  try{
+    let r;
+    if(MEM_EDIT_ID){
+      r=await fetch(SB_URL+'/rest/v1/memoria?id=eq.'+MEM_EDIT_ID,{
+        method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+        body:JSON.stringify(entry)});
+    }else{
+      r=await fetch(SB_URL+'/rest/v1/memoria',{
+        method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+        body:JSON.stringify(entry)});
+    }
+    if(r.ok){fecharMemModal();await loadMemoria();}
+    else{const d=await r.json();if(err){err.textContent='Erro: '+(d.message||r.status);err.style.display='block';}}
+  }catch(e){if(err){err.textContent='Falha de conexão.';err.style.display='block';}}
+  if(btn){btn.disabled=false;btn.textContent='Salvar';}
+}
+async function deletarEntrada(id){
+  if(!confirm('Apagar esta entrada? Não tem como desfazer.'))return;
+  await fetch(SB_URL+'/rest/v1/memoria?id=eq.'+id,
+    {method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  await loadMemoria();
+}
+async function askMemoriaAI(){
+  const inp=document.getElementById('mem-ai-q'),ans=document.getElementById('mem-ai-answer'),btn=document.getElementById('mem-ai-btn');
+  const q=inp?inp.value.trim():'';if(!q)return;
+  if(!BANK_LOADED){if(ans){ans.style.display='';ans.innerHTML='<div class="src">Aguarde o carregamento e tente de novo.</div>';}return;}
+  const secret=getSecret();if(!secret){alert('Entre como administrador para usar a IA.');return;}
+  if(ans){ans.style.display='';ans.innerHTML='<div class="src">✦ Consultando memória…</div>';}
+  if(btn)btn.disabled=true;
+  const memCtx=MEMORIA.slice(0,60).map(m=>`[${m.tipo.toUpperCase()}] ${m.data||''} | ${m.titulo}${m.conteudo?' — '+m.conteudo.slice(0,400):''}`).join('\n');
+  const chamCtx=(AGENDA||[]).filter(a=>a&&a.tarefa).slice(0,40).map(a=>`[CHAMADO] [${a.plat||'?'}] ${a.tarefa} | status: ${a.status||(a.feito?'concluído':'aberto')}`).join('\n');
+  const prompt=`Você é um assistente especializado no time de Integrações Educacionais da SEDUC-SP. Responda em português, de forma objetiva e prática, baseando-se SOMENTE nas informações abaixo. Cite fontes quando relevante.\n\nMEMÓRIA DO TIME:\n${memCtx}\n\nCHAMADOS ABERTOS:\n${chamCtx}\n\nPERGUNTA: ${q}`;
+  const safe=BANK_LOADED?bankPayload():undefined;
+  fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,action:'ai',prompt,payload:safe})})
+    .then(r=>r.json()).then(res=>{
+      if(btn)btn.disabled=false;
+      if(res&&res.ok&&res.text){ans.innerHTML='<div style="background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:var(--ink)">'+esc(res.text).replace(/\n/g,'<br>')+'</div>';}
+      else if(res&&res.ok&&!res.text){ans.innerHTML='<div class="src" style="color:#e0a13a">Apps Script novo não implantado ainda.</div>';}
+      else{ans.innerHTML='<div class="src" style="color:#e07171">'+esc((res&&res.error)||'erro')+'</div>';}
+    }).catch(e=>{if(btn)btn.disabled=false;ans.innerHTML='<div class="src" style="color:#e07171">Falha: '+esc(String(e))+'</div>';});
+}
 (async()=>{ startSync(); const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
   const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
   await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
