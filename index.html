@@ -1197,6 +1197,7 @@ async function serverLoad(){
       if(Array.isArray(cfg.agenda)) AGENDA=cfg.agenda.slice();
       if(cfg.profile&&typeof cfg.profile==='object'){PROFILE=Object.assign({name:'Administrador',photo:''},cfg.profile);renderAcct();}
       if(Array.isArray(cfg.pastas)) PASTAS=cfg.pastas.slice();
+  if(cfg.admins&&typeof cfg.admins==='object'){Object.assign(ADMINS,cfg.admins);}
       if(Array.isArray(cfg.versions)){VERSIONS=cfg.versions.slice();
         const have=new Set(VERSIONS.map(v=>v.ver));
         const missing=DEFAULT_VERSIONS.filter(dv=>!have.has(dv.ver));
@@ -1224,7 +1225,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE,admins:ADMINS};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -1746,9 +1747,9 @@ function renderAdmins(platKey){
         let pastasCell='<span style="color:var(--ink-3)">—</span>';
         if(isPEC(cod)&&pecLabels.length){
           const sel=(x.pasta||[]);
-          pastasCell='<div style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding:4px">'+
-            pecLabels.map((lb,pi)=>`<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" value="${esc(lb)}" ${sel.includes(lb)?'checked':''} onchange="setAdminPastaCheck('${platKey}',${i})"> ${esc(lb)}
+          pastasCell='<div style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding:4px" data-plat="${platKey}" data-idx="${i}" id="pasta-chk-${platKey}-${i}">'+
+            pecLabels.map(lb=>`<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" value="${esc(lb)}" ${sel.includes(lb)?'checked':''}> ${esc(lb)}
             </label>`).join('')+'</div>';
         } else if(isPEC(cod)){
           pastasCell='<span style="color:var(--ink-3);font-size:11px">Sem pastas cadastradas</span>';
@@ -1811,13 +1812,23 @@ function setAdminPasta(platKey,idx,sel){
   postBank();
 }
 function setAdminPastaCheck(platKey,idx){
-  // Lê todos os checkboxes daquele perfil
-  const box=document.getElementById('ptab-Admins');if(!box)return;
-  const checks=box.querySelectorAll(`input[type=checkbox][onchange*="setAdminPastaCheck('${platKey}',${idx})"]`);
+  const div=document.getElementById('pasta-chk-'+platKey+'-'+idx);if(!div)return;
+  const checks=div.querySelectorAll('input[type=checkbox]');
   const selected=Array.from(checks).filter(c=>c.checked).map(c=>c.value);
-  ADMINS[platKey].perfis[idx].pasta=selected;
+  if(!ADMINS[platKey])ADMINS[platKey]={perfis:[]};
+  if(ADMINS[platKey].perfis[idx])ADMINS[platKey].perfis[idx].pasta=selected;
   postBank();
 }
+// Event delegation para checkboxes de pasta
+document.addEventListener('change',function(e){
+  const inp=e.target;
+  if(inp.type!=='checkbox')return;
+  const div=inp.closest('div[id^="pasta-chk-"]');if(!div)return;
+  const platKey=div.dataset.plat;
+  const idx=parseInt(div.dataset.idx);
+  if(!platKey||isNaN(idx))return;
+  setAdminPastaCheck(platKey,idx);
+});
 
 /* ============ navegação topo ============ */
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{
