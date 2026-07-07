@@ -1260,6 +1260,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.4',date:'2026-06-25',text:'CORREÇÃO CRÍTICA: os perfis de Admin (e as pastas PEC) agora são salvos no banco de verdade — antes o ADMINS não estava no payload e tudo sumia ao recarregar. Pastas PEC viraram seletor: escolha uma pasta e ela é adicionada como tag (com × para remover), salvando na hora. Export de Excel com fallback de 3 servidores (CDNs) para garantir o carregamento da biblioteca.'},
   {ver:'6.3',date:'2026-06-25',text:'Exportar regras para Excel (.xlsx) no padrão do template (abas Turmas, Professores, Alunos, Admins) — botão na aba de regras de cada plataforma, gerado direto no browser via SheetJS. Admins agora é editável: adicionar perfis dos 8 cargos globais ou código manual, selecionar pastas PEC por perfil, remover. Perfis globais configurados (127, 112, 275, 7850, 272, 269, 1273, 7851).'},
   {ver:'6.2',date:'2026-06-25',text:'DevOps: campo Prazo separado da data de abertura — se a planilha tiver coluna "Prazo/Vencimento/Deadline", ela é usada para o badge de prazo do cartão; a data de abertura aparece só como informação. IA conversacional com histórico: as últimas 8 trocas são enviadas junto ao contexto, permitindo perguntas de acompanhamento. Contador de perguntas na conversa. Memória: importação de DOCX/DOC via mammoth.js (extrai texto puro).'},
   {ver:'6.1',date:'2026-06-25',text:'Botão "✕ Limpar" nas duas caixas de IA (DevOps e Memória): limpa o campo de pergunta e a resposta.'},
@@ -1747,10 +1748,14 @@ function renderAdmins(platKey){
         let pastasCell='<span style="color:var(--ink-3)">—</span>';
         if(isPEC(cod)&&pecLabels.length){
           const sel=(x.pasta||[]);
-          pastasCell='<div style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding:4px" data-plat="${platKey}" data-idx="${i}" id="pasta-chk-${platKey}-${i}">'+
-            pecLabels.map(lb=>`<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap">
-              <input type="checkbox" value="${esc(lb)}" ${sel.includes(lb)?'checked':''}> ${esc(lb)}
-            </label>`).join('')+'</div>';
+          // tags das pastas já selecionadas + seletor pra adicionar
+          const tagsHtml=sel.length?sel.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--accent)22;border:1px solid var(--accent)55;border-radius:999px;padding:2px 6px 2px 9px;font-size:11px;margin:2px">${esc(s)}<span style="cursor:pointer;font-weight:700;color:var(--accent)" onclick="removeAdminPastaItem('${platKey}',${i},'${esc(s).replace(/'/g,"&#39;")}')">×</span></span>`).join(''):'<span style="color:var(--ink-3);font-size:11px">nenhuma</span>';
+          const disponiveis=pecLabels.filter(lb=>!sel.includes(lb));
+          const selectHtml=disponiveis.length?`<select style="font-size:11px;margin-top:4px;max-width:220px" onchange="addAdminPastaItem('${platKey}',${i},this)">
+            <option value="">+ adicionar pasta…</option>
+            ${disponiveis.map(lb=>`<option value="${esc(lb)}">${esc(lb)}</option>`).join('')}
+          </select>`:'<div style="font-size:10.5px;color:var(--ink-3);margin-top:2px">todas adicionadas</div>';
+          pastasCell=`<div style="display:flex;flex-wrap:wrap;align-items:center">${tagsHtml}</div>${selectHtml}`;
         } else if(isPEC(cod)){
           pastasCell='<span style="color:var(--ink-3);font-size:11px">Sem pastas cadastradas</span>';
         }
@@ -1806,29 +1811,21 @@ function removeAdminPerfil(platKey,idx){
   postBank();
 }
 
-function setAdminPasta(platKey,idx,sel){
-  const selected=Array.from(sel.selectedOptions).map(o=>o.value);
-  ADMINS[platKey].perfis[idx].pasta=selected;
-  postBank();
-}
-function setAdminPastaCheck(platKey,idx){
-  const div=document.getElementById('pasta-chk-'+platKey+'-'+idx);if(!div)return;
-  const checks=div.querySelectorAll('input[type=checkbox]');
-  const selected=Array.from(checks).filter(c=>c.checked).map(c=>c.value);
+function addAdminPastaItem(platKey,idx,sel){
+  const val=sel.value;if(!val)return;
   if(!ADMINS[platKey])ADMINS[platKey]={perfis:[]};
-  if(ADMINS[platKey].perfis[idx])ADMINS[platKey].perfis[idx].pasta=selected;
+  const perfil=ADMINS[platKey].perfis[idx];if(!perfil)return;
+  if(!Array.isArray(perfil.pasta))perfil.pasta=[];
+  if(!perfil.pasta.includes(val))perfil.pasta.push(val);
   postBank();
+  document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
 }
-// Event delegation para checkboxes de pasta
-document.addEventListener('change',function(e){
-  const inp=e.target;
-  if(inp.type!=='checkbox')return;
-  const div=inp.closest('div[id^="pasta-chk-"]');if(!div)return;
-  const platKey=div.dataset.plat;
-  const idx=parseInt(div.dataset.idx);
-  if(!platKey||isNaN(idx))return;
-  setAdminPastaCheck(platKey,idx);
-});
+function removeAdminPastaItem(platKey,idx,val){
+  const perfil=ADMINS[platKey].perfis[idx];if(!perfil||!Array.isArray(perfil.pasta))return;
+  perfil.pasta=perfil.pasta.filter(x=>x!==val);
+  postBank();
+  document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
+}
 
 /* ============ navegação topo ============ */
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{
@@ -3411,17 +3408,33 @@ const PERFIS_GLOBAIS=[{"c": 127, "p": "PC / Coordenador de Gestão Pedagógica"}
 // ============================================================
 // EXPORTAR REGRAS PARA EXCEL (.xlsx) — SheetJS
 // ============================================================
+function loadXLSX(){
+  return new Promise((resolve,reject)=>{
+    if(window.XLSX)return resolve(window.XLSX);
+    const cdns=[
+      'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+      'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+      'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+    ];
+    let i=0;
+    function tryNext(){
+      if(window.XLSX)return resolve(window.XLSX);
+      if(i>=cdns.length)return reject(new Error('nenhum CDN carregou'));
+      const s=document.createElement('script');
+      s.src=cdns[i++];
+      s.onload=()=>{ if(window.XLSX)resolve(window.XLSX); else tryNext(); };
+      s.onerror=()=>tryNext();
+      document.head.appendChild(s);
+    }
+    tryNext();
+  });
+}
 async function exportPlatXlsx(){
   const k=window._curPlat;if(!k){alert('Abra uma plataforma primeiro.');return;}
   const p=PLATS[k];
-  if(!window.XLSX){
-    try{
-      await new Promise((res,rej)=>{const s=document.createElement('script');
-        s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-    }catch(e){alert('Erro ao carregar biblioteca de Excel. Verifique sua conexão e tente de novo.');return;}
-  }
-  if(!window.XLSX){alert('Biblioteca não carregou. Tente recarregar a página.');return;}
+  try{ await loadXLSX(); }
+  catch(e){ alert('Não consegui carregar a biblioteca de Excel de nenhum servidor. Verifique sua conexão/firewall e tente novamente.'); return; }
+  if(!window.XLSX){alert('Biblioteca de Excel não disponível. Recarregue a página (Ctrl+Shift+R) e tente de novo.');return;}
   const wb=window.XLSX.utils.book_new();
   const exR=Object.assign({},(EXCEL_RULES&&EXCEL_RULES[k])||{});
   const admObj=Object.assign({},(ADMINS&&ADMINS[k])||{});
