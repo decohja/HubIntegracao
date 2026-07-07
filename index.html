@@ -797,6 +797,7 @@
           <button data-role="Alunos">Alunos</button>
           <button data-role="Professores">Professores</button>
           <button data-role="Admins">Admins</button>
+          <button class="btn ghost xls" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="exportPlatXlsx()" title="Exportar regras no padrão Excel">⬇ Exportar .xlsx</button>
         </div>
         <div class="ptab active" id="ptab-Turmas"></div>
         <div class="ptab" id="ptab-Alunos"></div>
@@ -1258,6 +1259,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.3',date:'2026-06-25',text:'Exportar regras para Excel (.xlsx) no padrão do template (abas Turmas, Professores, Alunos, Admins) — botão na aba de regras de cada plataforma, gerado direto no browser via SheetJS. Admins agora é editável: adicionar perfis dos 8 cargos globais ou código manual, selecionar pastas PEC por perfil, remover. Perfis globais configurados (127, 112, 275, 7850, 272, 269, 1273, 7851).'},
   {ver:'6.2',date:'2026-06-25',text:'DevOps: campo Prazo separado da data de abertura — se a planilha tiver coluna "Prazo/Vencimento/Deadline", ela é usada para o badge de prazo do cartão; a data de abertura aparece só como informação. IA conversacional com histórico: as últimas 8 trocas são enviadas junto ao contexto, permitindo perguntas de acompanhamento. Contador de perguntas na conversa. Memória: importação de DOCX/DOC via mammoth.js (extrai texto puro).'},
   {ver:'6.1',date:'2026-06-25',text:'Botão "✕ Limpar" nas duas caixas de IA (DevOps e Memória): limpa o campo de pergunta e a resposta.'},
   {ver:'6.0',date:'2026-06-25',text:'IA aprimorada nas duas abas: prompts analíticos e decisórios — a IA agora sugere ações, prioridades e identifica padrões em vez de apenas descrever. IA da Memória usa até 150 entradas com conteúdo completo (800 chars cada) e inclui tags no contexto. IA do DevOps inclui data de hoje e total de abertos no contexto.'},
@@ -1722,27 +1724,99 @@ function publicoResumo(v){
   const extra=tipos.size>3?` +${tipos.size-3}`:'';
   return tl.length?tl.join(', ')+extra:'';
 }
-function renderAdmins(p){
-  const a=ADMINS[p];
-  if(!a)return '<div class="info-banner">Perfis de administrador ainda não mapeados para esta plataforma. Quando tivermos a planilha de admins, entram aqui.</div>';
-  const head=`<div style="margin-bottom:10px">${a.validado?'<span class="tag serie">validado com o responsável</span>':'<span class="tag toconf">a validar com o responsável</span>'}</div>`;
-  if(!a.perfis||!a.perfis.length)return head+(a.nota?`<div class="info-banner">${esc(a.nota)}</div>`:'<div class="empty">Sem perfis listados.</div>');
-  let table;
-  if(a.kind==='roles'){
-    const rows=a.perfis.map(x=>`<tr>
-      <td>${esc(x.p)}</td>
-      <td>${x.acesso?'<span class="tag adm">'+esc(x.acesso)+'</span>':'<span style="color:var(--ink-3)">—</span>'}</td>
-      <td>${x.obs?esc(x.obs):'<span style="color:var(--ink-3)">—</span>'}</td></tr>`).join('');
-    table=`<table><thead><tr><th>Perfil administrativo</th><th>Tipo de acesso</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }else{
-    const rows=a.perfis.map(x=>`<tr>
-      <td><span class="tag adm">${x.c}</span></td>
-      <td>${esc(x.p)}</td>
-      <td>${x.disc?'<span class="tag disc">'+esc(x.disc)+'</span>':'<span style="color:var(--ink-3)">—</span>'}</td>
-      <td>${x.pasta&&x.pasta.length?(Array.isArray(x.pasta)?x.pasta:[x.pasta]).map(pp=>'<span class="tag pasta">'+esc(pp)+'</span>').join(''):'<span style="color:var(--ink-3)">—</span>'}</td></tr>`).join('');
-    table=`<table><thead><tr><th>Cód. perfil</th><th>Perfil</th><th>Disciplina</th><th>PEC / pasta</th></tr></thead><tbody>${rows}</tbody></table>`;
+function renderAdmins(platKey){
+  const a=ADMINS[platKey]||{perfis:[]};
+  // Pastas PEC: PASTAS é array de {n,desc} — convertemos para labels legíveis
+  const pecPastas=(BANK_LOADED?bankPayload().pastas:PASTAS)||[];
+  const pecLabels=pecPastas.map(pp=>{
+    const n=pp.n||pp;
+    const desc=pp.desc?(' · '+pp.desc):'';
+    return 'Pasta '+n+desc;
+  }).filter(Boolean);
+
+  function isPEC(cod){return String(cod)==='112';}
+
+  function renderPerfisLista(){
+    const perfis=a.perfis||[];
+    if(!perfis.length) return '<div class="empty" style="margin:8px 0">Nenhum perfil adicionado. Use o campo abaixo para adicionar.</div>';
+    return '<table style="margin-bottom:10px"><thead><tr><th>Cód.</th><th>Perfil</th><th>PEC / pasta</th><th></th></tr></thead><tbody>'+
+      perfis.map((x,i)=>{
+        const cod=x.c!==undefined?x.c:'—';
+        const nome=x.p||x.nome||'—';
+        let pastasCell='<span style="color:var(--ink-3)">—</span>';
+        if(isPEC(cod)&&pecLabels.length){
+          const sel=(x.pasta||[]);
+          pastasCell='<div style="max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding:4px">'+
+            pecLabels.map((lb,pi)=>`<label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" value="${esc(lb)}" ${sel.includes(lb)?'checked':''} onchange="setAdminPastaCheck('${platKey}',${i})"> ${esc(lb)}
+            </label>`).join('')+'</div>';
+        } else if(isPEC(cod)){
+          pastasCell='<span style="color:var(--ink-3);font-size:11px">Sem pastas cadastradas</span>';
+        }
+        return `<tr>
+          <td><span class="tag adm">${esc(String(cod))}</span></td>
+          <td style="font-size:12px">${esc(String(nome))}</td>
+          <td style="min-width:160px">${pastasCell}</td>
+          <td><button class="btn ghost" style="font-size:10px;padding:2px 7px;color:#e07171;border-color:#e07171" onclick="removeAdminPerfil('${platKey}',${i})">✕</button></td>
+        </tr>`;
+      }).join('')+'</tbody></table>';
   }
-  return head+table+(a.nota?`<div class="note">${esc(a.nota)}</div>`:'');
+
+  const perfisDisponiveis=PERFIS_GLOBAIS.filter(g=>!(a.perfis||[]).some(p=>String(p.c)===String(g.c)));
+  const selectOpts='<option value="">+ selecionar perfil global…</option>'+
+    perfisDisponiveis.map(g=>`<option value="${g.c}">${g.c} · ${esc(g.p)}</option>`).join('');
+
+  const addForm=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-top:4px">
+    <select id="admin-sel-${platKey}" class="sel-badge cl-na" style="flex:1;min-width:200px">${selectOpts}</select>
+    <button class="btn ghost" style="font-size:11px" onclick="addAdminPerfil('${platKey}')">+ Adicionar</button>
+    <button class="btn ghost" style="font-size:11px" onclick="addAdminCustom('${platKey}')">+ Código manual</button>
+  </div>`;
+
+  return `<div id="admins-box-${platKey}">${renderPerfisLista()}</div>${addForm}`;
+}
+
+function addAdminPerfil(platKey){
+  const sel=document.getElementById('admin-sel-'+platKey);if(!sel||!sel.value)return;
+  const cod=parseInt(sel.value);
+  const g=PERFIS_GLOBAIS.find(x=>x.c===cod);
+  if(!g)return;
+  if(!ADMINS[platKey])ADMINS[platKey]={perfis:[]};
+  if(!ADMINS[platKey].perfis)ADMINS[platKey].perfis=[];
+  if(ADMINS[platKey].perfis.some(p=>p.c===cod)){alert('Perfil já adicionado.');return;}
+  ADMINS[platKey].perfis.push({c:cod,p:g.p,pasta:[]});
+  document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
+  postBank();
+}
+
+function addAdminCustom(platKey){
+  const cod=prompt('Código do perfil:');if(!cod)return;
+  const nome=prompt('Nome do perfil:');if(!nome)return;
+  if(!ADMINS[platKey])ADMINS[platKey]={perfis:[]};
+  if(!ADMINS[platKey].perfis)ADMINS[platKey].perfis=[];
+  ADMINS[platKey].perfis.push({c:parseInt(cod)||cod,p:nome,pasta:[]});
+  document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
+  postBank();
+}
+
+function removeAdminPerfil(platKey,idx){
+  if(!confirm('Remover este perfil?'))return;
+  ADMINS[platKey].perfis.splice(idx,1);
+  document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
+  postBank();
+}
+
+function setAdminPasta(platKey,idx,sel){
+  const selected=Array.from(sel.selectedOptions).map(o=>o.value);
+  ADMINS[platKey].perfis[idx].pasta=selected;
+  postBank();
+}
+function setAdminPastaCheck(platKey,idx){
+  // Lê todos os checkboxes daquele perfil
+  const box=document.getElementById('ptab-Admins');if(!box)return;
+  const checks=box.querySelectorAll(`input[type=checkbox][onchange*="setAdminPastaCheck('${platKey}',${idx})"]`);
+  const selected=Array.from(checks).filter(c=>c.checked).map(c=>c.value);
+  ADMINS[platKey].perfis[idx].pasta=selected;
+  postBank();
 }
 
 /* ============ navegação topo ============ */
@@ -1798,7 +1872,7 @@ function renderGrid(){const g=document.getElementById('plat-grid');
       <span class="srcbadge ${p.src==='excel'?'excel':(p.src==='teams'?'teams':'')}">${p.src==='excel'?'Planilha':(p.src==='teams'?'Teams':'SQL')}</span></div></div>`;}).join('');
   g.querySelectorAll('.pcard').forEach(el=>el.onclick=()=>openPlat(el.dataset.k));
   const sm=document.getElementById('plat-collapse-sum');if(sm)sm.textContent='🧩 Plataformas ('+list.length+')';}
-function openPlat(k){const p=PLATS[k];
+function openPlat(k){window._curPlat=k;const p=PLATS[k];
   document.getElementById('plat-overview').style.display='none';
   document.getElementById('plat-detail').style.display='block';
   const dav=document.getElementById('d-avatar');
@@ -2546,7 +2620,7 @@ function kanbanRows(){
 function loadXLSX(cb){
   if(window.XLSX)return cb(window.XLSX);
   const s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.src='https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
   s.onload=()=>cb(window.XLSX||null); s.onerror=()=>cb(null);
   document.head.appendChild(s);
 }
@@ -3317,6 +3391,81 @@ async function askMemoriaAI(){
       else{ans.innerHTML='<div class="src" style="color:#e07171">'+esc((res&&res.error)||'erro')+'</div>';}
     }).catch(e=>{if(btn)btn.disabled=false;ans.innerHTML='<div class="src" style="color:#e07171">Falha: '+esc(String(e))+'</div>';});
 }
+
+// ============================================================
+// PERFIS ADMIN GLOBAIS
+// ============================================================
+const PERFIS_GLOBAIS=[{"c": 127, "p": "PC / Coordenador de Gestão Pedagógica"}, {"c": 112, "p": "PCNP/Professor Especialista em Currículo"}, {"c": 275, "p": "Supervisor Educacional/Supervisor de Ensino"}, {"c": 7850, "p": "PROJ APOIO A TECNOLOGIA E INOVACAO (PROATEC)"}, {"c": 272, "p": "Diretor Escolar/Diretor de Escola"}, {"c": 269, "p": "Dirigente"}, {"c": 1273, "p": "NPE - Diretor(a) / Coordenador de Equipe Curricular"}, {"c": 7851, "p": "PROJ APOIO A TEC E INOVACAO - PROATEC PATI"}];
+
+// ============================================================
+// EXPORTAR REGRAS PARA EXCEL (.xlsx) — SheetJS
+// ============================================================
+async function exportPlatXlsx(){
+  const k=window._curPlat;if(!k)return;
+  const p=PLATS[k];
+  if(!window.XLSX){
+    await new Promise((res,rej)=>{const s=document.createElement('script');
+      s.src='https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+  }
+  const wb=window.XLSX.utils.book_new();
+  const exR=Object.assign({},(EXCEL_RULES&&EXCEL_RULES[k])||{});
+  const admObj=Object.assign({},(ADMINS&&ADMINS[k])||{});
+
+  const tipoNome=c=>{const t=TIPOS[String(c)];return t?t[0]:String(c);};
+  const redeNome=c=>{const r=REDES[String(c)];return r?r[0]:String(c);};
+  const discNome=c=>{const d=DISC[String(c)];return Array.isArray(d)?d[0]:String(c);};
+
+  const colsTab=['Cod.Rede de Ensino','Rede de Ensino','Código Tipo Ensino','Nome Tipo Ensino','Séries','Tipo Turma','Tipo Ensino - Mãe (Cod)','Tipo Ensino - Mãe (Nome)','Séries - Mãe','Disciplinas','Validado com Resp.','Observação'];
+  const colsAlu=['Cod.Rede de Ensino','Rede de Ensino','Código Tipo Ensino','Nome Tipo Ensino','Séries','Tipo Turma','Tipo Ensino - Mãe (Cod)','Tipo Ensino - Mãe (Nome)','Séries - Mãe','Validado com Resp.','Observação'];
+  const colsAdm=['Código do Perfil','Nome do Perfil','Se existir disciplina, quais?','Se PEC - Qual pasta?','Validado com Resp.','Observação'];
+
+  function buildRulesRows(tab,cols){
+    const rows=[cols];
+    const rd=exR[tab]||{};
+    const rules=rd.rules||[];
+    if(!rules.length)return rows;
+    for(const rule of rules){
+      const redes=rule.redes||[''];
+      const tipos=rule.tipos||[''];
+      const series=(rule.series||[]).join(', ');
+      const disc=(rule.disc||[]).map(discNome).join(', ');
+      for(const rc of redes){
+        for(const tc of tipos){
+          const row=[rc?String(rc):'',rc?redeNome(rc):'',tc?String(tc):'',tc?tipoNome(tc):'',series,'','','','',
+            tab==='Alunos'?undefined:disc,'',''];
+          if(tab==='Alunos')row.splice(9,1);
+          rows.push(row.slice(0,cols.length).map(v=>v===undefined?'':v));
+        }
+      }
+    }
+    return rows;
+  }
+
+  // Abas Turmas / Professores / Alunos
+  for(const tab of ['Turmas','Professores']){
+    const rows=buildRulesRows(tab,colsTab);
+    const ws=window.XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=colsTab.map((_,i)=>{return{wch:i<2?8:i<4?30:i===9?40:18};});
+    window.XLSX.utils.book_append_sheet(wb,ws,tab);
+  }
+  const rowsAlu=buildRulesRows('Alunos',colsAlu);
+  const wsAlu=window.XLSX.utils.aoa_to_sheet(rowsAlu);
+  wsAlu['!cols']=colsAlu.map((_,i)=>{return{wch:i<2?8:i<4?30:18};});
+  window.XLSX.utils.book_append_sheet(wb,wsAlu,'Alunos');
+
+  // Aba Admins
+  const perfis=(admObj.perfis)||[];
+  const rowsAdm=[colsAdm,...perfis.map(pf=>[String(pf.c||''),pf.p||'','',( (pf.pasta||[]).map(ps=>{const m=String(ps).match(/Pasta\s*(\d+)/i);return m?m[1]:ps;}).join(', ') ),'',''])];
+  const wsAdm=window.XLSX.utils.aoa_to_sheet(rowsAdm);
+  wsAdm['!cols']=[{wch:12},...[35,30,35,20,30].map(w=>{return{wch:w};})];
+  window.XLSX.utils.book_append_sheet(wb,wsAdm,'Admins');
+
+  const nome=(p.nome||k).replace(/[/\\?*\[\]]/g,'-');
+  const ver=(VERSIONS&&VERSIONS[0]&&VERSIONS[0].ver)||'';
+  window.XLSX.writeFile(wb,`Regra_${nome}_v${ver}.xlsx`);
+}
+window.DATA=DATA;
 (async()=>{ startSync(); const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
   const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
   await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
