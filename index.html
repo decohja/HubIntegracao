@@ -3401,13 +3401,16 @@ const PERFIS_GLOBAIS=[{"c": 127, "p": "PC / Coordenador de Gestão Pedagógica"}
 // EXPORTAR REGRAS PARA EXCEL (.xlsx) — SheetJS
 // ============================================================
 async function exportPlatXlsx(){
-  const k=window._curPlat;if(!k)return;
+  const k=window._curPlat;if(!k){alert('Abra uma plataforma primeiro.');return;}
   const p=PLATS[k];
   if(!window.XLSX){
-    await new Promise((res,rej)=>{const s=document.createElement('script');
-      s.src='https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
-      s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    try{
+      await new Promise((res,rej)=>{const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    }catch(e){alert('Erro ao carregar biblioteca de Excel. Verifique sua conexão e tente de novo.');return;}
   }
+  if(!window.XLSX){alert('Biblioteca não carregou. Tente recarregar a página.');return;}
   const wb=window.XLSX.utils.book_new();
   const exR=Object.assign({},(EXCEL_RULES&&EXCEL_RULES[k])||{});
   const admObj=Object.assign({},(ADMINS&&ADMINS[k])||{});
