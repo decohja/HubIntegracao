@@ -1262,6 +1262,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.7',date:'2026-07-07',text:'CORREÇÃO: regras duplicadas no parser de SQL (afetava Prepara SP e potencialmente outras plataformas com múltiplos blocos OR na query) — o interpretador às vezes detectava o mesmo bloco de condição duas vezes. Adicionada remoção de duplicatas exatas antes de exibir/exportar. Testado: Prepara SP caiu de 6 para 3 regras corretas em Turmas (13 linhas no Excel, sem repetição). Demais 21 plataformas conferidas sem alteração de contagem.'},
   {ver:'6.6',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no Exportar .xlsx: a exportação lia uma fonte de dados antiga/vazia (EXCEL_RULES, só 2 plataformas de teste) em vez da fonte real que alimenta a tela (PARSED, calculada a partir do SQL de verdade de todas as 22 plataformas). Agora export = exatamente o que a tela mostra, sempre. Trocada a biblioteca de Excel (SheetJS→ExcelJS) para preservar cor, borda e negrito do seu template — antes saía tudo sem formatação. Casos especiais tratados: "todas as turmas ativas" (PDA) e plataformas via Teams (Multiplica, Escola de Gestão) marcam "Aplica-se? Não". Testado nas 22 plataformas sem erro.'},
   {ver:'6.5',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no botão Exportar .xlsx: ele estava dentro da barra de abas (Turmas/Alunos/Professores/Admins) e o código de troca de aba sobrescrevia o clique, quebrando com erro de tela em branco. Botão movido para fora da barra. Exportação reescrita: agora abre o SEU template original (embutido no arquivo) e preenche os dados nas células certas — fidelidade total ao seu padrão, sem recriar formatação. Corrigida também uma colisão de nomes que quebrava o "Exportar para Excel" do quadro DevOps.'},
   {ver:'6.4',date:'2026-06-25',text:'CORREÇÃO CRÍTICA: os perfis de Admin (e as pastas PEC) agora são salvos no banco de verdade — antes o ADMINS não estava no payload e tudo sumia ao recarregar. Pastas PEC viraram seletor: escolha uma pasta e ela é adicionada como tag (com × para remover), salvando na hora. Export de Excel com fallback de 3 servidores (CDNs) para garantir o carregamento da biblioteca.'},
@@ -1473,6 +1474,17 @@ function dims(clause,ctx){const d={};let m;
   if(m)d.tipoClasse=m[1].split(/'\s*,\s*'/).map(s=>s.replace(/'/g,'').trim()).filter(Boolean);
   return d;
 }
+function dedupeRules(rules){
+  const seen=new Set();
+  const out=[];
+  for(const r of rules){
+    const key=JSON.stringify(r,Object.keys(r).sort());
+    if(seen.has(key))continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out;
+}
 function parsePlat(val){
   const c=getCase(val);
   if(c.kind==='zero')return{mode:'none'};if(c.kind==='allactive')return{mode:'allactive'};if(c.kind!=='case')return{mode:'unknown'};
@@ -1482,7 +1494,7 @@ function parsePlat(val){
   const groups=balanced(cond).filter(hasTipo);
   const leaves=groups.filter(g=>!groups.some(h=>h!==g&&h.start>g.start&&h.end<g.end)).sort((a,b)=>a.start-b.start);
   const rules=[];
-  if(!leaves.length){const gov=redes.length?redes[0].codes:null;rules.push(Object.assign({redes:gov},dims(cond,'')));return{mode:'rules',rules};}
+  if(!leaves.length){const gov=redes.length?redes[0].codes:null;rules.push(Object.assign({redes:gov},dims(cond,'')));return{mode:'rules',rules:dedupeRules(rules)};}
   const leafGov=leaves.map(leaf=>{let p=-1,e=0,c=null;redes.forEach(rd=>{if(rd.pos<leaf.end&&rd.pos>p){p=rd.pos;e=rd.end;c=rd.codes;}});return{pos:p,end:e,codes:c};});
   for(let i=0;i<leaves.length;i++){
     const leaf=leaves[i],gov=leafGov[i];
@@ -1495,7 +1507,7 @@ function parsePlat(val){
     const ctx=sharedPrefix+' \u0001 '+cond.slice(leaf.end,trailEnd);
     const dd=dims(leaf.text,ctx);dd.redes=gov.codes;rules.push(dd);
   }
-  return{mode:'rules',rules};
+  return{mode:'rules',rules:dedupeRules(rules)};
 }
 function parseAll(){
   const sqlPlats=PLATFORMS.filter(p=>PLATS[p].src!=='excel');
