@@ -1262,6 +1262,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.13',date:'2026-07-07',text:'Export .xlsx: a URL de produção da plataforma (quando cadastrada na tela de detalhes) agora vai automaticamente para a aba Cliente, campo "Produção" (linha 21). Se a plataforma não tiver URL, o campo fica em branco.'},
   {ver:'6.12',date:'2026-07-07',text:'Novos campos na tela e no export, baseado na estrutura da Alura (a mais completa): "Tipo Turma" (EXATAS / CD_HABILITACAO = X) e "Tipo Ensino - Mãe" + "Séries - Mãe" agora aparecem como colunas próprias, tanto no quadro de regras de cada plataforma quanto no Excel exportado — em vez de ficarem escondidos em "Outras condições" ou mesclados com a série própria. Testado com a Alura: bate exatamente com o padrão da planilha de referência (ex.: linha "Expansão Novo EM" mostrando Tipo Turma=EXATAS, Mãe=101 Novo Ensino Médio, Séries-Mãe=2,3).'},
   {ver:'6.11',date:'2026-07-07',text:'Regras de público (Turmas/Alunos/Professores) agora abrem já expandidas por padrão ao clicar na aba — sem precisar clicar para expandir toda vez.'},
   {ver:'6.10',date:'2026-07-07',text:'CORREÇÃO DEFINITIVA na duplicação do Prepara SP (e qualquer outra plataforma com o mesmo padrão): a query real tem, de propósito, dois blocos técnicos — um checando a série da própria turma e outro checando a série da turma-mãe, com os mesmos códigos. Isso é responsabilidade do SQL, não erro seu nem corrupção no banco. O Hub agora reconhece esse padrão e mescla os dois em uma única linha na tela e no export, já que representam a mesma audiência. Testado com a query real colada: caiu de 4 blocos (2 aparentando duplicados) para 3 regras limpas. Varredura nas 22 plataformas confirma zero regressão.'},
@@ -1815,7 +1816,8 @@ function renderRules(p,role){
     <summary><span>${n} regra${n>1?'s':''} de público${resumo?' · '+esc(resumo):''}</span></summary>
     <div class="acc-inner">
     ${profBanner}
-    <table><thead><tr><th>#</th><th>Rede</th><th>Tipo de ensino</th><th>Séries</th><th>Tipo Turma</th><th>Tipo Ensino - Mãe</th><th>Séries - Mãe</th><th>Disciplinas</th><th>Outras condições</th></tr></thead><tbody>${
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <table style="min-width:900px"><thead><tr><th>#</th><th>Rede</th><th>Tipo de ensino</th><th>Séries</th><th>Tipo Turma</th><th>Tipo Ensino - Mãe</th><th>Séries - Mãe</th><th>Disciplinas</th><th>Outras condições</th></tr></thead><tbody>${
     v.rules.map((r,i)=>`<tr><td style="color:var(--ink-3)">${i+1}</td>
       <td>${r.redes?r.redes.map(redeTag).join(''):'<span class="tag muted">—</span>'}</td>
       <td>${r.tipos?r.tipos.map(tipoTag).join(''):'<span class="tag muted">—</span>'}</td>
@@ -1825,6 +1827,7 @@ function renderRules(p,role){
       <td>${maeSerieTags(r)}</td>
       <td>${discTags(r)}</td>
       <td>${condTags(r)}</td></tr>`).join('')}</tbody></table>
+    </div>
     <div class="note">Quando há mais de uma linha, o público é a soma de todas (condição OR). "Séries" sem valor = a regra não restringe pela série da própria turma (pode restringir pela série da turma-mãe, se preenchida).</div>${escolasBlock}
     </div></details>`;
 }
@@ -3601,12 +3604,15 @@ async function exportPlatXlsx(){
       const maeTipoCod=(rule.maeTipo||[]).join(', ');
       const maeTipoNome=(rule.maeTipo||[]).map(tipoNome).join(', ');
       const maeSerie=(rule.maeSerie||[]).join(', ');
+      const obsParts=[];
+      if(rule.pei)obsParts.push('APENAS ESCOLAS PEI');
+      const obs=obsParts.join(' · ');
       for(const rc of redes){
         for(const tc of tipos){
           // C,D,E,F,G,H,I,J,K = CodRede,Rede,CodTipo,NomeTipo,Series,TipoTurma,MaeTipo(Cod),MaeTipo(Nome),SeriesMae
           const row=[rc?String(rc):'',rc?redeNome(rc):'',tc?String(tc):'',tc?tipoNome(tc):'',series,tipoTurma,maeTipoCod,maeTipoNome,maeSerie];
           if(hasDisc)row.push(disc); // L: Disciplinas
-          row.push('',''); // M,N: Validado com Resp. / Observação em branco (você preenche)
+          row.push('',obs); // M,N: Validado com Resp. (em branco) / Observação (PEI quando aplicável)
           rows.push(row);
         }
       }
@@ -3645,6 +3651,12 @@ async function exportPlatXlsx(){
     return [String(pf.c||''),pf.p||'',pf.disc||'',pastasNum,'',''];
   });
   fillSheet('Admins', rowsAdm);
+
+  // Aba Cliente: URL de produção (linha 21), só se a plataforma tiver uma cadastrada
+  if(p.url&&p.url.trim()){
+    const wsCliente=wb.getWorksheet('Cliente');
+    if(wsCliente)wsCliente.getCell('E21').value=p.url.trim();
+  }
 
   const nome=(p.nome||k).replace(/[\/\\?*\[\]]/g,'-');
   const ver=(VERSIONS&&VERSIONS[0]&&VERSIONS[0].ver)||'';
