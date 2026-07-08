@@ -1262,6 +1262,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.8',date:'2026-07-07',text:'Ferramenta de diagnóstico: no editor "Atualizar a query desta plataforma", cada papel (Turmas/Alunos/Professores) agora mostra um aviso "diferente do padrão original" se a query salva no banco divergir do texto original do Hub — e um botão "↺ restaurar original" para trazer de volta o texto correto com um clique. Isso resolve casos onde uma query foi editada/colada errada no passado e ficou gravada permanentemente no banco, sobrevivendo a qualquer correção no arquivo.'},
   {ver:'6.7',date:'2026-07-07',text:'CORREÇÃO: regras duplicadas no parser de SQL (afetava Prepara SP e potencialmente outras plataformas com múltiplos blocos OR na query) — o interpretador às vezes detectava o mesmo bloco de condição duas vezes. Adicionada remoção de duplicatas exatas antes de exibir/exportar. Testado: Prepara SP caiu de 6 para 3 regras corretas em Turmas (13 linhas no Excel, sem repetição). Demais 21 plataformas conferidas sem alteração de contagem.'},
   {ver:'6.6',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no Exportar .xlsx: a exportação lia uma fonte de dados antiga/vazia (EXCEL_RULES, só 2 plataformas de teste) em vez da fonte real que alimenta a tela (PARSED, calculada a partir do SQL de verdade de todas as 22 plataformas). Agora export = exatamente o que a tela mostra, sempre. Trocada a biblioteca de Excel (SheetJS→ExcelJS) para preservar cor, borda e negrito do seu template — antes saía tudo sem formatação. Casos especiais tratados: "todas as turmas ativas" (PDA) e plataformas via Teams (Multiplica, Escola de Gestão) marcam "Aplica-se? Não". Testado nas 22 plataformas sem erro.'},
   {ver:'6.5',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no botão Exportar .xlsx: ele estava dentro da barra de abas (Turmas/Alunos/Professores/Admins) e o código de troca de aba sobrescrevia o clique, quebrando com erro de tela em branco. Botão movido para fora da barra. Exportação reescrita: agora abre o SEU template original (embutido no arquivo) e preenche os dados nas células certas — fidelidade total ao seu padrão, sem recriar formatação. Corrigida também uma colisão de nomes que quebrava o "Exportar para Excel" do quadro DevOps.'},
@@ -1673,12 +1674,27 @@ function replacePlatBlock(role,k,pasted){
   SQL[role]=raw.slice(0,sp.start)+novo+'\n\n        '+raw.slice(sp.end);
   return true;
 }
+function getDefaultPlatBlockText(role,k){
+  const raw=b64dec(DATA.SQL[role]);const sp=platBlockSpan(raw,k);return sp?raw.slice(sp.start,sp.end).trim():'';
+}
+function restaurarQueryOriginal(k,role){
+  const el=document.getElementById('d-q-'+role);if(!el)return;
+  const original=getDefaultPlatBlockText(role,k);
+  if(!original){alert('Não encontrei uma query padrão para '+role+' nesta plataforma.');return;}
+  el.value=original;
+  const st=document.getElementById('d-query-status');
+  if(st){st.style.color='var(--ink-3)';st.textContent=role+': texto original carregado no campo — clique em "💾 Salvar query no banco" para confirmar.';}
+}
 function renderQueryEditor(k){
   const block=role=>esc(getPlatBlockText(role,k)||'');
+  const isDiff=role=>{const cur=getPlatBlockText(role,k)||'';const def=getDefaultPlatBlockText(role,k)||'';return cur.replace(/\s+/g,' ').trim()!==def.replace(/\s+/g,' ').trim();};
   return `<details class="rules-acc"><summary><span>✎ Atualizar a query desta plataforma</span></summary>
    <div class="acc-inner">
    <p class="lead" style="margin:0 0 12px">Cole o bloco que o time técnico te enviou — o trecho completo, ex.: <code>,${k} = MAX(CASE WHEN … THEN 1 ELSE 0 END)</code> (também aceita só o miolo entre parênteses). Ao salvar, substituo <b>apenas</b> o trecho desta plataforma na procedure e reprocesso o público dela. Deixe em branco o público que não mudou.</p>
-   ${['Turmas','Alunos','Professores'].map(r=>`<label class="resp-lbl">${r}</label>
+   ${['Turmas','Alunos','Professores'].map(r=>`<label class="resp-lbl" style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+     <span>${r}${isDiff(r)?' <span style="color:#e0a13a;font-size:11px;font-weight:700">· diferente do padrão original</span>':''}</span>
+     <button class="btn ghost" style="font-size:10.5px;padding:2px 8px" onclick="restaurarQueryOriginal('${k}','${r}')" title="Carregar de volta o texto original desta query (antes de qualquer edição)">↺ restaurar original</button>
+   </label>
      <textarea class="q-edit" id="d-q-${r}" spellcheck="false">${block(r)}</textarea>`).join('')}
    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
      <button class="btn pubbtn" onclick="savePlatQuery('${k}')">💾 Salvar query no banco</button>
