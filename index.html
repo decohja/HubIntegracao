@@ -1262,6 +1262,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.9',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no editor "Atualizar a query desta plataforma": se o bloco salvo de uma plataforma estivesse duplicado dentro do próprio texto SQL (corrompido), salvar uma correção só substituía a primeira ocorrência e deixava a segunda grudada logo depois ("soma com o cagado"). Agora a função encontra e remove TODAS as ocorrências antes de inserir a versão nova e única. Testado com cenário de bloco duplicado simulado: antes ficavam 2 blocos, agora fica exatamente 1.'},
   {ver:'6.8',date:'2026-07-07',text:'Ferramenta de diagnóstico: no editor "Atualizar a query desta plataforma", cada papel (Turmas/Alunos/Professores) agora mostra um aviso "diferente do padrão original" se a query salva no banco divergir do texto original do Hub — e um botão "↺ restaurar original" para trazer de volta o texto correto com um clique. Isso resolve casos onde uma query foi editada/colada errada no passado e ficou gravada permanentemente no banco, sobrevivendo a qualquer correção no arquivo.'},
   {ver:'6.7',date:'2026-07-07',text:'CORREÇÃO: regras duplicadas no parser de SQL (afetava Prepara SP e potencialmente outras plataformas com múltiplos blocos OR na query) — o interpretador às vezes detectava o mesmo bloco de condição duas vezes. Adicionada remoção de duplicatas exatas antes de exibir/exportar. Testado: Prepara SP caiu de 6 para 3 regras corretas em Turmas (13 linhas no Excel, sem repetição). Demais 21 plataformas conferidas sem alteração de contagem.'},
   {ver:'6.6',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no Exportar .xlsx: a exportação lia uma fonte de dados antiga/vazia (EXCEL_RULES, só 2 plataformas de teste) em vez da fonte real que alimenta a tela (PARSED, calculada a partir do SQL de verdade de todas as 22 plataformas). Agora export = exatamente o que a tela mostra, sempre. Trocada a biblioteca de Excel (SheetJS→ExcelJS) para preservar cor, borda e negrito do seu template — antes saía tudo sem formatação. Casos especiais tratados: "todas as turmas ativas" (PDA) e plataformas via Teams (Multiplica, Escola de Gestão) marcam "Aplica-se? Não". Testado nas 22 plataformas sem erro.'},
@@ -1657,6 +1658,19 @@ function platBlockSpan(raw,k){
   }}
   return null;
 }
+// Encontra TODAS as ocorrências do bloco desta plataforma (protege contra blocos duplicados corrompidos no banco)
+function allPlatBlockSpans(raw,k){
+  const into=raw.search(/INTO\s+#TMP/i); const lim=into>0?into:raw.length;
+  const re=/,\s*([A-Z][A-Z_]+)\s*=\s*/g; let m,marks=[];
+  while((m=re.exec(raw))){ if(m.index>=lim)break; marks.push({name:m[1],start:m.index,valStart:re.lastIndex}); }
+  const spans=[];
+  for(let i=0;i<marks.length;i++){ if(marks[i].name!==k)continue;
+    const start=marks[i].start; let end=lim;
+    for(let j=i+1;j<marks.length;j++){ if(PLATFORMS.includes(marks[j].name)){end=marks[j].start;break;} }
+    spans.push({start,end});
+  }
+  return spans;
+}
 function getPlatBlockText(role,k){const raw=SQL[role];const sp=platBlockSpan(raw,k);return sp?raw.slice(sp.start,sp.end).trim():'';}
 function valueFromPasted(pasted){
   let t=pasted.trim();
@@ -1669,9 +1683,17 @@ function valueFromPasted(pasted){
 }
 function replacePlatBlock(role,k,pasted){
   if(!pasted||!pasted.trim())return false;
-  const raw=SQL[role];const sp=platBlockSpan(raw,k);if(!sp)return false;
+  const raw=SQL[role];const spans=allPlatBlockSpans(raw,k);if(!spans.length)return false;
   const novo=','+k+' = '+valueFromPasted(pasted);
-  SQL[role]=raw.slice(0,sp.start)+novo+'\n\n        '+raw.slice(sp.end);
+  // Remove TODAS as ocorrências (mesmo se duplicadas/corrompidas) e insere UMA única, limpa, no lugar da primeira
+  let out=raw.slice(0,spans[0].start)+novo+'\n\n        ';
+  let lastEnd=spans[0].end;
+  for(let i=1;i<spans.length;i++){
+    out+=raw.slice(lastEnd,spans[i].start);
+    lastEnd=spans[i].end;
+  }
+  out+=raw.slice(lastEnd);
+  SQL[role]=out;
   return true;
 }
 function getDefaultPlatBlockText(role,k){
