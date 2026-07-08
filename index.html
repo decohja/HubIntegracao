@@ -744,8 +744,8 @@
 
   <div class="view active" id="view-plataformas">
     <div id="plat-overview">
-      <div id="dashboard" class="dashboard"></div>
       <div id="home-carousel"></div>
+      <div id="dashboard" class="dashboard"></div>
       <div id="home-agenda" class="home-agenda" hidden></div>
       <div class="hero">
         <h2>Onde cada plataforma chega</h2>
@@ -1278,6 +1278,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.19',date:'2026-07-08',text:'Home: carrossel movido para o topo da página (antes do dashboard e da agenda). Agenda agora mostra 3 itens por padrão (era 4), com "ver mais" para o resto.'},
   {ver:'6.18',date:'2026-07-08',text:'Sincronismo com o Hub: as 5 linhas padrão (Admin, Atribuição especial, Atribuição de Professor, Matrícula de Aluno, Criação de Turma) agora aparecem em TODAS as plataformas — quando a plataforma não tinha uma delas definida, entra automaticamente como "Não se aplica". Linhas extras específicas de algumas plataformas (ex.: sincronismo via Teams, validação de domínio) continuam aparecendo normalmente depois das 5 padrão.'},
   {ver:'6.17',date:'2026-07-08',text:'Sincronismo com o Hub: lista de opções ampliada, incluindo "Não se aplica" e "No acesso" — o seletor já era editável e salvo no banco (para quando o método de sincronismo de uma plataforma mudar, você mesmo ajusta ali, sem precisar de mim).'},
   {ver:'6.16',date:'2026-07-08',text:'Template de export atualizado novamente (arquivo enviado). Estrutura conferida idêntica à anterior (mesmas células, mesmos cabeçalhos) — testado de ponta a ponta com dados reais antes de entregar.'},
@@ -3168,7 +3169,7 @@ function renderHomeAgenda(){
   cardAlertItems().forEach(it=>{items.push({tarefa:it.card.title||'(sem título)',detalhe:'',devops:false,fromCard:true,prio:it.card.prio,d:it.d,id:it.card.id});});
   if(!items.length){box.hidden=true;box.innerHTML='';return;}
   items.sort((x,y)=>(x.d?x.d.getTime():8e15)-(y.d?y.d.getTime():8e15));
-  const LIM=4;
+  const LIM=3;
   const show=HOME_AG_OPEN?items:items.slice(0,LIM);
   const plbl={alta:'ALTA',media:'MÉDIA',baixa:'BAIXA'};
   const lines=show.map(a=>{const u=urgClass(a.d);const p=a.prio||'';
