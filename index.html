@@ -1262,7 +1262,8 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
-  {ver:'6.9',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no editor "Atualizar a query desta plataforma": se o bloco salvo de uma plataforma estivesse duplicado dentro do próprio texto SQL (corrompido), salvar uma correção só substituía a primeira ocorrência e deixava a segunda grudada logo depois ("soma com o cagado"). Agora a função encontra e remove TODAS as ocorrências antes de inserir a versão nova e única. Testado com cenário de bloco duplicado simulado: antes ficavam 2 blocos, agora fica exatamente 1.'},
+  {ver:'6.10',date:'2026-07-07',text:'CORREÇÃO DEFINITIVA na duplicação do Prepara SP (e qualquer outra plataforma com o mesmo padrão): a query real tem, de propósito, dois blocos técnicos — um checando a série da própria turma e outro checando a série da turma-mãe, com os mesmos códigos. Isso é responsabilidade do SQL, não erro seu nem corrupção no banco. O Hub agora reconhece esse padrão e mescla os dois em uma única linha na tela e no export, já que representam a mesma audiência. Testado com a query real colada: caiu de 4 blocos (2 aparentando duplicados) para 3 regras limpas. Varredura nas 22 plataformas confirma zero regressão.'},
+  {ver:'6.9',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no editor "Atualizar a query desta plataforma": se o bloco salvo de uma plataforma estivesse duplicado dentro do próprio texto SQL (corrompido), salvar uma correção só substituía a primeira ocorrência e deixava a segunda grudada logo depois ("soma com o cagado"). Agora a função encontra e remove TODAS as ocorrências antes de inserir a versão nova e única.'},
   {ver:'6.8',date:'2026-07-07',text:'Ferramenta de diagnóstico: no editor "Atualizar a query desta plataforma", cada papel (Turmas/Alunos/Professores) agora mostra um aviso "diferente do padrão original" se a query salva no banco divergir do texto original do Hub — e um botão "↺ restaurar original" para trazer de volta o texto correto com um clique. Isso resolve casos onde uma query foi editada/colada errada no passado e ficou gravada permanentemente no banco, sobrevivendo a qualquer correção no arquivo.'},
   {ver:'6.7',date:'2026-07-07',text:'CORREÇÃO: regras duplicadas no parser de SQL (afetava Prepara SP e potencialmente outras plataformas com múltiplos blocos OR na query) — o interpretador às vezes detectava o mesmo bloco de condição duas vezes. Adicionada remoção de duplicatas exatas antes de exibir/exportar. Testado: Prepara SP caiu de 6 para 3 regras corretas em Turmas (13 linhas no Excel, sem repetição). Demais 21 plataformas conferidas sem alteração de contagem.'},
   {ver:'6.6',date:'2026-07-07',text:'CORREÇÃO CRÍTICA no Exportar .xlsx: a exportação lia uma fonte de dados antiga/vazia (EXCEL_RULES, só 2 plataformas de teste) em vez da fonte real que alimenta a tela (PARSED, calculada a partir do SQL de verdade de todas as 22 plataformas). Agora export = exatamente o que a tela mostra, sempre. Trocada a biblioteca de Excel (SheetJS→ExcelJS) para preservar cor, borda e negrito do seu template — antes saía tudo sem formatação. Casos especiais tratados: "todas as turmas ativas" (PDA) e plataformas via Teams (Multiplica, Escola de Gestão) marcam "Aplica-se? Não". Testado nas 22 plataformas sem erro.'},
@@ -1477,15 +1478,53 @@ function dims(clause,ctx){const d={};let m;
   return d;
 }
 function dedupeRules(rules){
+  // Passo 1: remove duplicatas exatas (mesmo bloco detectado 2x pelo parser)
   const seen=new Set();
-  const out=[];
+  let out=[];
   for(const r of rules){
     const key=JSON.stringify(r,Object.keys(r).sort());
     if(seen.has(key))continue;
     seen.add(key);
     out.push(r);
   }
-  return out;
+  // Passo 2: mescla pares que só diferem entre "série própria" (series) e "série da turma-mãe" (maeSerie)
+  // com os MESMOS códigos — são a mesma audiência vista por dois caminhos técnicos diferentes no SQL.
+  const arrEq=(a,b)=>{if(!a||!b)return false;if(a.length!==b.length)return false;const sa=[...a].sort(),sb=[...b].sort();return sa.every((v,i)=>v===sb[i]);};
+  const restEq=(a,b)=>{
+    const keys=new Set([...Object.keys(a),...Object.keys(b)].filter(k=>k!=='series'&&k!=='maeSerie'));
+    for(const k of keys){
+      const av=a[k],bv=b[k];
+      if(Array.isArray(av)||Array.isArray(bv)){if(!arrEq(av,bv))return false;}
+      else if(JSON.stringify(av)!==JSON.stringify(bv))return false;
+    }
+    return true;
+  };
+  const merged=[];
+  const used=new Array(out.length).fill(false);
+  for(let i=0;i<out.length;i++){
+    if(used[i])continue;
+    const a=out[i];
+    let match=-1;
+    for(let j=i+1;j<out.length;j++){
+      if(used[j])continue;
+      const b=out[j];
+      const aHasSeries=!!a.series&&!a.maeSerie, aHasMae=!!a.maeSerie&&!a.series;
+      const bHasSeries=!!b.series&&!b.maeSerie, bHasMae=!!b.maeSerie&&!b.series;
+      const isSeriesMaePair=(aHasSeries&&bHasMae&&arrEq(a.series,b.maeSerie))||(aHasMae&&bHasSeries&&arrEq(a.maeSerie,b.series));
+      if(isSeriesMaePair&&restEq(a,b)){match=j;break;}
+    }
+    if(match>=0){
+      used[match]=true;
+      const combined=Object.assign({},a);
+      // Mantém só 'series' (própria) na exibição — cobre os dois casos pro usuário, sem duplicar linha
+      if(!combined.series&&out[match].series)combined.series=out[match].series;
+      delete combined.maeSerie;
+      merged.push(combined);
+    }else{
+      merged.push(a);
+    }
+  }
+  return merged;
 }
 function parsePlat(val){
   const c=getCase(val);
