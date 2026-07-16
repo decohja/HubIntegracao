@@ -909,6 +909,7 @@
     <p class="lead">Registre reuniões, decisões e pontos de atenção. A IA usa tudo isso para responder perguntas sobre o trabalho.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
       <button class="btn" onclick="abrirNovaEntrada()">＋ Nova entrada</button>
+      <button class="btn ghost" onclick="baixarBackupMemoria()" title="Baixa um arquivo com todas as entradas da Memória">💾 Baixar backup</button>
       <select id="mem-filtro" class="sel-badge cl-na" onchange="renderMemoria()">
         <option value="">Todos os tipos</option>
         <option value="reuniao">Reuniões</option>
@@ -1278,6 +1279,9 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.22',date:'2026-07-11',text:'Memória: novo botão "💾 Baixar backup" gera um arquivo .json com todas as entradas, com um clique — sem depender de nada externo. Além disso, foi criado um histórico automático no Supabase (tabela memoria_historico): qualquer edição ou exclusão de entrada guarda a versão anterior automaticamente, protegendo contra apagar/editar por engano.'},
+  {ver:'6.21',date:'2026-07-11',text:'Adicionado "heartbeat" no Supabase: toda vez que o Hub abre (qualquer aba, não só Memória), faz uma consulta leve no banco em segundo plano — reduz a chance do projeto pausar por inatividade no plano gratuito.'},
+  {ver:'6.20',date:'2026-07-11',text:'Memória: quando a busca no Supabase falha (ex.: projeto pausado por inatividade no plano gratuito), agora aparece um aviso claro de erro com botão "Tentar de novo" — em vez de mostrar "Nenhuma entrada encontrada", que passava a falsa impressão de que os dados tinham sumido.'},
   {ver:'6.19',date:'2026-07-08',text:'Home: carrossel movido para o topo da página (antes do dashboard e da agenda). Agenda agora mostra 3 itens por padrão (era 4), com "ver mais" para o resto.'},
   {ver:'6.18',date:'2026-07-08',text:'Sincronismo com o Hub: as 5 linhas padrão (Admin, Atribuição especial, Atribuição de Professor, Matrícula de Aluno, Criação de Turma) agora aparecem em TODAS as plataformas — quando a plataforma não tinha uma delas definida, entra automaticamente como "Não se aplica". Linhas extras específicas de algumas plataformas (ex.: sincronismo via Teams, validação de domínio) continuam aparecendo normalmente depois das 5 padrão.'},
   {ver:'6.17',date:'2026-07-08',text:'Sincronismo com o Hub: lista de opções ampliada, incluindo "Não se aplica" e "No acesso" — o seletor já era editável e salvo no banco (para quando o método de sincronismo de uma plataforma mudar, você mesmo ajusta ali, sem precisar de mim).'},
@@ -3417,14 +3421,36 @@ async function importarArquivoMem(input){
     if(nameEl)nameEl.textContent='Erro ao ler arquivo: '+String(e);
   }
 }
+let MEM_LOAD_ERROR=null;
+function baixarBackupMemoria(){
+  if(!MEMORIA||!MEMORIA.length){alert('Não há entradas na memória para fazer backup.');return;}
+  const conteudo=JSON.stringify(MEMORIA,null,2);
+  const blob=new Blob([conteudo],{type:'application/json'});
+  const stamp=new Date().toISOString().slice(0,10);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`memoria_backup_${stamp}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+}
 async function loadMemoria(){
+  MEM_LOAD_ERROR=null;
   try{
     const r=await fetch(SB_URL+'/rest/v1/memoria?order=data.desc,criado_em.desc&limit=200',
       {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const data=await r.json();
-    if(Array.isArray(data))MEMORIA=data;
-    else MEMORIA=[];
-  }catch(e){MEMORIA=[];}
+    if(!r.ok){
+      let detail='';
+      try{const j=await r.json();detail=j.message||j.hint||'';}catch(e2){}
+      MEM_LOAD_ERROR='Erro '+r.status+(detail?': '+detail:'')+'. O banco (Supabase) pode estar pausado — confira em supabase.com e reative o projeto se necessário.';
+      MEMORIA=[];
+    }else{
+      const data=await r.json();
+      if(Array.isArray(data))MEMORIA=data;
+      else MEMORIA=[];
+    }
+  }catch(e){
+    MEM_LOAD_ERROR='Falha de conexão com o banco: '+String(e)+'. O banco (Supabase) pode estar pausado — confira em supabase.com e reative o projeto se necessário.';
+    MEMORIA=[];
+  }
   renderMemoria();
 }
 function renderMemoria(){
@@ -3436,6 +3462,10 @@ function renderMemoria(){
   const tipoLabel={reuniao:'📋 Reunião',decisao:'✅ Decisão',atencao:'⚠ Ponto de atenção',documento:'📄 Documento',anotacao:'🗒 Anotação',outro:'📝 Outro'};
   const tipoCor={reuniao:'#4aa8f0',decisao:'#4caf82',atencao:'#e0a13a',documento:'#7c6ff7',anotacao:'#e07171',outro:'#a78bfa'};
   let items=MEMORIA.filter(m=>(!ft||m.tipo===ft)&&(!bq||(m.titulo||'').toLowerCase().includes(bq)||(m.conteudo||'').toLowerCase().includes(bq)||(m.tags||'').toLowerCase().includes(bq)));
+  if(MEM_LOAD_ERROR){
+    box.innerHTML='<div style="background:rgba(220,70,70,.1);border:1px solid #e0717166;border-radius:12px;padding:14px 16px;color:#ff9b9b;font-size:13.5px;line-height:1.6">⚠ Não consegui carregar a memória — isto NÃO significa que os dados foram apagados.<br><br>'+esc(MEM_LOAD_ERROR)+'<br><br><button class="btn ghost" style="margin-top:6px" onclick="loadMemoria()">🔄 Tentar de novo</button></div>';
+    return;
+  }
   if(!items.length){box.innerHTML='<div class="empty">Nenhuma entrada encontrada.</div>';return;}
   // Agrupar por tipo
   const grupos={};
@@ -3741,7 +3771,11 @@ async function exportPlatXlsx(){
   document.body.appendChild(a);a.click();a.remove();
 }
 window.DATA=DATA;
-(async()=>{ startSync(); const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
+function supabaseHeartbeat(){
+  // Ping leve toda vez que o Hub abre — reduz a chance do Supabase pausar por inatividade (plano gratuito)
+  fetch(SB_URL+'/rest/v1/memoria?select=id&limit=1',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).catch(()=>{});
+}
+(async()=>{ startSync(); supabaseHeartbeat(); const ok=await serverLoad(); if(ok){ fillSelect();renderChips();renderGrid();renderHeroStats();renderMateriais();fillTipoSelect();renderManageList();renderCust();renderCarousel();renderCarAdmin();renderKanban();renderPlatAdmin();renderLog();renderBackups();renderVersions();renderPastas();renderAcct();renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();renderDashboard();syncAgendaToKanban(); }
   const cinp=document.getElementById('ag-csv-url'); if(cinp)cinp.value=AGENDA_CSV_URL;
   await fetchAgendaCsv(); renderBell();renderAgenda();renderHomeAgenda();renderAgendaAdmin();syncAgendaToKanban();
   if(SEEN_FIRST)markAgendaSeen();
