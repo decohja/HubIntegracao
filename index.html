@@ -1300,6 +1300,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.25',date:'2026-07-11',text:'Book Mensal: campo "Números em 2026" agora também é gerado pela IA junto com Entregue/Previsto (usa só números que estiverem no texto bruto, sem inventar; fica vazio se não houver — você preenche manualmente algo como "Em análise ainda" quando quiser). Removido o texto entre parênteses do rótulo do campo.'},
   {ver:'6.24',date:'2026-07-11',text:'Book Mensal refeito do zero: agora é UM registro por mês (não mais um por plataforma), com os 7 campos exatos do Forms — Iniciativa (fixo "PLATAFORMAS"), Breve descrição (herdada do mês anterior, editável), Pilar (seletor), Farol (🟢 Saudável / 🟡 Atenção / 🔴 Crítico), Números em 2026 (manual, aguardando orientação), e "O que foi entregue"/"O que está previsto" — únicos parágrafos consolidados gerados pela IA misturando as plataformas em texto corrido, no padrão já validado.'},
   {ver:'6.23',date:'2026-07-11',text:'Nova aba "📖 Book Mensal" (só admin, logado): cole tudo bruto do que você fez no mês e a IA organiza por plataforma no padrão executivo (Descrição, Números, O que foi entregue, O que está previsto) — sem jargão técnico, sem inventar números, considerando o mês anterior para continuidade. Cada campo tem botão de copiar, pronto para colar no Forms. Salvo automaticamente no Supabase (tabela book_mensal), com histórico por mês.'},
   {ver:'6.22',date:'2026-07-11',text:'Memória: novo botão "💾 Baixar backup" gera um arquivo .json com todas as entradas, com um clique — sem depender de nada externo. Além disso, foi criado um histórico automático no Supabase (tabela memoria_historico): qualquer edição ou exclusão de entrada guarda a versão anterior automaticamente, protegendo contra apagar/editar por engano.'},
@@ -3515,8 +3516,10 @@ ${ctxAnterior}
 RELATO BRUTO DESTE MÊS (${mes}):
 ${raw}
 
+Além disso, preencha também o campo "numeros": use APENAS números/volumetrias explicitamente mencionados no relato bruto (ex.: quantidade de escolas, acessos, chamados, cadastros). Se nenhum número foi mencionado, deixe o campo como uma string vazia "" — não invente e não escreva texto de preenchimento.
+
 Responda SOMENTE com um objeto JSON válido, sem texto antes ou depois, sem markdown, no formato exato:
-{"entregue":"parágrafo único consolidado sobre o que foi entregue","previsto":"parágrafo único consolidado sobre o que está previsto"}`;
+{"numeros":"números/volumetrias mencionados no texto bruto, ou vazio","entregue":"parágrafo único consolidado sobre o que foi entregue","previsto":"parágrafo único consolidado sobre o que está previsto"}`;
 
   try{
     const res=await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,action:'ai',prompt})});
@@ -3531,6 +3534,7 @@ Responda SOMENTE com um objeto JSON válido, sem texto antes ou depois, sem mark
     catch(e){st.textContent='A IA respondeu em formato inesperado. Tente gerar de novo.';st.style.color='#ff9b9b';btn.disabled=false;console.log(data.text);return;}
 
     const atual=(await fetchBookMes(mes))||{competencia:mes,iniciativa:'PLATAFORMAS',descricao:BOOK_DESCRICAO_PADRAO,pilar:'Jornada do Aluno',farol:'Saudável',numeros:''};
+    atual.numeros=parsed.numeros||'';
     atual.entregue=parsed.entregue||'';
     atual.previsto=parsed.previsto||'';
     renderBookResultado(atual);
@@ -3568,7 +3572,7 @@ function renderBookResultado(row){
         ${farolOpts.map(([v,lb])=>`<option value="${esc(v)}" ${(row.farol||'Saudável')===v?'selected':''}>${esc(lb)}</option>`).join('')}
       </select>
     </div>
-    ${campo('Números em 2026 (aguardando orientação sobre o indicador)','bk-numeros',row.numeros||'','textarea')}
+    ${campo('Números em 2026','bk-numeros',row.numeros||'','textarea')}
     ${campo('O que foi entregue','bk-entregue',row.entregue||'','textarea')}
     ${campo('O que está previsto','bk-previsto',row.previsto||'','textarea')}
     <button class="btn pubbtn" onclick="salvarBookCampo()">💾 Salvar</button>
