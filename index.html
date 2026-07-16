@@ -984,19 +984,18 @@
   </div>
   <div class="view" id="view-book">
     <h2>📖 Book Mensal</h2>
-    <p class="lead">Cole tudo que você fez no mês, sem se preocupar com formato — a IA organiza por plataforma, no padrão executivo (foco em valor entregue, sem jargão técnico, sem inventar números).</p>
+    <p class="lead">Cole tudo que você fez no mês, sem se preocupar com formato — a IA escreve "O que foi entregue" e "O que está previsto" como parágrafos únicos, misturando as plataformas, no padrão executivo validado.</p>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
       <label class="resp-lbl">Competência (mês)</label>
-      <input type="month" id="book-mes" class="ac-input" style="width:160px">
-      <button class="btn ghost" onclick="carregarBookMes()">🔄 Carregar este mês</button>
+      <input type="month" id="book-mes" class="ac-input" style="width:160px" onchange="carregarBookMes()">
     </div>
 
     <div style="background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px">
       <label class="resp-lbl">Cole aqui tudo bruto do mês (pode ser texto solto, WhatsApp, anotações — qualquer coisa)</label>
-      <textarea id="book-raw" class="ac-input" style="width:100%;box-sizing:border-box;min-height:220px;margin-top:8px;font-family:inherit;resize:vertical" placeholder="Ex: Terminamos a integração da Trivium, já está em produção. O Khan ainda está em revisão de regras. Guri travou, vamos ter reunião com a Santa Marcelina..."></textarea>
+      <textarea id="book-raw" class="ac-input" style="width:100%;box-sizing:border-box;min-height:180px;margin-top:8px;font-family:inherit;resize:vertical" placeholder="Ex: Terminamos a integração da Trivium, já está em produção para o piloto. Khan Academy: melhoramos a rastreabilidade. Multiplica: ajustamos pastas e alertas. Está previsto avançar com Minha Biblioteca, Matemática Digital, Meu Diploma SP..."></textarea>
       <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
-        <button class="btn" id="book-gerar-btn" onclick="gerarBookMensal()">✦ Gerar Book do mês</button>
+        <button class="btn" id="book-gerar-btn" onclick="gerarBookMensal()">✦ Gerar "Entregue" e "Previsto"</button>
         <span id="book-gerar-status" style="font-size:12px;color:var(--ink-3)"></span>
       </div>
     </div>
@@ -1301,6 +1300,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.24',date:'2026-07-11',text:'Book Mensal refeito do zero: agora é UM registro por mês (não mais um por plataforma), com os 7 campos exatos do Forms — Iniciativa (fixo "PLATAFORMAS"), Breve descrição (herdada do mês anterior, editável), Pilar (seletor), Farol (🟢 Saudável / 🟡 Atenção / 🔴 Crítico), Números em 2026 (manual, aguardando orientação), e "O que foi entregue"/"O que está previsto" — únicos parágrafos consolidados gerados pela IA misturando as plataformas em texto corrido, no padrão já validado.'},
   {ver:'6.23',date:'2026-07-11',text:'Nova aba "📖 Book Mensal" (só admin, logado): cole tudo bruto do que você fez no mês e a IA organiza por plataforma no padrão executivo (Descrição, Números, O que foi entregue, O que está previsto) — sem jargão técnico, sem inventar números, considerando o mês anterior para continuidade. Cada campo tem botão de copiar, pronto para colar no Forms. Salvo automaticamente no Supabase (tabela book_mensal), com histórico por mês.'},
   {ver:'6.22',date:'2026-07-11',text:'Memória: novo botão "💾 Baixar backup" gera um arquivo .json com todas as entradas, com um clique — sem depender de nada externo. Além disso, foi criado um histórico automático no Supabase (tabela memoria_historico): qualquer edição ou exclusão de entrada guarda a versão anterior automaticamente, protegendo contra apagar/editar por engano.'},
   {ver:'6.21',date:'2026-07-11',text:'Adicionado "heartbeat" no Supabase: toda vez que o Hub abre (qualquer aba, não só Memória), faz uma consulta leve no banco em segundo plano — reduz a chance do projeto pausar por inatividade no plano gratuito.'},
@@ -3459,24 +3459,29 @@ function mesAnterior(m){
   const d=new Date(y,mm-2,1);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
+const BOOK_DESCRICAO_PADRAO=`Responsável pela integração, sustentação e evolução das plataformas educacionais da SEDUC, promovendo automação de acessos, integração entre sistemas e melhorias operacionais que ampliam a confiabilidade, a governança e a experiência de alunos, professores e equipes administrativas.`;
+
 async function fetchBookMes(competencia){
   try{
-    const r=await fetch(SB_URL+'/rest/v1/book_mensal?competencia=eq.'+encodeURIComponent(competencia)+'&order=plataforma.asc',
+    const r=await fetch(SB_URL+'/rest/v1/book_mensal?competencia=eq.'+encodeURIComponent(competencia),
       {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    if(!r.ok)return [];
+    if(!r.ok)return null;
     const data=await r.json();
-    return Array.isArray(data)?data:[];
-  }catch(e){return [];}
+    return (Array.isArray(data)&&data.length)?data[0]:null;
+  }catch(e){return null;}
 }
 async function carregarBookMes(){
   const mesEl=document.getElementById('book-mes');
   const mes=mesEl.value||mesAtualStr();
-  const rows=await fetchBookMes(mes);
-  if(!rows.length){
-    document.getElementById('book-resultado').innerHTML='<div class="empty">Nenhum book salvo para '+esc(mesLabel(mes))+' ainda. Cole o material bruto acima e clique em Gerar.</div>';
-    return;
+  let row=await fetchBookMes(mes);
+  if(!row){
+    // Sem registro ainda: pré-preenche com padrão + descrição herdada do mês anterior (se houver)
+    const anterior=await fetchBookMes(mesAnterior(mes));
+    row={competencia:mes,iniciativa:'PLATAFORMAS',descricao:(anterior&&anterior.descricao)||BOOK_DESCRICAO_PADRAO,
+      pilar:(anterior&&anterior.pilar)||'Jornada do Aluno',farol:(anterior&&anterior.farol)||'Saudável',
+      numeros:'',entregue:'',previsto:''};
   }
-  renderBookResultado(rows,mes);
+  renderBookResultado(row);
 }
 async function gerarBookMensal(){
   const mesEl=document.getElementById('book-mes');
@@ -3487,22 +3492,22 @@ async function gerarBookMensal(){
   const secret=getSecret();if(!secret){alert('Entre como administrador para usar a IA.');return;}
   btn.disabled=true;st.textContent='✦ Gerando...';st.style.color='var(--ink-3)';
 
-  const mesAnt=mesAnterior(mes);
-  const anteriores=await fetchBookMes(mesAnt);
-  const ctxAnterior=anteriores.length
-    ?anteriores.map(r=>`[${r.plataforma}] Entregue mês anterior: ${r.entregue||'—'} | Previsto mês anterior: ${r.previsto||'—'}`).join('\n')
+  const anterior=await fetchBookMes(mesAnterior(mes));
+  const ctxAnterior=anterior
+    ?`Entregue no mês anterior: ${anterior.entregue||'—'}\nPrevisto no mês anterior: ${anterior.previsto||'—'}`
     :'(sem book do mês anterior registrado)';
 
-  const prompt=`Você é um redator executivo especializado em Books Estratégicos para diretoria (SEDUC/FDE). Sua tarefa é organizar o relato bruto abaixo em um Book Mensal, separado por plataforma/iniciativa.
+  const prompt=`Você é um redator executivo especializado em Books Estratégicos para diretoria (SEDUC/FDE). Sua tarefa é escrever DOIS parágrafos únicos e consolidados (não separados por plataforma) resumindo o mês do time de Plataformas/Integrações, a partir do relato bruto abaixo.
 
 REGRAS OBRIGATÓRIAS (não negociáveis):
 - Público-alvo: diretores e executivos que NÃO conhecem detalhes técnicos nem o dia a dia dos projetos.
 - Foque em VALOR ENTREGUE, resultado, benefício para a FDE/SEDUC/rede de ensino — nunca em atividade técnica ou operacional.
 - NUNCA escreva sobre bugs, incidentes ou sustentação como se fossem entregas, a menos que o resultado seja relevante para o negócio.
-- NUNCA invente números, métricas ou volumetrias. Se o texto bruto não trouxer números, o campo "numeros" deve ficar vazio ou dizer "Sem indicador consolidado neste mês".
-- Cada campo deve ser objetivo: 1 a 2 linhas no máximo.
-- Use linguagem madura e institucional. Exemplo do padrão esperado: "Disponibilizada nova funcionalidade que automatiza X, reduzindo esforço operacional e aumentando a confiabilidade das informações."
-- Considere a continuidade com o mês anterior (abaixo) — se algo que estava "previsto" foi concluído agora, isso deve virar "entregue" refletindo a evolução.
+- NUNCA invente números ou volumetrias que não estejam no texto bruto.
+- Cada parágrafo deve mencionar as plataformas/iniciativas relevantes de forma fluida, dentro de um texto corrido (não em lista, não em bullets) — como neste exemplo real já aprovado:
+"Durante a competência, foram disponibilizadas melhorias e evoluções nas plataformas educacionais, com destaque para a entrada em operação da integração do Speaker Progress para as escolas do projeto piloto, aprimoramentos de governança e rastreabilidade na Khan Academy, melhorias na gestão de pastas, permissionamentos e alertas do Multiplica, além da adequação dos ambientes às diretrizes do período pré-eleitoral. As entregas reforçam a confiabilidade das integrações e apoiam a continuidade da transformação digital da rede estadual."
+- Considere a continuidade com o mês anterior — se algo que estava "previsto" foi concluído agora, isso deve virar "entregue" refletindo a evolução.
+- Cada parágrafo deve ter de 2 a 4 frases, nunca mais que isso.
 
 CONTEXTO DO MÊS ANTERIOR (para continuidade):
 ${ctxAnterior}
@@ -3510,10 +3515,8 @@ ${ctxAnterior}
 RELATO BRUTO DESTE MÊS (${mes}):
 ${raw}
 
-Responda SOMENTE com um array JSON válido, sem texto antes ou depois, sem markdown, no formato exato:
-[{"plataforma":"Nome da Plataforma","descricao":"breve descrição executiva da iniciativa","numeros":"números/volumetrias mencionados, ou vazio se não houver","entregue":"o que foi entregue, linguagem executiva","previsto":"o que está previsto a seguir, linguagem executiva"}]
-
-Crie um objeto para cada plataforma/iniciativa distinta mencionada no relato bruto.`;
+Responda SOMENTE com um objeto JSON válido, sem texto antes ou depois, sem markdown, no formato exato:
+{"entregue":"parágrafo único consolidado sobre o que foi entregue","previsto":"parágrafo único consolidado sobre o que está previsto"}`;
 
   try{
     const res=await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret,action:'ai',prompt})});
@@ -3526,58 +3529,71 @@ Crie um objeto para cada plataforma/iniciativa distinta mencionada no relato bru
     let parsed;
     try{parsed=JSON.parse(jsonText);}
     catch(e){st.textContent='A IA respondeu em formato inesperado. Tente gerar de novo.';st.style.color='#ff9b9b';btn.disabled=false;console.log(data.text);return;}
-    if(!Array.isArray(parsed)||!parsed.length){st.textContent='Nenhuma iniciativa identificada no texto. Tente detalhar mais.';st.style.color='#e0a13a';btn.disabled=false;return;}
 
-    // Salva cada linha no Supabase (upsert por competencia+plataforma)
-    for(const item of parsed){
-      await fetch(SB_URL+'/rest/v1/book_mensal',{
-        method:'POST',
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify({competencia:mes,plataforma:item.plataforma,descricao:item.descricao||'',numeros:item.numeros||'',entregue:item.entregue||'',previsto:item.previsto||''})
-      });
-    }
-    st.textContent='✓ Book gerado e salvo!';st.style.color='#86e29a';btn.disabled=false;
-    const rows=await fetchBookMes(mes);
-    renderBookResultado(rows,mes);
+    const atual=(await fetchBookMes(mes))||{competencia:mes,iniciativa:'PLATAFORMAS',descricao:BOOK_DESCRICAO_PADRAO,pilar:'Jornada do Aluno',farol:'Saudável',numeros:''};
+    atual.entregue=parsed.entregue||'';
+    atual.previsto=parsed.previsto||'';
+    renderBookResultado(atual);
+    st.textContent='✓ Gerado! Revise e clique em Salvar.';st.style.color='#86e29a';btn.disabled=false;
   }catch(e){
     st.textContent='Falha: '+String(e);st.style.color='#ff9b9b';btn.disabled=false;
   }
 }
-function renderBookResultado(rows,mes){
+function renderBookResultado(row){
   const box=document.getElementById('book-resultado');if(!box)return;
-  box.innerHTML=`<div style="font-weight:700;color:var(--head);margin-bottom:10px">Book de ${esc(mesLabel(mes))} — ${rows.length} iniciativa(s)</div>`+
-    rows.map((r,i)=>{
-      const uid='bk'+i;
-      const campo=(label,key,val)=>`<div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <label class="resp-lbl">${label}</label>
-          <button class="btn ghost" style="font-size:10.5px;padding:2px 8px" onclick="copiarBookCampo('${uid}-${key}')">📋 Copiar</button>
-        </div>
-        <textarea id="${uid}-${key}" class="ac-input" style="width:100%;box-sizing:border-box;min-height:52px;font-family:inherit;resize:vertical">${esc(val||'')}</textarea>
-      </div>`;
-      return `<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px">
-        <div style="font-weight:800;font-size:15px;color:var(--head);margin-bottom:12px">${esc(r.plataforma)}</div>
-        ${campo('Breve descrição da Iniciativa','descricao',r.descricao)}
-        ${campo('Números em 2026','numeros',r.numeros)}
-        ${campo('O que foi entregue','entregue',r.entregue)}
-        ${campo('O que está previsto','previsto',r.previsto)}
-        <button class="btn ghost" style="font-size:11px" onclick="salvarBookCampo('${mes}','${esc(r.plataforma).replace(/'/g,"&#39;")}','${uid}')">💾 Salvar edições</button>
-      </div>`;
-    }).join('');
+  const farolOpts=[['Saudável','🟢 Saudável'],['Atenção','🟡 Atenção'],['Crítico','🔴 Crítico']];
+  const pilarOpts=['Jornada do Aluno','Jornada Docente','Eficiência Operacional','Tecnologia'];
+  const campo=(label,id,val,tipo)=>{
+    const copyBtn=`<button class="btn ghost" style="font-size:10.5px;padding:2px 8px" onclick="copiarBookCampo('${id}')">📋 Copiar</button>`;
+    const inner=tipo==='textarea'
+      ?`<textarea id="${id}" class="ac-input" style="width:100%;box-sizing:border-box;min-height:52px;font-family:inherit;resize:vertical">${esc(val||'')}</textarea>`
+      :`<input id="${id}" class="ac-input" style="width:100%;box-sizing:border-box" value="${esc(val||'')}">`;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <label class="resp-lbl">${label}</label>${copyBtn}
+      </div>${inner}</div>`;
+  };
+  box.innerHTML=`<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:18px">
+    ${campo('Iniciativa','bk-iniciativa','PLATAFORMAS','input')}
+    ${campo('Breve descrição da Iniciativa','bk-descricao',row.descricao||BOOK_DESCRICAO_PADRAO,'textarea')}
+    <div style="margin-bottom:12px">
+      <label class="resp-lbl">Pilar</label>
+      <select id="bk-pilar" class="sel-badge cl-na" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)">
+        ${pilarOpts.map(p=>`<option value="${esc(p)}" ${(row.pilar||'Jornada do Aluno')===p?'selected':''}>${esc(p)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="resp-lbl">Farol</label>
+      <select id="bk-farol" class="sel-badge cl-na" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)">
+        ${farolOpts.map(([v,lb])=>`<option value="${esc(v)}" ${(row.farol||'Saudável')===v?'selected':''}>${esc(lb)}</option>`).join('')}
+      </select>
+    </div>
+    ${campo('Números em 2026 (aguardando orientação sobre o indicador)','bk-numeros',row.numeros||'','textarea')}
+    ${campo('O que foi entregue','bk-entregue',row.entregue||'','textarea')}
+    ${campo('O que está previsto','bk-previsto',row.previsto||'','textarea')}
+    <button class="btn pubbtn" onclick="salvarBookCampo()">💾 Salvar</button>
+    <span id="bk-save-status" style="font-size:12px;color:var(--ink-3);margin-left:8px"></span>
+  </div>`;
 }
 function copiarBookCampo(id){
   const el=document.getElementById(id);if(!el)return;
-  el.select();
+  el.select&&el.select();
   navigator.clipboard&&navigator.clipboard.writeText(el.value).catch(()=>{document.execCommand('copy');});
 }
-async function salvarBookCampo(mes,plataforma,uid){
-  const get=k=>(document.getElementById(uid+'-'+k)||{}).value||'';
-  await fetch(SB_URL+'/rest/v1/book_mensal',{
-    method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-    body:JSON.stringify({competencia:mes,plataforma:plataforma,descricao:get('descricao'),numeros:get('numeros'),entregue:get('entregue'),previsto:get('previsto')})
-  });
-  alert('Salvo.');
+async function salvarBookCampo(){
+  const mes=(document.getElementById('book-mes')||{}).value||mesAtualStr();
+  const get=id=>(document.getElementById(id)||{}).value||'';
+  const st=document.getElementById('bk-save-status');
+  const payload={competencia:mes,iniciativa:'PLATAFORMAS',descricao:get('bk-descricao'),pilar:get('bk-pilar'),
+    farol:get('bk-farol'),numeros:get('bk-numeros'),entregue:get('bk-entregue'),previsto:get('bk-previsto')};
+  try{
+    await fetch(SB_URL+'/rest/v1/book_mensal',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(st){st.style.color='#86e29a';st.textContent='✓ Salvo.';}
+  }catch(e){if(st){st.style.color='#ff9b9b';st.textContent='Falha ao salvar: '+String(e);}}
 }
 function baixarBackupMemoria(){
   if(!MEMORIA||!MEMORIA.length){alert('Não há entradas na memória para fazer backup.');return;}
