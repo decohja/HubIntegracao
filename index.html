@@ -798,6 +798,7 @@
           <button data-role="Alunos">Alunos</button>
           <button data-role="Professores">Professores</button>
           <button data-role="Admins">Admins</button>
+          <button data-role="Atrib">Atribuições Especiais</button>
         </div>
         <div style="display:flex;justify-content:flex-end;margin:6px 0 2px">
           <button class="btn ghost xls" id="d-export-xlsx-btn" style="font-size:11px;padding:4px 12px" onclick="exportPlatXlsx()" title="Exportar regras no padrão Excel">⬇ Exportar .xlsx</button>
@@ -806,6 +807,7 @@
         <div class="ptab" id="ptab-Alunos"></div>
         <div class="ptab" id="ptab-Professores"></div>
         <div class="ptab" id="ptab-Admins"></div>
+        <div class="ptab" id="ptab-Atrib"></div>
       </div>
       <div class="card" id="d-query"></div>
     </div>
@@ -1237,6 +1239,7 @@ async function serverLoad(){
       if(cfg.profile&&typeof cfg.profile==='object'){PROFILE=Object.assign({name:'Administrador',photo:''},cfg.profile);renderAcct();}
       if(Array.isArray(cfg.pastas)) PASTAS=cfg.pastas.slice();
   if(cfg.admins&&typeof cfg.admins==='object'){Object.assign(ADMINS,cfg.admins);}
+  if(cfg.atribs&&typeof cfg.atribs==='object'){Object.assign(ATRIBS,cfg.atribs);}
   if(Array.isArray(cfg.perfisGlobais)&&cfg.perfisGlobais.length){PERFIS_GLOBAIS=cfg.perfisGlobais;}
       if(Array.isArray(cfg.versions)){VERSIONS=cfg.versions.slice();
         const have=new Set(VERSIONS.map(v=>v.ver));
@@ -1265,7 +1268,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE,admins:ADMINS,perfisGlobais:PERFIS_GLOBAIS};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE,admins:ADMINS,atribs:ATRIBS,perfisGlobais:PERFIS_GLOBAIS};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -1283,6 +1286,14 @@ async function serverSave(btn){
   postBank(()=>{ if(btn){btn.textContent='✓ Salvo no site!';setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2500);} },
            e=>{ alert('Não consegui salvar no site: '+e); if(btn){btn.textContent=old;btn.disabled=false;} });
 }
+const ATRIBS=Object.assign({
+  AVACEEJA:{tipos:[
+    {c:7940,n:'LINGUAGENS E SUAS TECNOLOGIAS'},
+    {c:7941,n:'MATEMATICA E SUAS TECNOLOGIAS'},
+    {c:7942,n:'CIENCIAS DA NATUREZA E SUAS TECNOLOGIAS'},
+    {c:7943,n:'CIENCIAS HUMANAS E SOCIAIS APLICADAS'}
+  ]}
+},DATA.ATRIBS||{});
 const PLATS=DATA.PLATS, EXCEL_RULES=DATA.EXCEL_RULES, ADMINS=DATA.ADMINS, DISC=DATA.DISC, ESCOLAS=DATA.ESCOLAS, MATERIAIS=DATA.MATERIAIS||[];
 let TIPOS=DATA.TIPOS, REDES=DATA.REDES;
 let DEL_TIPOS=[], DEL_REDES=[];
@@ -1300,6 +1311,7 @@ const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
 const DEFAULT_VERSIONS=[
+  {ver:'6.27',date:'2026-11-05',text:'Nova aba "Atribuições Especiais" na tela de cada plataforma (ao lado de Admins): lista código + nome do tipo de atribuição, com adicionar/remover e salvamento no banco. Meu Diploma SP (AVA CEEJA) já vem com 7940 Linguagens, 7941 Matemática, 7942 Ciências da Natureza e 7943 Ciências Humanas. Exportar .xlsx agora preenche a aba Atribuições Especiais do template (Aplica-se? Sim + linhas) quando a plataforma tem atribuições; sem atribuições continua "Não".'},
   {ver:'6.25',date:'2026-07-11',text:'Book Mensal: campo "Números em 2026" agora também é gerado pela IA junto com Entregue/Previsto (usa só números que estiverem no texto bruto, sem inventar; fica vazio se não houver — você preenche manualmente algo como "Em análise ainda" quando quiser). Removido o texto entre parênteses do rótulo do campo.'},
   {ver:'6.24',date:'2026-07-11',text:'Book Mensal refeito do zero: agora é UM registro por mês (não mais um por plataforma), com os 7 campos exatos do Forms — Iniciativa (fixo "PLATAFORMAS"), Breve descrição (herdada do mês anterior, editável), Pilar (seletor), Farol (🟢 Saudável / 🟡 Atenção / 🔴 Crítico), Números em 2026 (manual, aguardando orientação), e "O que foi entregue"/"O que está previsto" — únicos parágrafos consolidados gerados pela IA misturando as plataformas em texto corrido, no padrão já validado.'},
   {ver:'6.23',date:'2026-07-11',text:'Nova aba "📖 Book Mensal" (só admin, logado): cole tudo bruto do que você fez no mês e a IA organiza por plataforma no padrão executivo (Descrição, Números, O que foi entregue, O que está previsto) — sem jargão técnico, sem inventar números, considerando o mês anterior para continuidade. Cada campo tem botão de copiar, pronto para colar no Forms. Salvo automaticamente no Supabase (tabela book_mensal), com histórico por mês.'},
@@ -2000,6 +2012,44 @@ function removeAdminPastaItem(platKey,idx,val){
   document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
 }
 
+/* ============ Atribuições especiais (por plataforma) ============ */
+function renderAtribs(platKey){
+  const a=ATRIBS[platKey]||{tipos:[]};
+  const tipos=a.tipos||[];
+  const lista=tipos.length?
+    '<div style="font-size:11.5px;color:var(--ink-2);margin:4px 0 8px">Aplica-se: <b>Sim</b> · '+tipos.length+' tipo(s) de atribuição</div>'+
+    '<table style="margin-bottom:10px"><thead><tr><th>Cód. do tipo</th><th>Nome do tipo de atribuição</th><th></th></tr></thead><tbody>'+
+    tipos.map((t,i)=>`<tr>
+      <td><span class="tag adm">${esc(String(t.c))}</span></td>
+      <td style="font-size:12px">${esc(String(t.n||''))}</td>
+      <td><button class="btn ghost" style="font-size:10px;padding:2px 7px;color:#e07171;border-color:#e07171" onclick="removeAtrib('${platKey}',${i})">✕</button></td>
+    </tr>`).join('')+'</tbody></table>'
+    :'<div class="empty" style="margin:8px 0">Não se aplica — nenhuma atribuição especial cadastrada para esta plataforma.</div>';
+  const addForm=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-top:4px">
+    <input id="atrib-cod-${platKey}" placeholder="Código" style="width:90px;font-size:12px">
+    <input id="atrib-nome-${platKey}" placeholder="Nome do tipo de atribuição" style="flex:1;min-width:200px;font-size:12px">
+    <button class="btn ghost" style="font-size:11px" onclick="addAtrib('${platKey}')">+ Adicionar</button>
+  </div>`;
+  return lista+addForm;
+}
+function addAtrib(platKey){
+  const ci=document.getElementById('atrib-cod-'+platKey), ni=document.getElementById('atrib-nome-'+platKey);
+  const cod=(ci&&ci.value||'').trim(), nome=(ni&&ni.value||'').trim();
+  if(!cod){alert('Informe o código do tipo de atribuição.');return;}
+  if(!ATRIBS[platKey])ATRIBS[platKey]={tipos:[]};
+  if(!Array.isArray(ATRIBS[platKey].tipos))ATRIBS[platKey].tipos=[];
+  if(ATRIBS[platKey].tipos.some(t=>String(t.c)===cod)){alert('Código já adicionado.');return;}
+  ATRIBS[platKey].tipos.push({c:parseInt(cod)||cod,n:nome});
+  document.getElementById('ptab-Atrib').innerHTML=renderAtribs(platKey);
+  postBank();
+}
+function removeAtrib(platKey,idx){
+  if(!confirm('Remover esta atribuição especial?'))return;
+  ATRIBS[platKey].tipos.splice(idx,1);
+  document.getElementById('ptab-Atrib').innerHTML=renderAtribs(platKey);
+  postBank();
+}
+
 /* ============ navegação topo ============ */
 document.querySelectorAll('.nav button[data-view]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
@@ -2091,6 +2141,7 @@ function openPlat(k){window._curPlat=k;const p=PLATS[k];
   document.getElementById('ptab-Alunos').innerHTML=renderRules(k,'Alunos');
   document.getElementById('ptab-Professores').innerHTML=renderRules(k,'Professores');
   document.getElementById('ptab-Admins').innerHTML=renderAdmins(k);
+  document.getElementById('ptab-Atrib').innerHTML=renderAtribs(k);
   document.querySelectorAll('#d-subtabs button[data-role]').forEach((b,i)=>{b.classList.toggle('active',i===0);
     b.onclick=()=>{document.querySelectorAll('#d-subtabs button[data-role]').forEach(x=>x.classList.remove('active'));
       document.querySelectorAll('#plat-detail .ptab').forEach(x=>x.classList.remove('active'));
@@ -3929,6 +3980,14 @@ async function exportPlatXlsx(){
     return [String(pf.c||''),pf.p||'',pf.disc||'',pastasNum,'',''];
   });
   fillSheet('Admins', rowsAdm);
+
+  // Aba Atribuições Especiais: Código do tipo | Nome do tipo | Disciplina | Validado | Obs
+  const wsAtr=wb.getWorksheet('Atribuições Especiais');
+  const atrTipos=((ATRIBS&&ATRIBS[k])||{}).tipos||[];
+  if(wsAtr){
+    wsAtr.getCell('D3').value=atrTipos.length?'Sim':'Não';
+    fillSheet('Atribuições Especiais', atrTipos.map(t=>[String(t.c),t.n||'','','','']));
+  }
 
   // Aba Cliente: URL de produção + Nome do Cliente (Responsável SEDUC), só se existirem
   const wsCliente=wb.getWorksheet('Cliente');
