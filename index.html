@@ -1238,7 +1238,7 @@ async function serverLoad(){
       if(Array.isArray(cfg.agenda)) AGENDA=cfg.agenda.slice();
       if(cfg.profile&&typeof cfg.profile==='object'){PROFILE=Object.assign({name:'Administrador',photo:''},cfg.profile);renderAcct();}
       if(Array.isArray(cfg.pastas)) PASTAS=cfg.pastas.slice();
-  if(cfg.admins&&typeof cfg.admins==='object'){Object.assign(ADMINS,cfg.admins);} hubMigAdm629();
+  if(cfg.admins&&typeof cfg.admins==='object'){Object.assign(ADMINS,cfg.admins);} hubMigAdm629(); hubMigAdm632();
   if(cfg.atribs&&typeof cfg.atribs==='object'){Object.assign(ATRIBS,cfg.atribs);}
   if(Array.isArray(cfg.perfisGlobais)&&cfg.perfisGlobais.length){PERFIS_GLOBAIS=cfg.perfisGlobais;}
       if(Array.isArray(cfg.versions)){VERSIONS=cfg.versions.slice();
@@ -1310,7 +1310,9 @@ let PLAT_ADDS = (DATA.PLAT_ADDS&&typeof DATA.PLAT_ADDS==='object') ? DATA.PLAT_A
 const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
-const DEFAULT_VERSIONS=[{ver:'6.29',date:'2026-11-10',text:'Admins alinhados à procedure de admin (SP_ATUALIZA_ADMIN), que é a regra enviada para a SF. Leia SP: saem 121 (código de vice errado) e 1273; entram 1832 (nome a confirmar) e Sala de Leitura (1130). Elefante Letrado: sai 1273; entram 114 Vice, Sala de Leitura (1130), Salas de Recursos 9000/9020/9030, Sala de Recurso por atribuição em turmas de Ed. Especial e atribuições 7878/7879/7881/7882 (nomes a confirmar). Prepara SP: entram 127, 272, 114, 275, 269 e 1273 (112 mantém a pasta PEC). Khan Academy: vice 121 trocado pelo código correto 114. A troca só acontece se a lista salva no banco ainda era a anterior; listas editadas depois não são tocadas.'},
+const DEFAULT_VERSIONS=[{ver:'6.32',date:'2026-11-10',text:'Admins que estavam cadastrados só pelo nome agora estão ligados aos códigos do cadastro de perfis: São Paulo em Ação, Empreendedorismo, Matific, SPeak e OpenEnglish. CEC = 1273; Trio gestor = 272 Diretor + 114 Vice + 127 PC. Saíram CGPAC - Matemática (Matific), Professor do Centro de Línguas (SPeak) e SUPED - CORRIC (OpenEnglish). A troca só acontece se a lista salva no banco ainda era a anterior.'},
+  {ver:'6.31',date:'2026-11-10',text:'Editor "Atualizar a query desta plataforma" funciona em qualquer card, inclusive nos que ainda não têm trecho na procedure (ex.: BEEM): ao salvar, se o trecho não existir, o Hub cria o bloco na procedure do papel preenchido; se existir, substitui como antes. Cards novos adicionados pela tela também passam a ser lidos da procedure. Quando um card de link/Teams tiver query, as abas mostram o texto do card e, abaixo, as regras. Desfeito o que a 6.30 tinha alterado (editor escondido e botão de editar texto).'},
+  {ver:'6.29',date:'2026-11-10',text:'Admins alinhados à procedure de admin (SP_ATUALIZA_ADMIN), que é a regra enviada para a SF. Leia SP: saem 121 (código de vice errado) e 1273; entram 1832 (nome a confirmar) e Sala de Leitura (1130). Elefante Letrado: sai 1273; entram 114 Vice, Sala de Leitura (1130), Salas de Recursos 9000/9020/9030, Sala de Recurso por atribuição em turmas de Ed. Especial e atribuições 7878/7879/7881/7882 (nomes a confirmar). Prepara SP: entram 127, 272, 114, 275, 269 e 1273 (112 mantém a pasta PEC). Khan Academy: vice 121 trocado pelo código correto 114. A troca só acontece se a lista salva no banco ainda era a anterior; listas editadas depois não são tocadas.'},
   {ver:'6.28',date:'2026-11-10',text:'Atualização das procedures de 10/11 (Turmas, Alunos e Professores) — só nas plataformas que mudaram; as demais foram conferidas e estão iguais. Prepara SP: séries 1-3 em todos os papéis, regra de Turmas sem filtro de disciplina e de Professores com lista de disciplinas no 101. SPeak (EFIRST): tipo 5 e 110 passam a valer inteiros em Turmas/Alunos; em Professores o 110 perde o filtro de série. Meu Diploma SP (AVA CEEJA): sai a restrição de Presença Flexível, vale todo o tipo 5. Educação Profissional (MOODLE): Professores passam a ter a lista de disciplinas técnicas. OpenEnglish: Turmas e Alunos tipo 14, séries 6-9. Piloto de Matemática (campo CANVA da procedure): tipo 101 nas 156 escolas (Professores também por disciplina) — as regras aparecem no card Matemática EM; o card Canva (validação de domínio) continua sem regra de procedure. O SQL salvo no banco é atualizado automaticamente ao abrir o Hub SOMENTE onde o bloco salvo ainda era a versão anterior; blocos editados à mão não são tocados. Nova plataforma BEEM (CIEE) como card de redirecionamento SF → Portal Kairós, status parcial, público-alvo pendente (Ester). IPTV, Guri e VIVO não foram alterados.'},
   
   {ver:'6.27',date:'2026-11-05',text:'Nova aba "Atribuições Especiais" na tela de cada plataforma (ao lado de Admins): lista código + nome do tipo de atribuição, com adicionar/remover e salvamento no banco. Meu Diploma SP (AVA CEEJA) já vem com 7940 Linguagens, 7941 Matemática, 7942 Ciências da Natureza e 7943 Ciências Humanas. Exportar .xlsx agora preenche a aba Atribuições Especiais do template (Aplica-se? Sim + linhas) quando a plataforma tem atribuições; sem atribuições continua "Não".'},
@@ -1513,13 +1515,14 @@ function saveLogos(){try{localStorage.setItem('hubLogos',JSON.stringify(LOGOS))}
 
 /* ============ PARSER (mesmo do testbed) ============ */
 const PLATFORMS=Object.keys(PLATS);
+function isPlatName(n){return PLATFORMS.includes(n)||!!PLATS[n];}
 function stripComments(s){return s.replace(/\/\*[\s\S]*?\*\//g,' ').replace(/--[^\n\r]*/g,' ');}
 function nums(s){return s.split(',').map(x=>parseInt(x.trim(),10)).filter(n=>!isNaN(n));}
 function extractBlocks(sql){
   sql=stripComments(sql); const into=sql.search(/INTO\s+#TMP/i); if(into>0)sql=sql.slice(0,into);
   const blocks={}; const re=/,\s*([A-Z][A-Z_]+)\s*=\s*/g; let m,marks=[];
   while((m=re.exec(sql)))marks.push({name:m[1],start:m.index,valStart:re.lastIndex});
-  for(let i=0;i<marks.length;i++){const c=marks[i];if(!PLATFORMS.includes(c.name)||blocks[c.name]!==undefined)continue;
+  for(let i=0;i<marks.length;i++){const c=marks[i];if(!isPlatName(c.name)||blocks[c.name]!==undefined)continue;
     const end=(i+1<marks.length)?marks[i+1].start:sql.length;blocks[c.name]=sql.slice(c.valStart,end).trim();}
   return blocks;
 }
@@ -1634,6 +1637,9 @@ function parseAll(){
 
 
 
+/* v6.32: admins cadastrados so por nome (Sao Paulo em Acao, Empreendedorismo, Matific, SPeak, OpenEnglish) ligados aos codigos do cadastro de perfis. Trio gestor vira 272+114+127; CGPAC-Matematica, Professor do Centro de Linguas e SUPED-CORRIC saem. So troca se a lista salva ainda for exatamente a de 10/11. */
+const ADM632={"g":{"127":"PC / Coordenador de Gestão Pedagógica","112":"PCNP/Professor Especialista em Currículo","275":"Supervisor Educacional/Supervisor de Ensino","272":"Diretor Escolar/Diretor de Escola","269":"Dirigente","1273":"NPE - Diretor(a) / Coordenador de Equipe Curricular","114":"Vice-Diretor / Vice-Diretor Escolar"},"p":{"SABER":{"sig":"Dirigente|Supervisor|PEC|CEC|Diretor de Escola|Vice-Diretor|PC/Coordenador de Gestão Pedagógica","map":[[269],[275],[112],[1273],[272],[114],[127]]},"SHAPER":{"sig":"SUPERVISOR|PEC|Diretor|Vice-Diretor|PC/ Coordenador de gestão pedagógica","map":[[275],[112],[272],[114],[127]]},"MATIFIC":{"sig":"TRIO GESTOR (Diretor, Vice-diretor, Professor Coordenador)|CGPAC - MATEMÁTICA*|SUPERVISOR|CEC|PEC","map":[[272,114,127],[],[275],[1273],[112]]},"EFIRST":{"sig":"TRIO GESTOR (PC, Vice e diretor)|SUPERVISOR|PEC|PROFESSOR do Centro de Línguas","map":[[272,114,127],[275],[112],[]]},"OPENENGLISH":{"sig":"Diretor / Vice-Diretor / PC-Coordenador|PEC|Supervisor|Dirigente|CEC|SUPED – CORRIC","map":[[272,114,127],[112],[275],[269],[1273],[]]}}};
+function hubMigAdm632(){let n=0;try{for(const k in ADM632.p){const a=ADMINS[k];if(!a||!Array.isArray(a.perfis))continue;const cf=ADM632.p[k];if(a.perfis.map(x=>x.p||'').join('|')!==cf.sig)continue;if(a.perfis.some(x=>x.c!=null&&x.c!==''))continue;const out=[],seen=new Set();a.perfis.forEach((x,i)=>{(cf.map[i]||[]).forEach(c=>{if(seen.has(c))return;seen.add(c);const e={c:c,p:ADM632.g[c],pasta:[]};if(x.acesso)e.acesso=x.acesso;if(x.obs)e.obs=x.obs;out.push(e);});});a.perfis=out;n++;}if(n)console.info('v6.32: admins ligados aos codigos em '+n+' plataforma(s)');}catch(e){console.warn('hubMigAdm632',e);}return n;}
 /* v6.29: admins de Leia SP, Elefante Letrado e Prepara SP alinhados a SP_ATUALIZA_ADMIN; vice 121 (codigo errado) trocado por 114 na Khan. So troca se a lista salva no banco ainda for exatamente a de 10/11 (mesmos codigos); a pasta PEC do 112 e preservada. */
 const ADM629={"new":{"LEIASP":[{"c":127,"p":"PC / Coordenador de Gestão Pedagógica","pasta":[]},{"c":272,"p":"Diretor Escolar/Diretor de Escola","pasta":[]},{"c":114,"p":"Vice-Diretor / Vice-Diretor Escolar","pasta":[]},{"c":275,"p":"Supervisor Educacional/Supervisor de Ensino","pasta":[]},{"c":112,"p":"PCNP/Professor Especialista em Currículo","pasta":[]},{"c":1832,"p":"(nome a confirmar)","pasta":[]},{"c":1130,"p":"Sala de Leitura (atribuição especial 1130 ou afastamento Docente PEI-Sala de Leitura)","pasta":[]}],"ELEFANTE":[{"c":127,"p":"PC / Coordenador de Gestão Pedagógica","pasta":[]},{"c":272,"p":"Diretor Escolar/Diretor de Escola","pasta":[]},{"c":114,"p":"Vice-Diretor / Vice-Diretor Escolar","pasta":[]},{"c":275,"p":"Supervisor Educacional/Supervisor de Ensino","pasta":[]},{"c":112,"p":"PCNP/Professor Especialista em Currículo","pasta":[]},{"c":1130,"p":"Sala de Leitura (atribuição especial 1130 ou afastamento Docente PEI-Sala de Leitura)","pasta":[]},{"c":9000,"p":"Sala De Recursos Deficiencia Auditiva (atribuição especial)","pasta":[]},{"c":9020,"p":"Sala De Recursos Deficiencia Intelectual (atribuição especial)","pasta":[]},{"c":9030,"p":"Sala De Recursos Deficiencia Visual (atribuição especial)","pasta":[]},{"c":9000,"p":"Sala de Recurso: professores atribuídos em turmas de Educação Especial (tipos 64-73), disciplinas 9000/9010/9020/9030/9050 e itinerante 6740-6745","pasta":[]},{"c":7878,"p":"(nome a confirmar) - atribuição especial","pasta":[]},{"c":7879,"p":"(nome a confirmar) - atribuição especial","pasta":[]},{"c":7881,"p":"(nome a confirmar) - atribuição especial","pasta":[]},{"c":7882,"p":"(nome a confirmar) - atribuição especial","pasta":[]}],"PREPARASP":[{"c":127,"p":"PC / Coordenador de Gestão Pedagógica","pasta":[]},{"c":272,"p":"Diretor Escolar/Diretor de Escola","pasta":[]},{"c":114,"p":"Vice-Diretor / Vice-Diretor Escolar","pasta":[]},{"c":275,"p":"Supervisor Educacional/Supervisor de Ensino","pasta":[]},{"c":269,"p":"Dirigente","pasta":[]},{"c":1273,"p":"NPE - Diretor(a) / Coordenador de Equipe Curricular","pasta":[]},{"c":112,"p":"PCNP/Professor Especialista em Currículo","pasta":[]}]},"known":{"LEIASP":"112,114,121,127,1273,272,275","ELEFANTE":"112,127,1273,272,275","PREPARASP":"112","KHAN":"112,121,127,1273,272,275"}};
 function hubMigAdm629(){let n=0;try{for(const k in ADM629.known){const a=ADMINS[k];if(!a||!Array.isArray(a.perfis))continue;const sig=a.perfis.map(x=>String(x.c)).sort().join(',');if(sig!==ADM629.known[k])continue;const old112=a.perfis.find(x=>String(x.c)==='112');const pasta112=old112&&Array.isArray(old112.pasta)?old112.pasta.slice():[];if(k==='KHAN'){a.perfis=a.perfis.map(x=>String(x.c)==='121'?{c:114,p:'Vice-Diretor / Vice-Diretor Escolar',pasta:[]}:x);}else{a.perfis=JSON.parse(JSON.stringify(ADM629.new[k])).map(x=>String(x.c)==='112'?Object.assign(x,{pasta:pasta112}):x);}n++;}if(n)console.info('v6.29: admins atualizados em '+n+' plataforma(s)');}catch(e){console.warn('hubMigAdm629',e);}return n;}
@@ -1794,7 +1800,7 @@ function platBlockSpan(raw,k){
   while((m=re.exec(raw))){ if(m.index>=lim)break; marks.push({name:m[1],start:m.index,valStart:re.lastIndex}); }
   for(let i=0;i<marks.length;i++){ if(marks[i].name===k){
     const start=marks[i].start; let end=lim;
-    for(let j=i+1;j<marks.length;j++){ if(PLATFORMS.includes(marks[j].name)){end=marks[j].start;break;} }
+    for(let j=i+1;j<marks.length;j++){ if(isPlatName(marks[j].name)){end=marks[j].start;break;} }
     return {start,end};
   }}
   return null;
@@ -1807,7 +1813,7 @@ function allPlatBlockSpans(raw,k){
   const spans=[];
   for(let i=0;i<marks.length;i++){ if(marks[i].name!==k)continue;
     const start=marks[i].start; let end=lim;
-    for(let j=i+1;j<marks.length;j++){ if(PLATFORMS.includes(marks[j].name)){end=marks[j].start;break;} }
+    for(let j=i+1;j<marks.length;j++){ if(isPlatName(marks[j].name)){end=marks[j].start;break;} }
     spans.push({start,end});
   }
   return spans;
@@ -1835,6 +1841,15 @@ function replacePlatBlock(role,k,pasted){
   }
   out+=raw.slice(lastEnd);
   SQL[role]=out;
+  return true;
+}
+/* v6.31: se a plataforma ainda nao tem trecho na procedure, cria o trecho antes do INTO #TMP */
+function insertPlatBlock(role,k,pasted){
+  if(!pasted||!pasted.trim())return false;
+  const raw=SQL[role];if(allPlatBlockSpans(raw,k).length)return false;
+  const into=raw.search(/INTO\s+#TMP/i);if(into<0)return false;
+  let pos=into;while(pos>0&&/\s/.test(raw[pos-1]))pos--;
+  SQL[role]=raw.slice(0,pos)+'\n\n        ,'+k+' = '+valueFromPasted(pasted)+'\n\n    '+raw.slice(into);
   return true;
 }
 function getDefaultPlatBlockText(role,k){
@@ -1870,7 +1885,7 @@ function savePlatQuery(k){
   let mudou=false;
   ['Turmas','Alunos','Professores'].forEach(r=>{const el=document.getElementById('d-q-'+r);
     if(el){const sk=sqlKey(k)||k;const atual=getPlatBlockText(r,sk);const novo=el.value.trim();
-      if(novo&&novo!==atual){if(replacePlatBlock(r,sk,novo))mudou=true;}}});
+      if(novo&&novo!==atual){if(replacePlatBlock(r,sk,novo)||insertPlatBlock(r,sk,novo))mudou=true;}}});
   if(!mudou){const st=document.getElementById('d-query-status');if(st){st.style.color='var(--ink-3)';st.textContent='Nenhuma mudança para salvar.';}return;}
   saveSQL();PARSED=parseAll();openPlat(k);renderGrid();
   const st=document.getElementById('d-query-status');if(st){st.style.color='var(--ink-3)';st.textContent='Reprocessado. Salvando no banco…';}
@@ -1880,8 +1895,14 @@ function savePlatQuery(k){
 
 function renderRules(p,role){
   if(PLATS[p].src==='teams'||PLATS[p].src==='card'){
-    return `<div class="info-banner">${esc(PLATS[p].note||'Integração via Microsoft Teams. O público são os participantes do programa (professores/gestores inscritos); não há enturmação por query SQL.')}</div>`;
+    const banner=`<div class="info-banner">${esc(PLATS[p].note||'Integração via Microsoft Teams. O público são os participantes do programa (professores/gestores inscritos); não há enturmação por query SQL.')}</div>`;
+    const v0=PARSED[role]&&PARSED[role][p];
+    if(!v0||v0.mode==='absent')return banner;
+    return banner+'<div style="height:10px"></div>'+_renderRulesSql(p,role);
   }
+  return _renderRulesSql(p,role);
+}
+function _renderRulesSql(p,role){
   const v=PARSED[role][p];
   if(!v||v.mode==='absent')return '<div class="empty">Sem informação desta regra para este recorte.</div>';
   if(v.mode==='none')return '<div class="info-banner">Não é enturmado por esta regra. O público é definido por outro fluxo (ver sincronismo acima).</div>';
@@ -3981,7 +4002,7 @@ async function exportPlatXlsx(){
   fillSheet('Alunos', buildRulesRows('Alunos', false));
 
   // Se a plataforma é via Teams (sem regra de enturmação), marca "Aplica-se? Não" nas 3 abas
-  if(PLATS[k].src==='teams'||PLATS[k].src==='card'){
+  if(PLATS[k].src==='teams'||(PLATS[k].src==='card'&&!['Turmas','Alunos','Professores'].some(r=>PARSED[r][k]&&PARSED[r][k].mode!=='absent'))){
     ['Turmas','Professores','Alunos'].forEach(sh=>{
       const ws=wb.getWorksheet(sh);if(!ws)return;
       ws.getCell('D4').value='Não';
