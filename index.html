@@ -718,14 +718,14 @@
       </span>
     </div>
     <div class="owners">
-      <button id="bell-btn" class="theme-toggle bell" type="button" title="Lembretes da agenda" aria-label="Lembretes" onclick="toggleAgenda(event)">🔔<span id="bell-badge" class="bell-badge" hidden>0</span><span id="bell-new" class="bell-new" hidden>0</span></button>
+      <button id="bell-btn" class="theme-toggle bell admin-only" type="button" title="Lembretes da agenda" aria-label="Lembretes" onclick="toggleAgenda(event)">🔔<span id="bell-badge" class="bell-badge" hidden>0</span><span id="bell-new" class="bell-new" hidden>0</span></button>
       <button id="theme-toggle" class="theme-toggle" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">☀</button>
       <div class="owner-acct" id="acct-box"></div>
     </div>
   </div>
 </div>
 
-<div id="agenda-panel" class="agenda-panel" hidden>
+<div id="agenda-panel" class="agenda-panel admin-only" hidden>
   <div class="agenda-head"><span>🔔 Lembretes</span><button class="ag-x" onclick="closeAgenda()" title="Fechar">×</button></div>
   <div id="agenda-body" class="agenda-body"></div>
   <div class="agenda-foot">Para adicionar ou editar lembretes, vá em <b>⚙ → Agenda / lembretes</b>.</div>
@@ -735,7 +735,7 @@
   <button class="active" data-view="plataformas">Plataformas</button>
   <button data-view="busca">Tipos de Ensino</button>
   <button data-view="materiais">Materiais</button>
-  <button data-view="devops">DevOps</button>
+  <button data-view="devops" class="admin-only">DevOps</button>
   <button data-view="memoria" class="admin-only" id="nav-memoria">🧠 Memória</button>
   <button data-view="book" class="admin-only" id="nav-book">📖 Book Mensal</button>
   <button data-view="personalizar" class="nav-gear" title="Configurações" aria-label="Configurações">⚙</button>
@@ -747,7 +747,7 @@
     <div id="plat-overview">
       <div id="home-carousel"></div>
       <div id="dashboard" class="dashboard"></div>
-      <div id="home-agenda" class="home-agenda" hidden></div>
+      <div id="home-agenda" class="home-agenda admin-only" hidden></div>
       <div class="hero">
         <h2>Onde cada plataforma chega</h2>
         <p>Escolha uma plataforma para ver, de forma clara, quem ela atende — turmas, alunos, professores e administradores — e como sincroniza com o Hub. As regras vêm direto da query oficial; quando mudam, é só reprocessar.</p>
@@ -1157,7 +1157,7 @@
     </div>
   </div>
 
-  <div class="view" id="view-devops">
+  <div class="view admin-only" id="view-devops">
     <h2>DevOps</h2>
     <p class="lead">Painel de trabalho do time. Organize as demandas em colunas, arraste os cartões entre elas e acompanhe o andamento. Tudo fica salvo no banco para todos.</p>
     <div id="analise-panel" style="margin-bottom:14px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;overflow:hidden">
@@ -1310,7 +1310,8 @@ let PLAT_ADDS = (DATA.PLAT_ADDS&&typeof DATA.PLAT_ADDS==='object') ? DATA.PLAT_A
 const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
-const DEFAULT_VERSIONS=[{ver:'6.33',date:'2026-11-10',text:'Nova plataforma Fluência Leitora – Tutoria (Verificação de Aprendizagem Professor Tutor Anos Finais), status Pausada: aplicação realizada e encerrada, reabre quando solicitado. Card com acesso autenticado por token e sincronismo de alunos e turmas via API. Regra: rede estadual, tipo 14, séries 6 a 9 (Turmas e Alunos), editável pelo editor de query do card.'},
+const DEFAULT_VERSIONS=[{ver:'6.34',date:'2026-11-12',text:'DevOps e agenda visíveis só para quem está logado: para visitantes somem o menu e a tela do DevOps, o sino e o painel de lembretes, a linha do tempo da agenda na home e os blocos DevOps e Alertas do painel do topo (o bloco Plataformas continua para todos). Ao sair da conta estando no DevOps, volta para Plataformas. Observação: é ocultação de tela; a leitura do banco continua sem senha.'},
+  {ver:'6.33',date:'2026-11-10',text:'Nova plataforma Fluência Leitora – Tutoria (Verificação de Aprendizagem Professor Tutor Anos Finais), status Pausada: aplicação realizada e encerrada, reabre quando solicitado. Card com acesso autenticado por token e sincronismo de alunos e turmas via API. Regra: rede estadual, tipo 14, séries 6 a 9 (Turmas e Alunos), editável pelo editor de query do card.'},
   {ver:'6.32',date:'2026-11-10',text:'Admins que estavam cadastrados só pelo nome agora estão ligados aos códigos do cadastro de perfis: São Paulo em Ação, Empreendedorismo, Matific, SPeak e OpenEnglish. CEC = 1273; Trio gestor = 272 Diretor + 114 Vice + 127 PC. Saíram CGPAC - Matemática (Matific), Professor do Centro de Línguas (SPeak) e SUPED - CORRIC (OpenEnglish). A troca só acontece se a lista salva no banco ainda era a anterior.'},
   {ver:'6.31',date:'2026-11-10',text:'Editor "Atualizar a query desta plataforma" funciona em qualquer card, inclusive nos que ainda não têm trecho na procedure (ex.: BEEM): ao salvar, se o trecho não existir, o Hub cria o bloco na procedure do papel preenchido; se existir, substitui como antes. Cards novos adicionados pela tela também passam a ser lidos da procedure. Quando um card de link/Teams tiver query, as abas mostram o texto do card e, abaixo, as regras. Desfeito o que a 6.30 tinha alterado (editor escondido e botão de editar texto).'},
   {ver:'6.29',date:'2026-11-10',text:'Admins alinhados à procedure de admin (SP_ATUALIZA_ADMIN), que é a regra enviada para a SF. Leia SP: saem 121 (código de vice errado) e 1273; entram 1832 (nome a confirmar) e Sala de Leitura (1130). Elefante Letrado: sai 1273; entram 114 Vice, Sala de Leitura (1130), Salas de Recursos 9000/9020/9030, Sala de Recurso por atribuição em turmas de Ed. Especial e atribuições 7878/7879/7881/7882 (nomes a confirmar). Prepara SP: entram 127, 272, 114, 275, 269 e 1273 (112 mantém a pasta PEC). Khan Academy: vice 121 trocado pelo código correto 114. A troca só acontece se a lista salva no banco ainda era a anterior; listas editadas depois não são tocadas.'},
@@ -3250,6 +3251,7 @@ let HOME_AG_OPEN=false;
 let DASH_MONTH=(function(){try{return localStorage.getItem('hubDashMonth')!=='0';}catch(e){return true;}})();
 function toggleHomeAgenda(){HOME_AG_OPEN=!HOME_AG_OPEN;renderHomeAgenda();}
 function goView(name){
+  if(!AUTHED&&(name==='devops'||name==='personalizar'||name==='memoria'||name==='book'))name='plataformas';
   document.querySelectorAll('.nav button[data-view]').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   const nav=document.querySelector('.nav button[data-view="'+name+'"]');if(nav)nav.classList.add('active');
@@ -3275,9 +3277,9 @@ function renderDashboard(){
   box.innerHTML=
     '<div class="dash-group"><div class="dash-gtitle">Plataformas</div><div class="dash-row">'
       +dc(ativa,'Ativas','d-ok','')+dc(parcial,'Parciais','d-warn','')+dc(off,'Pausadas','d-off','')+'</div></div>'
-    +'<div class="dash-group"><div class="dash-ghead"><span class="dash-gtitle" style="margin:0">DevOps · '+escopo+' · '+pct+'%</span>'+tg+'</div><div class="dash-row">'
+    +'<div class="dash-group admin-only"><div class="dash-ghead"><span class="dash-gtitle" style="margin:0">DevOps · '+escopo+' · '+pct+'%</span>'+tg+'</div><div class="dash-row">'
       +dc(todo,'A fazer','','goDevops()')+dc(doing,'Em andamento','d-doing','goDevops()')+dc(done,'Concluído','d-ok','goDevops()')+'</div></div>'
-    +'<div class="dash-group"><div class="dash-gtitle">Alertas</div><div class="dash-row">'
+    +'<div class="dash-group admin-only"><div class="dash-gtitle">Alertas</div><div class="dash-row">'
       +dc(alerts,'Prazos no radar',alerts>0?'d-alert':'','toggleAgenda(event)')+'</div></div>';
 }
 function setDashMonth(v){DASH_MONTH=v;try{localStorage.setItem('hubDashMonth',v?'1':'0');}catch(e){}renderDashboard();}
@@ -3417,7 +3419,7 @@ function login(){
   AUTHED=true;renderAcct();
 }
 function logout(){AUTHED=false;try{sessionStorage.removeItem('hubSecret');sessionStorage.removeItem('hubAuthed')}catch(e){}
-  const cur=document.querySelector('.view.active');if(cur&&cur.id==='view-personalizar'){const b=document.querySelector('.nav button[data-view="plataformas"]');if(b)b.click();}
+  const cur=document.querySelector('.view.active');if(cur&&(cur.id==='view-personalizar'||cur.id==='view-devops')){const b=document.querySelector('.nav button[data-view="plataformas"]');if(b)b.click();}
   renderAcct();
 }
 function setProfile(){
