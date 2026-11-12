@@ -822,6 +822,7 @@
         <button data-cad="professores" class="cfg-tab">👩‍🏫 Professores</button>
         <button data-cad="pecs" class="cfg-tab">📁 Pastas (PEC)</button>
         <button data-cad="admins" class="cfg-tab">👤 Perfis de Admin</button>
+        <button data-cad="atribg" class="cfg-tab">🧾 Atribuições Especiais</button>
         <button data-cad="disciplinas" class="cfg-tab">📚 Disciplinas</button>
       </nav>
       <div class="cfg-main">
@@ -871,6 +872,20 @@
           <div class="card-title" style="margin-top:0">Professores por disciplina</div>
           <p class="lead" style="margin-top:2px">Regra de acesso do professor em cada plataforma, derivada automaticamente das queries oficiais (a mesma da aba Professores das regras). Onde a query filtra por disciplina, só entram os professores daquela disciplina; senão, entram todos. Não precisa cadastrar nada à mão.</p>
           <div class="card"><div id="prof-deriv"></div></div>
+        </section>
+
+        <section class="cfg-panel" data-cadpanel="atribg" hidden>
+          <div class="card-title" style="margin-top:0">Atribuições Especiais (globais)</div>
+          <p class="lead" style="margin-top:2px">Cadastre aqui as atribuições especiais (código + nome) que ficam disponíveis para selecionar na aba Atribuições Especiais de qualquer plataforma. Editar o nome aqui também completa o nome nas plataformas que estavam "a confirmar"; remover daqui não tira de quem já usa.</p>
+          <div class="card">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+              <div><label class="resp-lbl">Código</label><br><input id="atribg-code" class="addfld" style="width:110px" placeholder="ex: 7940"></div>
+              <div style="flex:1;min-width:240px"><label class="resp-lbl">Nome da atribuição</label><br><input id="atribg-name" class="addfld" style="width:100%" placeholder="ex: LINGUAGENS E SUAS TECNOLOGIAS"></div>
+              <button class="btn pubbtn" onclick="addAtribGlobal()">💾 Adicionar e salvar</button>
+              <div id="atribg-status" style="font-size:12px;width:100%;min-height:14px"></div>
+            </div>
+            <div id="atribg-list" style="margin-top:14px"></div>
+          </div>
         </section>
 
         <section class="cfg-panel" data-cadpanel="admins" hidden>
@@ -1241,6 +1256,7 @@ async function serverLoad(){
   if(cfg.admins&&typeof cfg.admins==='object'){Object.assign(ADMINS,cfg.admins);} hubMigAdm629(); hubMigAdm632();
   if(cfg.atribs&&typeof cfg.atribs==='object'){Object.assign(ATRIBS,cfg.atribs);}
   if(Array.isArray(cfg.perfisGlobais)&&cfg.perfisGlobais.length){PERFIS_GLOBAIS=cfg.perfisGlobais;}
+  if(Array.isArray(cfg.atribGlobais)&&cfg.atribGlobais.length){ATRIB_GLOBAIS=cfg.atribGlobais;} hubMig635();
       if(Array.isArray(cfg.versions)){VERSIONS=cfg.versions.slice();
         const have=new Set(VERSIONS.map(v=>v.ver));
         const missing=DEFAULT_VERSIONS.filter(dv=>!have.has(dv.ver));
@@ -1268,7 +1284,7 @@ function getSecret(force){
   return s;
 }
 function statusMap(){const o={};Object.keys(PLATS).forEach(k=>o[k]=PLATS[k].status);return o;}
-function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE,admins:ADMINS,atribs:ATRIBS,perfisGlobais:PERFIS_GLOBAIS};}
+function bankPayload(){return {logos:LOGOS,sql:SQL,materiais:MATERIAIS,meta:META,tipos:TIPOS,redes:REDES,status:statusMap(),delTipos:DEL_TIPOS,delRedes:DEL_REDES,carousel:CAROUSEL,kanban:KANBAN,platEdits:PLAT_EDITS,platAdds:PLAT_ADDS,delPlats:DEL_PLATS,log:LOG,agenda:AGENDA,agendaCsvUrl:AGENDA_CSV_URL,versions:VERSIONS,pastas:PASTAS,profile:PROFILE,admins:ADMINS,atribs:ATRIBS,perfisGlobais:PERFIS_GLOBAIS,atribGlobais:ATRIB_GLOBAIS};}
 function hexEnc(s){const b=new TextEncoder().encode(s);let o='';for(let i=0;i<b.length;i++)o+=b[i].toString(16).padStart(2,'0');return o;}
 function hexDec(h){if(!/^[0-9a-fA-F]+$/.test(h)||h.length%2)return null;const b=new Uint8Array(h.length/2);for(let i=0;i<b.length;i++)b[i]=parseInt(h.substr(i*2,2),16);return new TextDecoder().decode(b);}
 function postBank(onok,onerr){
@@ -1310,7 +1326,8 @@ let PLAT_ADDS = (DATA.PLAT_ADDS&&typeof DATA.PLAT_ADDS==='object') ? DATA.PLAT_A
 const PLATS_ORIG = JSON.parse(JSON.stringify(DATA.PLATS));
 let DEL_PLATS = Array.isArray(DATA.DEL_PLATS) ? DATA.DEL_PLATS.slice() : [];
 let LOG = Array.isArray(DATA.LOG) ? DATA.LOG.slice() : [];
-const DEFAULT_VERSIONS=[{ver:'6.34',date:'2026-11-12',text:'DevOps e agenda visíveis só para quem está logado: para visitantes somem o menu e a tela do DevOps, o sino e o painel de lembretes, a linha do tempo da agenda na home e os blocos DevOps e Alertas do painel do topo (o bloco Plataformas continua para todos). Ao sair da conta estando no DevOps, volta para Plataformas. Observação: é ocultação de tela; a leitura do banco continua sem senha.'},
+const DEFAULT_VERSIONS=[{ver:'6.35',date:'2026-11-12',text:'CORREÇÃO: as atribuições especiais que a 6.29 tinha colocado na aba Admins (Elefante Letrado e Leia SP: Sala de Leitura 1130, Salas de Recursos 9000/9020/9030, Sala de Recurso por atribuição em Ed. Especial e 7878/7879/7881/7882) foram movidas para a aba Atribuições Especiais. Novo cadastro global em Cadastros e consulta → 🧾 Atribuições Especiais, igual ao de Perfis de Admin, já com todas as atribuições das procedures; a aba Atribuições Especiais de cada plataforma passa a selecionar desse cadastro. Incluídas as atribuições de Expansão (7950, 7902), Educação Profissional e Wadhwani (TP_ATRIB 28) e PDA (todas). Perfis/atribuições "a confirmar" pegam o nome do cadastro quando ele existir (ex.: 1832 = PAAC).'},
+  {ver:'6.34',date:'2026-11-12',text:'DevOps e agenda visíveis só para quem está logado: para visitantes somem o menu e a tela do DevOps, o sino e o painel de lembretes, a linha do tempo da agenda na home e os blocos DevOps e Alertas do painel do topo (o bloco Plataformas continua para todos). Ao sair da conta estando no DevOps, volta para Plataformas. Observação: é ocultação de tela; a leitura do banco continua sem senha.'},
   {ver:'6.33',date:'2026-11-10',text:'Nova plataforma Fluência Leitora – Tutoria (Verificação de Aprendizagem Professor Tutor Anos Finais), status Pausada: aplicação realizada e encerrada, reabre quando solicitado. Card com acesso autenticado por token e sincronismo de alunos e turmas via API. Regra: rede estadual, tipo 14, séries 6 a 9 (Turmas e Alunos), editável pelo editor de query do card.'},
   {ver:'6.32',date:'2026-11-10',text:'Admins que estavam cadastrados só pelo nome agora estão ligados aos códigos do cadastro de perfis: São Paulo em Ação, Empreendedorismo, Matific, SPeak e OpenEnglish. CEC = 1273; Trio gestor = 272 Diretor + 114 Vice + 127 PC. Saíram CGPAC - Matemática (Matific), Professor do Centro de Línguas (SPeak) e SUPED - CORRIC (OpenEnglish). A troca só acontece se a lista salva no banco ainda era a anterior.'},
   {ver:'6.31',date:'2026-11-10',text:'Editor "Atualizar a query desta plataforma" funciona em qualquer card, inclusive nos que ainda não têm trecho na procedure (ex.: BEEM): ao salvar, se o trecho não existir, o Hub cria o bloco na procedure do papel preenchido; se existir, substitui como antes. Cards novos adicionados pela tela também passam a ser lidos da procedure. Quando um card de link/Teams tiver query, as abas mostram o texto do card e, abaixo, as regras. Desfeito o que a 6.30 tinha alterado (editor escondido e botão de editar texto).'},
@@ -2054,6 +2071,37 @@ function removeAdminPastaItem(platKey,idx,val){
   document.getElementById('ptab-Admins').innerHTML=renderAdmins(platKey);
 }
 
+/* v6.35: atribuicoes especiais saem da aba Admin e vao para a aba Atribuicoes Especiais; cadastro global de atribuicoes (como Perfis de Admin). */
+let ATRIB_GLOBAIS=[{"c": 7940, "n": "LINGUAGENS E SUAS TECNOLOGIAS"}, {"c": 7941, "n": "MATEMATICA E SUAS TECNOLOGIAS"}, {"c": 7942, "n": "CIENCIAS DA NATUREZA E SUAS TECNOLOGIAS"}, {"c": 7943, "n": "CIENCIAS HUMANAS E SOCIAIS APLICADAS"}, {"c": 1130, "n": "Sala De Leitura"}, {"c": 9000, "n": "Sala De Recursos Deficiencia Auditiva"}, {"c": 9020, "n": "Sala De Recursos Deficiencia Intelectual"}, {"c": 9030, "n": "Sala De Recursos Deficiencia Visual"}, {"c": 7878, "n": "(nome a confirmar)"}, {"c": 7879, "n": "(nome a confirmar)"}, {"c": 7881, "n": "(nome a confirmar)"}, {"c": 7882, "n": "(nome a confirmar)"}, {"c": 7950, "n": "(nome a confirmar)"}, {"c": 7902, "n": "(nome a confirmar)"}, {"c": 7850, "n": "PROATEC - Apoio a Tecnologia e Inovação"}, {"c": 7851, "n": "PROATEC PATI"}, {"c": 28, "n": "TP_ATRIB 28 - tipo de atribuição (qualquer disciplina)"}];
+const MIG635={"move":{"Sala de Leitura (atribuição especial 1130 ou afastamento Docente PEI-Sala de Leitura)":{"c":1130,"n":"Sala De Leitura (atribuição especial 1130 ou afastamento Docente PEI-Sala de Leitura)"},"Sala De Recursos Deficiencia Auditiva (atribuição especial)":{"c":9000,"n":"Sala De Recursos Deficiencia Auditiva"},"Sala De Recursos Deficiencia Intelectual (atribuição especial)":{"c":9020,"n":"Sala De Recursos Deficiencia Intelectual"},"Sala De Recursos Deficiencia Visual (atribuição especial)":{"c":9030,"n":"Sala De Recursos Deficiencia Visual"},"Sala de Recurso: professores atribuídos em turmas de Educação Especial (tipos 64-73), disciplinas 9000/9010/9020/9030/9050 e itinerante 6740-6745":{"c":"64-73","n":"Sala de Recurso: atribuição em turmas de Educação Especial (tipos 64-73), disciplinas 9000/9010/9020/9030/9050 e itinerante 6740-6745"},"(nome a confirmar) - atribuição especial":null},"add":{"EXPANSAO":[{"c":7950,"n":"(nome a confirmar)"},{"c":7902,"n":"(nome a confirmar)"}],"MOODLE":[{"c":28,"n":"TP_ATRIB 28 - tipo de atribuição (qualquer disciplina)"}],"WADHWANI":[{"c":28,"n":"TP_ATRIB 28 - tipo de atribuição (qualquer disciplina)"}],"MOODLEPDA":[{"c":"Todas","n":"Todas as atribuições especiais vigentes"}]}};
+function _atribNome(c){const g=ATRIB_GLOBAIS.find(x=>String(x.c)===String(c));return g?g.n:'';}
+function hubMig635(){let mv=0;try{
+ ['ELEFANTE','LEIASP'].forEach(k=>{const a=ADMINS[k];if(!a||!Array.isArray(a.perfis))return;const keep=[];
+  a.perfis.forEach(x=>{const p=x.p||'';if(Object.prototype.hasOwnProperty.call(MIG635.move,p)){let t=MIG635.move[p];if(t===null)t={c:x.c,n:_atribNome(x.c)||'(nome a confirmar)'};
+    if(!ATRIBS[k])ATRIBS[k]={tipos:[]};if(!Array.isArray(ATRIBS[k].tipos))ATRIBS[k].tipos=[];
+    if(!ATRIBS[k].tipos.some(y=>String(y.c)===String(t.c)))ATRIBS[k].tipos.push({c:t.c,n:t.n});mv++;}else keep.push(x);});
+  a.perfis=keep;});
+ for(const k in MIG635.add){if(ATRIBS[k]===undefined){ATRIBS[k]={tipos:JSON.parse(JSON.stringify(MIG635.add[k]))};mv++;}}
+ for(const k in ADMINS){const a=ADMINS[k];(a&&a.perfis||[]).forEach(x=>{if(/^\(nome a confirmar\)/.test(x.p||'')){const g=PERFIS_GLOBAIS.find(y=>String(y.c)===String(x.c));if(g&&g.p)x.p=g.p;}});}
+ for(const k in ATRIBS){(ATRIBS[k].tipos||[]).forEach(x=>{if(/^\(nome a confirmar\)/.test(x.n||'')){const n=_atribNome(x.c);if(n&&!/^\(nome a confirmar\)/.test(n))x.n=n;}});}
+ if(mv)console.info('v6.35: '+mv+' ajuste(s) em atribuicoes especiais');}catch(e){console.warn('hubMig635',e);}return mv;}
+function addAtribGlobal(){const ce=document.getElementById('atribg-code'),ne=document.getElementById('atribg-name'),st=document.getElementById('atribg-status');
+ const setMsg=(c,t)=>{if(st){st.style.color=c;st.textContent=t;}};const cod=(ce.value||'').trim(),nome=(ne.value||'').trim();
+ if(!cod||!nome){setMsg('#ff9b9b','Preencha código e nome.');return;}const cn=parseInt(cod)||cod;
+ if(ATRIB_GLOBAIS.some(x=>String(x.c)===String(cn))){setMsg('#ff9b9b','Já existe uma atribuição com esse código.');return;}
+ ATRIB_GLOBAIS.push({c:cn,n:nome});ce.value='';ne.value='';renderAtribGlobaisList();setMsg('var(--ink-3)','Salvando…');
+ postBank(()=>setMsg('#86e29a','✓ Adicionado e salvo: '+cn+' · '+nome),e=>setMsg('#ff9b9b','Adicionado localmente, mas falha ao salvar: '+e));}
+function editAtribGlobalNome(i,v){if(!ATRIB_GLOBAIS[i])return;const c=ATRIB_GLOBAIS[i].c;ATRIB_GLOBAIS[i].n=v;
+ for(const k in ATRIBS){(ATRIBS[k].tipos||[]).forEach(x=>{if(String(x.c)===String(c)&&(!x.n||/^\(nome a confirmar\)/.test(x.n)))x.n=v;});}postBank();}
+function delAtribGlobal(i){const g=ATRIB_GLOBAIS[i];if(!g)return;if(!confirm('Remover a atribuição '+g.c+' · '+g.n+' da lista de opções? (Não afeta as plataformas que já usam.)'))return;ATRIB_GLOBAIS.splice(i,1);renderAtribGlobaisList();postBank();}
+function renderAtribGlobaisList(){const box=document.getElementById('atribg-list');if(!box)return;
+ if(!ATRIB_GLOBAIS.length){box.innerHTML='<div class="empty">Nenhuma atribuição cadastrada ainda.</div>';return;}
+ box.innerHTML='<table><thead><tr><th style="width:90px">Código</th><th>Nome da atribuição especial</th><th style="width:60px"></th></tr></thead><tbody>'+
+  ATRIB_GLOBAIS.map((g,i)=>`<tr><td><span class="tag adm">${esc(String(g.c))}</span></td><td><input class="ac-input" style="width:100%;font-size:13px" value="${esc(g.n||'')}" onblur="editAtribGlobalNome(${i},this.value.trim())"></td><td><button class="btn ghost" style="font-size:11px;padding:3px 9px;color:#e07171;border-color:#e07171" onclick="delAtribGlobal(${i})">✕</button></td></tr>`).join('')+'</tbody></table>';}
+function addAtribSel(platKey){const s=document.getElementById('atrib-sel-'+platKey);const v=s&&s.value;if(!v)return;const g=ATRIB_GLOBAIS.find(x=>String(x.c)===v);if(!g)return;
+ if(!ATRIBS[platKey])ATRIBS[platKey]={tipos:[]};if(!Array.isArray(ATRIBS[platKey].tipos))ATRIBS[platKey].tipos=[];
+ if(ATRIBS[platKey].tipos.some(t=>String(t.c)===String(g.c))){alert('Já adicionada.');return;}ATRIBS[platKey].tipos.push({c:g.c,n:g.n});
+ document.getElementById('ptab-Atrib').innerHTML=renderAtribs(platKey);postBank();}
 /* ============ Atribuições especiais (por plataforma) ============ */
 function renderAtribs(platKey){
   const a=ATRIBS[platKey]||{tipos:[]};
@@ -2067,11 +2115,12 @@ function renderAtribs(platKey){
       <td><button class="btn ghost" style="font-size:10px;padding:2px 7px;color:#e07171;border-color:#e07171" onclick="removeAtrib('${platKey}',${i})">✕</button></td>
     </tr>`).join('')+'</tbody></table>'
     :'<div class="empty" style="margin:8px 0">Não se aplica — nenhuma atribuição especial cadastrada para esta plataforma.</div>';
+  const disp=ATRIB_GLOBAIS.filter(g=>!tipos.some(t=>String(t.c)===String(g.c)));
+  const opts='<option value="">+ selecionar atribuição especial…</option>'+disp.map(g=>`<option value="${esc(String(g.c))}">${esc(String(g.c))} · ${esc(g.n||'')}</option>`).join('');
   const addForm=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-top:4px">
-    <input id="atrib-cod-${platKey}" placeholder="Código" style="width:90px;font-size:12px">
-    <input id="atrib-nome-${platKey}" placeholder="Nome do tipo de atribuição" style="flex:1;min-width:200px;font-size:12px">
-    <button class="btn ghost" style="font-size:11px" onclick="addAtrib('${platKey}')">+ Adicionar</button>
-  </div>`;
+    <select id="atrib-sel-${platKey}" class="sel-badge cl-na" style="flex:1;min-width:200px">${opts}</select>
+    <button class="btn ghost" style="font-size:11px" onclick="addAtribSel('${platKey}')">+ Adicionar</button>
+  </div><div style="font-size:11px;color:var(--ink-3);margin-top:6px">Não achou? Cadastre em Cadastros e consulta → 🧾 Atribuições Especiais.</div>`;
   return lista+addForm;
 }
 function addAtrib(platKey){
@@ -3437,6 +3486,7 @@ function cadShow(name){
   if(name==='disciplinas')renderDisc(document.getElementById('disc-search')?document.getElementById('disc-search').value:'');
   if(name==='professores')renderProfDeriv();
   if(name==='admins')renderPerfisGlobaisList();
+  if(name==='atribg')renderAtribGlobaisList();
 }
 function renderProfDeriv(){
   const box=document.getElementById('prof-deriv');if(!box)return;
