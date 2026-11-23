@@ -291,7 +291,10 @@ kbd{
   // ---------- carga ----------
   function load(gid){
     document.getElementById('content').innerHTML='<div class="loading">Puxando dados da planilha…</div>';
-    var url='https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:json&gid='+gid+'&t='+Date.now();
+    // headers=1 é obrigatório: sem ele o gviz tenta adivinhar o cabeçalho
+    // e engole dezenas de linhas como rótulo de coluna.
+    var url='https://docs.google.com/spreadsheets/d/'+SID+
+            '/gviz/tq?tqx=out:json&headers=1&gid='+gid+'&t='+Date.now();
     fetch(url).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.text();
@@ -309,7 +312,10 @@ kbd{
 
   function cell(r,i){
     var c=r.c&&r.c[i];
-    return c && c.v!=null ? String(c.v).trim() : '';
+    if(!c) return '';
+    // c.f é o valor formatado (datas vêm como Date(...) em c.v)
+    if(c.f!=null) return String(c.f).trim();
+    return c.v!=null ? String(c.v).trim() : '';
   }
 
   function build(raw){
