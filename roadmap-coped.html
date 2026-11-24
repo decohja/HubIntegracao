@@ -3,90 +3,145 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Roadmap Tecnologia + COPED</title>
+<title>Roadmap Tecnologia + SUPED</title>
 <style>
 :root{
   color-scheme: light;
-  --bg:#ccd7e6; --panel:#eaeff7; --panel-2:#dde5f0; --panel-3:#f4f7fb;
+  /* --k é o zoom geral da página (botões A- / A+) */
+  --k:1;
+  --bg:#ccd7e6; --panel:#eaeff7; --panel-2:#dde5f0;
   --line:#c8d3e2; --line-2:#b4c2d6;
-  --ink:#16222f; --ink-2:#4a5765; --ink-3:#76828f;
+  --ink:#16222f; --ink-2:#44515f; --ink-3:#6e7b89;
   --accent:#2f7fd0; --accent-2:#2168b3; --accent-soft:#e3f0fc;
-  --crit:#cf5052; --crit-bg:#fde7e8;
-  --mod:#b9831f; --mod-bg:#fbf0d8;
-  --ok:#1f9460; --ok-bg:#e0f6ea;
-  --neu:#5b6b7d; --neu-bg:#e8edf4;
-  --ped:#7a52c8; --ti:#1f6fb0;
+  --crit:#c4393b; --crit-bg:#fde7e8;
+  --mod:#a8731a; --mod-bg:#fbf0d8;
+  --ok:#1b8356; --ok-bg:#e0f6ea;
+  --neu:#526273; --neu-bg:#e6ecf3;
+  --ped:#6f45c0; --ped-bg:#efe8fc; --ti:#1b6098;
   --shadow:0 1px 2px rgba(38,66,105,.05),0 10px 30px rgba(38,66,105,.08);
-  --radius:14px;
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
-  --bg:#101823; --panel:#18222f; --panel-2:#1e2a39; --panel-3:#141d28;
+  --bg:#101823; --panel:#18222f; --panel-2:#1e2a39;
   --line:#2a3848; --line-2:#36465a;
-  --ink:#e7eef7; --ink-2:#adbccd; --ink-3:#7e8d9f;
-  --accent:#5aa3e8; --accent-2:#79b8f2; --accent-soft:#17293d;
-  --crit:#f08a8c; --crit-bg:#331a1b;
-  --mod:#e0ab4e; --mod-bg:#2e2512;
-  --ok:#5fc48e; --ok-bg:#10301f;
-  --neu:#9aabbd; --neu-bg:#1e2a39;
-  --ped:#b095ee; --ti:#6fa9dc;
+  --ink:#eef4fb; --ink-2:#b8c6d6; --ink-3:#8a98a8;
+  --accent:#5aa3e8; --accent-2:#8cc3f5; --accent-soft:#17293d;
+  --crit:#f59a9c; --crit-bg:#3a1d1e;
+  --mod:#e6b45c; --mod-bg:#332a14;
+  --ok:#6fd09b; --ok-bg:#123524;
+  --neu:#a7b7c8; --neu-bg:#223041;
+  --ped:#bda4f2; --ped-bg:#2a2140; --ti:#7fb4e4;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
   background:var(--bg); color:var(--ink);
-  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
-  padding-bottom:80px;
+  font:400 calc(17px * var(--k))/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+  padding-bottom:calc(90px * var(--k));
+  -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:1500px;margin:0 auto;padding:0 20px}
+.wrap{max-width:2100px;margin:0 auto;padding:0 calc(26px * var(--k))}
+
+/* ---------- textura de fundo ---------- */
+/* camada 1: luz difusa, tira o chapado do azul */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(1300px 760px at 10% -8%, rgba(255,255,255,.80), transparent 62%),
+    radial-gradient(1000px 620px at 90% 4%, rgba(47,127,208,.11), transparent 64%),
+    radial-gradient(1100px 820px at 48% 112%, rgba(47,127,208,.08), transparent 62%);
+}
+/* camada 2: grão fino, quase imperceptível, mata o degradê em faixas */
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:calc(150px * var(--k)) calc(150px * var(--k));
+}
+:root[data-theme="dark"] body::before{
+  background:
+    radial-gradient(1300px 760px at 10% -8%, rgba(90,163,232,.13), transparent 62%),
+    radial-gradient(1000px 620px at 90% 4%, rgba(90,163,232,.09), transparent 64%),
+    radial-gradient(1100px 820px at 48% 112%, rgba(255,255,255,.045), transparent 62%);
+}
+:root[data-theme="dark"] body::after{opacity:.075}
 
 /* ---------- topo ---------- */
 header.top{
   background:linear-gradient(180deg,var(--panel) 0%,var(--bg) 100%);
-  border-bottom:1px solid var(--line); padding:22px 0 16px; margin-bottom:18px;
+  border-bottom:1px solid var(--line);
+  padding:calc(20px * var(--k)) 0 calc(15px * var(--k));
+  margin-bottom:calc(16px * var(--k));
   position:sticky; top:0; z-index:30;
 }
-.topbar{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
-.kicker{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);font-weight:700}
-h1{margin:5px 0 2px;font-size:23px;letter-spacing:-.02em}
-.sub{color:var(--ink-2);font-size:13px;margin:0}
-.tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.topbar{display:flex;gap:calc(16px * var(--k));align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.kicker{font-size:calc(12px * var(--k));letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);font-weight:800}
+h1{margin:calc(5px * var(--k)) 0 calc(3px * var(--k));font-size:calc(32px * var(--k));letter-spacing:-.022em;line-height:1.1}
+.sub{color:var(--ink-2);font-size:calc(15px * var(--k));margin:0}
+.tools{display:flex;gap:calc(8px * var(--k));flex-wrap:wrap;align-items:center}
 button.btn,select.btn{
-  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;cursor:pointer;
+  font:inherit;font-size:calc(15px * var(--k));font-weight:600;
+  padding:calc(8px * var(--k)) calc(15px * var(--k));
+  border-radius:calc(10px * var(--k));cursor:pointer;
   border:1px solid var(--line-2);background:var(--panel);color:var(--ink);
 }
 button.btn:hover,select.btn:hover{border-color:var(--accent);color:var(--accent-2)}
 button.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+button.btn.ico{min-width:calc(42px * var(--k));text-align:center}
 input.search{
-  font:inherit;font-size:12.5px;padding:6px 12px;border-radius:9px;min-width:190px;
+  font:inherit;font-size:calc(15px * var(--k));
+  padding:calc(8px * var(--k)) calc(15px * var(--k));
+  border-radius:calc(10px * var(--k));min-width:calc(210px * var(--k));
   border:1px solid var(--line-2);background:var(--panel);color:var(--ink);
 }
 input.search:focus{outline:none;border-color:var(--accent)}
+.zoom{display:flex;align-items:center;gap:calc(4px * var(--k));
+  border:1px solid var(--line-2);border-radius:calc(10px * var(--k));
+  background:var(--panel);padding:calc(2px * var(--k))}
+.zoom button{
+  font:inherit;font-weight:800;font-size:calc(15px * var(--k));
+  border:none;background:none;color:var(--ink-2);cursor:pointer;
+  padding:calc(6px * var(--k)) calc(10px * var(--k));border-radius:calc(8px * var(--k));
+}
+.zoom button:hover{background:var(--panel-2);color:var(--accent-2)}
+.zoom span{font-size:calc(12px * var(--k));color:var(--ink-3);font-weight:700;min-width:calc(42px * var(--k));text-align:center}
 
 /* ---------- placar ---------- */
-.scores{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px}
+.scores{display:flex;gap:calc(11px * var(--k));flex-wrap:wrap;margin:0 0 calc(18px * var(--k))}
 .score{
-  background:var(--panel);border:1px solid var(--line);border-radius:11px;
-  padding:9px 15px;min-width:112px;box-shadow:var(--shadow);cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);border-radius:calc(13px * var(--k));
+  padding:calc(11px * var(--k)) calc(20px * var(--k));min-width:calc(140px * var(--k));
+  box-shadow:var(--shadow);cursor:pointer;
   transition:transform .12s ease, border-color .12s ease;
 }
 .score:hover{transform:translateY(-1px);border-color:var(--accent)}
-.score.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft),var(--shadow)}
-.score b{display:block;font-size:24px;line-height:1.1;letter-spacing:-.02em}
-.score span{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.score.on{border-color:var(--accent);box-shadow:0 0 0 calc(3px * var(--k)) var(--accent-soft),var(--shadow)}
+.score b{display:block;font-size:calc(34px * var(--k));line-height:1.05;letter-spacing:-.03em}
+.score span{font-size:calc(12px * var(--k));letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:800}
 .score.c b{color:var(--crit)} .score.m b{color:var(--mod)}
-.score.a b{color:var(--neu)} .score.k b{color:var(--ok)}
+.score.a b{color:var(--ti)} .score.k b{color:var(--ok)}
+/* secundários: menores e discretos */
+.score.sec{
+  padding:calc(8px * var(--k)) calc(14px * var(--k));
+  min-width:calc(104px * var(--k));opacity:.72;box-shadow:none;background:transparent;
+}
+.score.sec b{font-size:calc(21px * var(--k))}
+.score.sec span{font-size:calc(10.5px * var(--k))}
+.score.sec:hover{opacity:1;background:var(--panel)}
+.score-sep{width:calc(20px * var(--k))}
 
 /* ---------- seções ---------- */
 .band{
-  display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
-  margin:22px 0 9px;padding:7px 14px;border-radius:9px;
+  display:flex;align-items:center;gap:calc(12px * var(--k));cursor:pointer;user-select:none;
+  margin:calc(26px * var(--k)) 0 calc(10px * var(--k));
+  padding:calc(10px * var(--k)) calc(18px * var(--k));
+  border-radius:calc(11px * var(--k));
   background:var(--panel-2);border:1px solid var(--line);
 }
-.band h2{margin:0;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);font-weight:800}
-.band .n{font-size:11px;color:var(--ink-3);font-weight:700;background:var(--panel);padding:1px 8px;border-radius:20px;border:1px solid var(--line)}
-.band .caret{margin-left:auto;color:var(--ink-3);font-size:12px;transition:transform .15s ease}
+.band h2{margin:0;font-size:calc(15px * var(--k));letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);font-weight:800}
+.band .n{font-size:calc(14px * var(--k));color:var(--ink-3);font-weight:800;background:var(--panel);
+  padding:calc(2px * var(--k)) calc(11px * var(--k));border-radius:20px;border:1px solid var(--line)}
+.band .caret{margin-left:auto;color:var(--ink-3);font-size:calc(15px * var(--k));transition:transform .15s ease}
 .band.closed .caret{transform:rotate(-90deg)}
 .band.crit{background:var(--crit-bg);border-color:transparent}
 .band.crit h2{color:var(--crit)}
@@ -94,81 +149,118 @@ input.search:focus{outline:none;border-color:var(--accent)}
 /* ---------- grade ---------- */
 .gridhead,.row{
   display:grid;
-  grid-template-columns: 240px 118px minmax(260px,1.05fr) minmax(260px,1.05fr) minmax(230px,.9fr);
-  gap:0;
+  grid-template-columns:
+    calc(300px * var(--k))
+    calc(150px * var(--k))
+    minmax(0,1.05fr)
+    minmax(0,1.05fr)
+    minmax(0,.92fr);
 }
 .gridhead{
-  padding:0 0 7px; font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  padding:0 0 calc(8px * var(--k));
+  font-size:calc(12px * var(--k));letter-spacing:.09em;text-transform:uppercase;
   color:var(--ink-3);font-weight:800;
 }
-.gridhead div{padding:0 14px}
+.gridhead div{padding:0 calc(18px * var(--k))}
 .row{
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;
-  margin-bottom:7px;box-shadow:var(--shadow);cursor:pointer;
+  position:relative;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);border-radius:calc(14px * var(--k));
+  margin-bottom:calc(9px * var(--k));box-shadow:var(--shadow);cursor:pointer;
   transition:border-color .12s ease, box-shadow .12s ease, opacity .15s ease;
 }
+/* faixa de status na borda esquerda do cartão */
+.row::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;
+  width:calc(5px * var(--k));background:var(--line-2);
+}
+.row.s-critico::before{background:var(--crit)}
+.row.s-andamento::before{background:var(--neu)}
+.row.s-concluido::before{background:var(--ok)}
+.row.s-outro::before{background:var(--mod)}
 .row:hover{border-color:var(--line-2)}
-.row>div{padding:13px 14px;min-width:0}
-.row .plat{font-weight:700;font-size:13.5px;display:flex;flex-direction:column;gap:6px}
-.owners{display:flex;gap:4px;flex-wrap:wrap}
-.own{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--neu-bg);color:var(--ink-3);white-space:nowrap}
-.own.ti{background:var(--accent-soft);color:var(--accent-2)}
+.row>div{padding:calc(16px * var(--k)) calc(18px * var(--k));min-width:0}
+.row>div:first-child{padding-left:calc(24px * var(--k))}
+.row .plat{font-weight:800;font-size:calc(21px * var(--k));line-height:1.22;
+  letter-spacing:-.012em;color:var(--ink);
+  display:flex;flex-direction:column;gap:calc(9px * var(--k))}
+.owners{display:flex;gap:calc(5px * var(--k));flex-wrap:wrap}
+/* SUPED em roxo e TI em azul, mesmo código de cor dos rótulos da descrição */
+.own{font-size:calc(12.5px * var(--k));font-weight:700;
+  padding:calc(3px * var(--k)) calc(10px * var(--k));border-radius:20px;
+  background:var(--ped-bg);color:var(--ped);white-space:nowrap}
+.own.ti{background:var(--accent-soft);color:var(--ti)}
 .pill{
-  display:inline-block;font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
-  letter-spacing:.02em;white-space:nowrap;
+  display:inline-block;font-size:calc(14px * var(--k));font-weight:800;
+  padding:calc(5px * var(--k)) calc(14px * var(--k));border-radius:20px;white-space:nowrap;
 }
 .pill.critico{background:var(--crit-bg);color:var(--crit)}
 .pill.andamento{background:var(--neu-bg);color:var(--neu)}
 .pill.concluido{background:var(--ok-bg);color:var(--ok)}
 .pill.outro{background:var(--mod-bg);color:var(--mod)}
-.seg{font-size:12.5px;color:var(--ink-2);margin-bottom:7px;line-height:1.45}
+.seg{font-size:calc(16px * var(--k));color:var(--ink-2);margin-bottom:calc(9px * var(--k));line-height:1.45}
 .seg:last-child{margin-bottom:0}
-.seg .lbl{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;margin-right:5px}
+.seg .lbl{font-size:calc(11.5px * var(--k));letter-spacing:.07em;text-transform:uppercase;
+  font-weight:800;margin-right:calc(6px * var(--k))}
 .seg.ped .lbl{color:var(--ped)} .seg.ti .lbl{color:var(--ti)} .seg.at .lbl{color:var(--crit)}
-.seg.at{color:var(--ink)}
-.txt{font-size:12.5px;color:var(--ink-2);line-height:1.5;white-space:pre-line}
-.empty{color:var(--ink-3);font-size:12px}
-.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.seg.at{color:var(--ink);font-weight:500}
+.txt{font-size:calc(16px * var(--k));color:var(--ink-2);line-height:1.5;white-space:pre-line}
+.empty{color:var(--ink-3)}
+.clamp{display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ---------- modo pauta ---------- */
-body.pauta .row{opacity:.32;filter:saturate(.5)}
+body.pauta .row{opacity:.28;filter:saturate(.45)}
 body.pauta .row.active{
   opacity:1;filter:none;border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-soft),0 14px 34px rgba(38,66,105,.16);
-  transform:scale(1.006);
+  box-shadow:0 0 0 calc(4px * var(--k)) var(--accent-soft),0 16px 40px rgba(38,66,105,.18);
 }
 body.pauta .row.active .clamp{-webkit-line-clamp:unset;overflow:visible}
-body.pauta .band{opacity:.5}
+/* o item em pauta cresce de verdade: fonte, respiro e faixa de status */
+body.pauta .row.active{margin:calc(18px * var(--k)) 0;border-width:calc(2px * var(--k))}
+body.pauta .row.active::before{width:calc(8px * var(--k))}
+body.pauta .row.active>div{padding:calc(24px * var(--k)) calc(22px * var(--k))}
+body.pauta .row.active>div:first-child{padding-left:calc(30px * var(--k))}
+body.pauta .row.active .plat{font-size:calc(30px * var(--k));gap:calc(12px * var(--k))}
+body.pauta .row.active .own{font-size:calc(14px * var(--k));padding:calc(4px * var(--k)) calc(12px * var(--k))}
+body.pauta .row.active .pill{font-size:calc(16px * var(--k));padding:calc(7px * var(--k)) calc(17px * var(--k))}
+body.pauta .row.active .seg,
+body.pauta .row.active .txt{font-size:calc(21px * var(--k));line-height:1.45}
+body.pauta .row.active .seg{margin-bottom:calc(12px * var(--k))}
+body.pauta .row.active .seg .lbl{font-size:calc(12.5px * var(--k))}
+body.pauta .band{opacity:.45}
 body.pauta .band.hasactive{opacity:1}
 .row.active .plat::before{
-  content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
-  background:var(--accent);margin-right:7px;vertical-align:middle;
+  content:"";display:inline-block;
+  width:calc(9px * var(--k));height:calc(9px * var(--k));border-radius:50%;
+  background:var(--accent);margin-right:calc(9px * var(--k));vertical-align:middle;
 }
 
 /* ---------- barra inferior ---------- */
 .dock{
   position:fixed;left:0;right:0;bottom:0;z-index:40;
   background:var(--panel);border-top:1px solid var(--line);
-  padding:9px 20px;display:none;align-items:center;gap:14px;
+  padding:calc(12px * var(--k)) calc(26px * var(--k));
+  display:none;align-items:center;gap:calc(16px * var(--k));
   box-shadow:0 -6px 22px rgba(38,66,105,.1);
 }
 body.pauta .dock{display:flex}
-.dock .now{font-size:13px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dock .hint{font-size:11.5px;color:var(--ink-3)}
+.dock .now{font-size:calc(19px * var(--k));font-weight:800;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock .hint{font-size:calc(13px * var(--k));color:var(--ink-3)}
 kbd{
-  font:inherit;font-size:10.5px;padding:1px 6px;border-radius:5px;
+  font:inherit;font-size:calc(12px * var(--k));
+  padding:calc(2px * var(--k)) calc(8px * var(--k));border-radius:calc(6px * var(--k));
   background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);
 }
-.status-line{font-size:11.5px;color:var(--ink-3);margin:0 0 14px}
-.loading{padding:50px 0;text-align:center;color:var(--ink-3);font-size:13px}
+.status-line{font-size:calc(13px * var(--k));color:var(--ink-3);margin:0 0 calc(14px * var(--k))}
+.loading{padding:calc(60px * var(--k)) 0;text-align:center;color:var(--ink-3);font-size:calc(16px * var(--k))}
 .err{
-  background:var(--crit-bg);color:var(--crit);border-radius:11px;
-  padding:14px 16px;font-size:13px;margin-bottom:14px;
+  background:var(--crit-bg);color:var(--crit);border-radius:calc(13px * var(--k));
+  padding:calc(18px * var(--k)) calc(20px * var(--k));font-size:calc(16px * var(--k));
+  margin-bottom:calc(14px * var(--k));
 }
-@media (max-width:1100px){
+@media (max-width:1200px){
   .gridhead{display:none}
-  .row{grid-template-columns:1fr;gap:0}
-  .row>div{padding:10px 14px}
+  .row{grid-template-columns:1fr}
   .row>div+div{border-top:1px dashed var(--line)}
 }
 @media print{
@@ -184,17 +276,20 @@ kbd{
 <header class="top">
   <div class="wrap topbar">
     <div>
-      <div class="kicker">Reunião semanal · SUPED + Integração / BI / Plataformas</div>
-      <h1>Roadmap Tecnologia + COPED</h1>
-      <p class="sub" id="sub">Carregando…</p>
+      <div class="kicker" id="h-kicker" contenteditable="true" spellcheck="false">Reunião semanal · SUPED + Integração / BI / Plataformas</div>
+      <h1 id="h-title" contenteditable="true" spellcheck="false">Roadmap Tecnologia + SUPED</h1>
+      <p class="sub" id="sub" contenteditable="true" spellcheck="false">Carregando…</p>
     </div>
     <div class="tools">
       <select class="btn" id="sel-tab" title="Pauta"></select>
       <input class="search" id="q" placeholder="Buscar plataforma…" autocomplete="off">
       <button class="btn" id="btn-pauta" title="Realça o item em discussão">▶ Modo pauta</button>
-      <button class="btn" id="btn-reload" title="Recarregar da planilha">↻</button>
-      <button class="btn" id="btn-theme" title="Tema">☾</button>
-      <button class="btn" id="btn-print" title="Imprimir">⎙</button>
+      <div class="zoom" title="Tamanho da letra">
+        <button id="z-menos">A−</button><span id="z-val">100%</span><button id="z-mais">A+</button>
+      </div>
+      <button class="btn ico" id="btn-reload" title="Recarregar da planilha">↻</button>
+      <button class="btn ico" id="btn-theme" title="Tema">☾</button>
+      <button class="btn ico" id="btn-print" title="Imprimir">⎙</button>
     </div>
   </div>
 </header>
@@ -214,15 +309,46 @@ kbd{
 (function(){
   var SID='1bornECZ2OyAQbNQcXc91CeXrvysDVWX-L95qBC9-CA4';
 
-  // abas recentes (nome -> gid). A primeira é a padrão.
-  var TABS=[
-    ['26/11/2026',1510101900],['19/11/2026',446353429],['12/11/2026',1878177131],
-    ['05/11/2026',2122251248],['29/10/2026',2077933539],['22/10/2026',1027921680],
-    ['15/10/2026',2080121116],['08/10/2026',2116824110],['01/10/2026',1820770598],
-    ['17/09/2026',1291830813],['10/09/2026',1046552088],['03/09/2026',1800523730]
-  ];
+  // A aba é buscada pelo NOME, não pelo gid: o nome é sempre a data da
+  // reunião (quinta-feira), então a lista se monta sozinha toda semana.
+  var DIA_DA_REUNIAO=4;       // 0=dom ... 4=qui
+  var SEMANAS_ATRAS=16, SEMANAS_A_FRENTE=1;
 
-  var state={rows:[],bands:{},filter:null,query:'',pauta:false,idx:-1,order:[]};
+  function pad(n){ return (n<10?'0':'')+n; }
+  function nomeDaAba(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+  function quintaDaSemana(ref){
+    var d=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate());
+    d.setDate(d.getDate()+((DIA_DA_REUNIAO-d.getDay())+7)%7);  // próxima quinta (ou hoje)
+    return d;
+  }
+  function listaDeDatas(){
+    var base=quintaDaSemana(new Date()), out=[];
+    for(var i=-SEMANAS_A_FRENTE;i<SEMANAS_ATRAS;i++){
+      var d=new Date(base); d.setDate(d.getDate()-i*7);
+      out.push(nomeDaAba(d));
+    }
+    return out;  // da mais recente para a mais antiga
+  }
+  // nomes já usados na planilha ao longo do tempo
+  function variantes(nome){
+    var p=nome.split('/');
+    return [nome, 'Pauta '+nome, 'Pauta '+p[0]+'/'+p[1]+'/'+p[2].slice(2)];
+  }
+  var SIG_INVALIDA=null;   // assinatura devolvida quando a aba não existe
+
+  var state={bands:[],filter:null,query:'',pauta:false,idx:-1,order:[]};
+
+  // ---------- zoom ----------
+  var k=1;
+  try{ var sk=parseFloat(localStorage.getItem('roadmap_k')); if(sk>0) k=sk; }catch(e){}
+  function applyK(){
+    document.documentElement.style.setProperty('--k',k);
+    document.getElementById('z-val').textContent=Math.round(k*100)+'%';
+    try{ localStorage.setItem('roadmap_k',k); }catch(e){}
+  }
+  document.getElementById('z-mais').onclick=function(){ k=Math.min(1.8,k+0.1); applyK(); };
+  document.getElementById('z-menos').onclick=function(){ k=Math.max(0.7,k-0.1); applyK(); };
+  applyK();
 
   // ---------- tema ----------
   function applyTheme(t){
@@ -240,9 +366,9 @@ kbd{
 
   // ---------- seletor de aba ----------
   var sel=document.getElementById('sel-tab');
-  TABS.forEach(function(t,i){
+  listaDeDatas().forEach(function(nome){
     var o=document.createElement('option');
-    o.value=t[1]; o.textContent='Pauta '+t[0];
+    o.value=nome; o.textContent='Pauta '+nome;
     sel.appendChild(o);
   });
   sel.onchange=function(){load(sel.value);};
@@ -260,7 +386,6 @@ kbd{
     return (s==null?'':String(s))
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
-  // quebra "Atualizações Pedagógicas: ... Atualizações TI: ... Ponto de atenção: ..."
   function parseDesc(d){
     if(!d) return [];
     var re=/(Atualiza(?:ç|c)(?:ões|oes)\s+Pedag(?:ó|o)gicas|Atualiza(?:ç|c)(?:ões|oes)\s+jur(?:í|i)dicas|Atualiza(?:ç|c)(?:ões|oes)\s+TI|Atualiza(?:ç|c)(?:ões|oes)|Ponto de aten(?:ç|c)(?:ã|a)o|Apoio\s*TI)\s*:/gi;
@@ -281,32 +406,85 @@ kbd{
   }
   function shortLabel(label){
     var l=(label||'').toLowerCase();
-    if(l.indexOf('aten')>-1) return 'Atenção';
-    if(l.indexOf('jur')>-1) return 'Jurídico';
-    if(l.indexOf('ti')>-1) return 'TI';
-    if(l.indexOf('pedag')>-1) return 'Pedagógico';
+    if(l.indexOf('aten')>-1) return 'Ponto de atenção';
+    if(l.indexOf('jur')>-1) return 'Atualizações jurídicas';
+    if(l.indexOf('ti')>-1) return 'Atualizações de TI';
+    if(l.indexOf('pedag')>-1) return 'Atualizações pedagógicas';
     return label;
   }
 
   // ---------- carga ----------
-  function load(gid){
-    document.getElementById('content').innerHTML='<div class="loading">Puxando dados da planilha…</div>';
-    // headers=1 é obrigatório: sem ele o gviz tenta adivinhar o cabeçalho
-    // e engole dezenas de linhas como rótulo de coluna.
+  // headers=1 é obrigatório: sem ele o gviz tenta adivinhar o cabeçalho
+  // e engole dezenas de linhas como rótulo de coluna.
+  function puxar(sheet){
     var url='https://docs.google.com/spreadsheets/d/'+SID+
-            '/gviz/tq?tqx=out:json&headers=1&gid='+gid+'&t='+Date.now();
-    fetch(url).then(function(r){
+            '/gviz/tq?tqx=out:json&headers=1&sheet='+encodeURIComponent(sheet)+'&t='+Date.now();
+    return fetch(url).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.text();
     }).then(function(txt){
-      var s=txt.indexOf('{'), e=txt.lastIndexOf('}');
-      var data=JSON.parse(txt.slice(s,e+1));
-      build(data.table.rows||[]);
+      return JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
+    });
+  }
+
+  // Quando a aba não existe o Google NÃO dá erro: devolve a primeira aba da
+  // planilha. A assinatura (sig) dessa resposta é sempre a mesma, então
+  // comparamos com uma busca proposital por um nome inexistente.
+  function descobrirSigInvalida(){
+    if(SIG_INVALIDA!==null) return Promise.resolve(SIG_INVALIDA);
+    return puxar('__aba_que_nao_existe_'+Date.now()+'__').then(function(d){
+      SIG_INVALIDA=d.sig; return SIG_INVALIDA;
+    }).catch(function(){ return null; });
+  }
+
+  // tenta as variantes de nome e devolve a primeira que for uma aba de verdade
+  function puxarValida(nome){
+    var vs=variantes(nome), i=0;
+    function tentar(){
+      if(i>=vs.length) return Promise.resolve(null);
+      return puxar(vs[i++]).then(function(d){
+        if(SIG_INVALIDA!==null && d.sig===SIG_INVALIDA) return tentar();
+        return d;
+      }).catch(function(){ return tentar(); });
+    }
+    return tentar();
+  }
+
+  function load(nome){
+    document.getElementById('content').innerHTML='<div class="loading">Puxando dados da planilha…</div>';
+    descobrirSigInvalida().then(function(){
+      return puxarValida(nome);
+    }).then(function(d){
+      if(!d){
+        document.getElementById('content').innerHTML=
+          '<div class="err"><b>A aba <u>'+esc(nome)+'</u> ainda não existe na planilha.</b>'+
+          '<br><br>Escolha outra data no seletor, ou crie a aba com esse nome exato.</div>';
+        document.getElementById('scores').innerHTML='';
+        return;
+      }
+      build(d.table.rows||[]);
     }).catch(function(err){
       document.getElementById('content').innerHTML=
         '<div class="err"><b>Não consegui ler a planilha.</b><br>'+esc(err.message)+
-        '<br><br>Isso costuma significar que o compartilhamento do arquivo mudou. '+
-        'A página lê a planilha diretamente, sem cópia — se o acesso por link for restrito, ela deixa de carregar.</div>';
+        '<br><br>Se a página estiver aberta como arquivo local (file://) o navegador bloqueia a '+
+        'requisição. Abra pelo endereço do GitHub Pages.</div>';
+    });
+    stamp();
+  }
+
+  // na abertura, busca a pauta mais recente que já existe de verdade
+  function abrirMaisRecente(){
+    var datas=listaDeDatas(), i=0;
+    document.getElementById('content').innerHTML='<div class="loading">Procurando a pauta mais recente…</div>';
+    descobrirSigInvalida().then(function proximo(){
+      if(i>=datas.length){ load(datas[0]); return; }
+      var nome=datas[i++];
+      return puxarValida(nome).then(function(d){
+        if(!d) return proximo();
+        sel.value=nome;
+        build(d.table.rows||[]);
+        stamp();
+      });
     });
   }
 
@@ -355,15 +533,17 @@ kbd{
     var counts={critico:0,andamento:0,concluido:0,outro:0};
     bands.forEach(function(b){ b.items.forEach(function(it){ counts[statusClass(it.status)]++; }); });
 
-    // placar
+    // os dois primeiros são os status que a reunião trata; os outros dois
+    // ficam menores, só para consulta e resgate eventual
     var sc=[
-      ['c','critico',counts.critico,'Críticas'],
-      ['m','outro',counts.outro,'Outros status'],
-      ['a','andamento',counts.andamento,'Em andamento'],
-      ['k','concluido',counts.concluido,'Concluídas']
+      ['c','critico',counts.critico,'Críticas',''],
+      ['a','andamento',counts.andamento,'Em andamento',''],
+      ['m','outro',counts.outro,'Outros status',' sec'],
+      ['k','concluido',counts.concluido,'Concluídas',' sec']
     ];
-    document.getElementById('scores').innerHTML=sc.map(function(s){
-      return '<div class="score '+s[0]+(state.filter===s[1]?' on':'')+'" data-f="'+s[1]+'">'+
+    document.getElementById('scores').innerHTML=sc.map(function(s,i){
+      return (i===2?'<div class="score-sep"></div>':'')+
+             '<div class="score '+s[0]+s[4]+(state.filter===s[1]?' on':'')+'" data-f="'+s[1]+'">'+
              '<b>'+s[2]+'</b><span>'+s[3]+'</span></div>';
     }).join('');
     Array.prototype.forEach.call(document.querySelectorAll('.score'),function(el){
@@ -374,7 +554,7 @@ kbd{
       };
     });
 
-    var html='', order=[], n=0;
+    var html='', n=0;
     bands.forEach(function(b,bi){
       var items=b.items.filter(matches);
       if(!items.length) return;
@@ -387,7 +567,7 @@ kbd{
       html+='<div class="gridhead"><div>Plataforma</div><div>Status</div><div>Descrição do status</div>'+
             '<div>Encaminhamentos</div><div>Última atualização</div></div>';
       items.forEach(function(it){
-        var id=n++; order.push(id);
+        var id=n++;
         var segs=parseDesc(it.desc).filter(function(p){return p[1];});
         var descHtml = segs.length
           ? segs.map(function(p){
@@ -395,11 +575,11 @@ kbd{
                      (p[0]?'<span class="lbl">'+esc(shortLabel(p[0]))+'</span>':'')+
                      esc(p[1])+'</div>';
             }).join('')
-          : '<div class="empty">—</div>';
+          : '<div class="seg empty">—</div>';
         var owners='';
         if(it.suped) owners+='<span class="own">'+esc(it.suped)+'</span>';
         if(it.ti) owners+='<span class="own ti">'+esc(it.ti)+'</span>';
-        html+='<div class="row" data-id="'+id+'" data-band="'+bi+'">'+
+        html+='<div class="row s-'+statusClass(it.status)+'" data-id="'+id+'" data-band="'+bi+'">'+
           '<div class="plat"><span>'+esc(it.plat)+'</span>'+(owners?'<div class="owners">'+owners+'</div>':'')+'</div>'+
           '<div><span class="pill '+statusClass(it.status)+'">'+esc(it.status||'—')+'</span></div>'+
           '<div class="clamp">'+descHtml+'</div>'+
@@ -414,7 +594,6 @@ kbd{
     document.getElementById('content').innerHTML=html;
     rebuildOrder();
 
-    // recolher/expandir seções
     Array.prototype.forEach.call(document.querySelectorAll('.band'),function(b){
       b.onclick=function(){
         var sec=document.querySelector('.section[data-sec="'+b.getAttribute('data-b')+'"]');
@@ -426,7 +605,6 @@ kbd{
       };
     });
 
-    // foco por clique
     Array.prototype.forEach.call(document.querySelectorAll('.row'),function(r){
       r.onclick=function(){
         var id=parseInt(r.getAttribute('data-id'),10);
@@ -485,6 +663,8 @@ kbd{
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
     if(e.key==='Escape'){ if(state.pauta) setPauta(false); return; }
+    if(e.key==='+'||e.key==='='){ k=Math.min(1.8,k+0.1); applyK(); return; }
+    if(e.key==='-'){ k=Math.max(0.7,k-0.1); applyK(); return; }
     if(!state.pauta) return;
     if(e.key==='ArrowDown'||e.key==='ArrowRight'){ e.preventDefault(); focus(state.idx+1); }
     if(e.key==='ArrowUp'||e.key==='ArrowLeft'){ e.preventDefault(); focus(state.idx-1); }
@@ -503,13 +683,28 @@ kbd{
     document.getElementById('stamp').textContent=
       'Lido diretamente da planilha · atualizado às '+
       d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('sub').textContent=
-      'Os dados vêm da planilha oficial. Editar na planilha e recarregar aqui (↻).';
+    // só escreve o subtítulo padrão se o usuário ainda não editou
+    var sb=document.getElementById('sub');
+    if(!sb.dataset.custom)
+      sb.textContent='Os dados vêm da planilha oficial. Editar na planilha e recarregar aqui (↻).';
   }
-  var _load=load;
-  load=function(gid){ _load(gid); stamp(); };
 
-  load(TABS[0][1]);
+  // ---------- cabeçalho editável ----------
+  ['h-kicker','h-title','sub'].forEach(function(id){
+    var el=document.getElementById(id);
+    try{
+      var sv=localStorage.getItem('roadmap_txt_'+id);
+      if(sv!=null){ el.textContent=sv; if(id==='sub') el.dataset.custom='1'; }
+    }catch(e){}
+    el.addEventListener('input',function(){
+      el.dataset.custom='1';
+      try{ localStorage.setItem('roadmap_txt_'+id, el.textContent); }catch(e){}
+    });
+    // Enter não cria linha nova no cabeçalho
+    el.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+  });
+
+  abrirMaisRecente();
 })();
 </script>
 </body>
