@@ -79,6 +79,24 @@ header.top{
 h1{margin:calc(5px * var(--k)) 0 calc(3px * var(--k));font-size:calc(32px * var(--k));letter-spacing:-.022em;line-height:1.1}
 .sub{color:var(--ink-2);font-size:calc(15px * var(--k));margin:0}
 .right{display:flex;flex-direction:column;align-items:flex-end;gap:calc(10px * var(--k))}
+
+/* cabeçalho encolhe ao rolar, para devolver tela ao conteúdo */
+body.compact header.top{padding:calc(9px * var(--k)) 0 calc(9px * var(--k))}
+/* no compacto tudo continua visível, só menor */
+body.compact .kicker{font-size:calc(10.5px * var(--k))}
+body.compact h1{font-size:calc(20px * var(--k));margin:calc(1px * var(--k)) 0}
+body.compact .tools{flex-wrap:nowrap}
+body.compact .sub{font-size:calc(13px * var(--k));margin-top:calc(2px * var(--k));
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar>div:first-child{min-width:0;flex:1 1 auto}
+body.compact .topbar{flex-wrap:nowrap;align-items:center}
+body.compact .logo img{height:calc(26px * var(--k))}
+body.compact .right{flex-direction:row;align-items:center;gap:calc(14px * var(--k))}
+/* no modo pauta nada compete com o item em discussão */
+body.pauta .scores{display:none}
+.rel{font-size:calc(12px * var(--k));color:var(--ink-3);font-weight:700;white-space:nowrap}
+.rel.link{color:var(--accent-2);text-decoration:none}
+.rel.link:hover{text-decoration:underline}
 .tools{display:flex;gap:calc(8px * var(--k));flex-wrap:wrap;align-items:center}
 /* duas versões do logo: a escura no tema claro, a branca no tema escuro */
 .logo{display:inline-flex;opacity:.9}
@@ -139,14 +157,18 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .score-sep{width:calc(20px * var(--k))}
 
 /* ---------- seções ---------- */
+/* o espaçamento entre seções vive no wrapper; se ficasse na faixa, a margem
+   escaparia do contêiner fixo e abriria um vão transparente no topo */
+.secwrap{margin-top:calc(24px * var(--k))}
+.secwrap:first-child{margin-top:0}
 .sechead{
   position:sticky;top:var(--htop,0px);z-index:20;
-  background:var(--sticky-bg);backdrop-filter:blur(10px);
-  padding-bottom:calc(3px * var(--k));
+  background:var(--sticky-bg);backdrop-filter:blur(12px);
+  padding:calc(9px * var(--k)) 0 calc(4px * var(--k));
 }
 .band{
   display:flex;align-items:center;gap:calc(12px * var(--k));cursor:pointer;user-select:none;
-  margin:calc(26px * var(--k)) 0 calc(10px * var(--k));
+  margin:0 0 calc(10px * var(--k));
   padding:calc(10px * var(--k)) calc(18px * var(--k));
   border-radius:calc(11px * var(--k));
   background:var(--panel-2);border:1px solid var(--line);
@@ -165,11 +187,10 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .gridhead,.row{
   display:grid;
   grid-template-columns:
-    calc(300px * var(--k))
-    calc(150px * var(--k))
-    minmax(0,1.05fr)
-    minmax(0,1.05fr)
-    minmax(0,.92fr);
+    calc(330px * var(--k))
+    minmax(0,1.08fr)
+    minmax(0,1.08fr)
+    minmax(0,.95fr);
 }
 .gridhead{
   padding:0 0 calc(8px * var(--k));
@@ -198,6 +219,7 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .row .plat{font-weight:800;font-size:calc(21px * var(--k));line-height:1.22;
   letter-spacing:-.012em;color:var(--ink);
   display:flex;flex-direction:column;gap:calc(9px * var(--k))}
+.meta{display:flex;gap:calc(6px * var(--k));flex-wrap:wrap;align-items:center}
 .owners{display:flex;gap:calc(5px * var(--k));flex-wrap:wrap}
 /* SUPED em roxo e TI em azul, mesmo código de cor dos rótulos da descrição */
 .own{font-size:calc(12.5px * var(--k));font-weight:700;
@@ -279,8 +301,8 @@ kbd{
   100%{background-color:transparent}
 }
 .flash{animation:flash 6s ease-out 1;border-radius:calc(8px * var(--k))}
-:root{--flash:rgba(245,196,74,.30); --sticky-bg:rgba(204,215,230,.82)}
-:root[data-theme="dark"]{--flash:rgba(230,180,92,.22); --sticky-bg:rgba(16,24,35,.82)}
+:root{--flash:rgba(245,196,74,.30); --sticky-bg:rgba(204,215,230,.96)}
+:root[data-theme="dark"]{--flash:rgba(230,180,92,.22); --sticky-bg:rgba(16,24,35,.96)}
 .loading{padding:calc(60px * var(--k)) 0;text-align:center;color:var(--ink-3);font-size:calc(16px * var(--k))}
 .err{
   background:var(--crit-bg);color:var(--crit);border-radius:calc(13px * var(--k));
@@ -318,6 +340,9 @@ kbd{
       <div class="zoom" title="Tamanho da letra">
         <button id="z-menos">A−</button><span id="z-val">100%</span><button id="z-mais">A+</button>
       </div>
+      <a class="rel link" id="abrir" target="_blank" rel="noopener"
+         title="abrir a planilha para editar">planilha ↗</a>
+      <span class="rel" id="stamp" title="horário da última leitura da planilha"></span>
       <button class="btn ico" id="btn-reload" title="Recarregar da planilha">↻</button>
       <button class="btn ico" id="btn-theme" title="Tema">☾</button>
       <button class="btn ico" id="btn-print" title="Imprimir">⎙</button>
@@ -327,7 +352,7 @@ kbd{
 </header>
 
 <div class="wrap">
-  <p class="status-line"><span id="stamp"></span> <span class="diff" id="diff"></span></p>
+  <p class="status-line"><span class="diff" id="diff"></span></p>
   <div class="scores" id="scores"></div>
   <div id="content"><div class="loading">Puxando dados da planilha…</div></div>
 </div>
@@ -380,6 +405,13 @@ kbd{
   }
   window.addEventListener('resize',ajustarTopo);
 
+  // compacta o cabeçalho depois de rolar (com folga para não piscar no limiar)
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY, c=document.body.classList.contains('compact');
+    if(!c && y>70){ document.body.classList.add('compact'); ajustarTopo(); }
+    else if(c && y<24){ document.body.classList.remove('compact'); ajustarTopo(); }
+  },{passive:true});
+
   function applyK(){
     document.documentElement.style.setProperty('--k',k);
     document.getElementById('z-val').textContent=Math.round(k*100)+'%';
@@ -403,6 +435,7 @@ kbd{
     try{localStorage.setItem('roadmap_theme',next);}catch(e){}
   };
   document.getElementById('btn-print').onclick=function(){window.print();};
+  document.getElementById('abrir').href='https://docs.google.com/spreadsheets/d/'+SID+'/edit';
 
   // ---------- seletor de aba ----------
   var sel=document.getElementById('sel-tab');
@@ -575,11 +608,12 @@ kbd{
              esc(p[1])+'</div>';
     }).join('');
   }
+  // o status deixou de ser coluna: vive embaixo do nome, junto dos responsáveis
   function htmlPlat(it){
-    var owners='';
-    if(it.suped) owners+='<span class="own">'+esc(it.suped)+'</span>';
-    if(it.ti) owners+='<span class="own ti">'+esc(it.ti)+'</span>';
-    return '<span>'+esc(it.plat)+'</span>'+(owners?'<div class="owners">'+owners+'</div>':'');
+    var meta=htmlPill(it);
+    if(it.suped) meta+='<span class="own">'+esc(it.suped)+'</span>';
+    if(it.ti) meta+='<span class="own ti">'+esc(it.ti)+'</span>';
+    return '<span class="nome">'+esc(it.plat)+'</span><div class="meta">'+meta+'</div>';
   }
   function htmlPill(it){
     return '<span class="pill '+statusClass(it.status)+'">'+esc(it.status||'—')+'</span>';
@@ -685,17 +719,16 @@ kbd{
       if(!dif.length) return;
       var r=document.querySelector('.row[data-key="'+cssEsc(x.chave)+'"]');
       if(!r) return;
-      var cols=r.children;   // 0 plataforma · 1 status · 2 descrição · 3 encaminhamentos · 4 atualização
+      var cols=r.children;   // 0 plataforma (nome + status + donos) · 1 descrição · 2 encaminhamentos · 3 atualização
       n++;
-      if(dif.indexOf('suped')>-1||dif.indexOf('ti')>-1){ cols[0].innerHTML=htmlPlat(it); piscar(cols[0]); }
-      if(dif.indexOf('status')>-1){
-        cols[1].innerHTML=htmlPill(it);
+      if(dif.indexOf('status')>-1||dif.indexOf('suped')>-1||dif.indexOf('ti')>-1){
+        cols[0].innerHTML=htmlPlat(it);
         r.className=r.className.replace(/\bs-\w+/,'s-'+statusClass(it.status));
-        piscar(cols[1]);
+        piscar(cols[0]);
       }
-      if(dif.indexOf('desc')>-1){ cols[2].innerHTML=htmlDesc(it); piscar(cols[2]); }
-      if(dif.indexOf('enc')>-1){ cols[3].innerHTML=htmlTxt(it.enc); piscar(cols[3]); }
-      if(dif.indexOf('upd')>-1){ cols[4].innerHTML=htmlTxt(it.upd); piscar(cols[4]); }
+      if(dif.indexOf('desc')>-1){ cols[1].innerHTML=htmlDesc(it); piscar(cols[1]); }
+      if(dif.indexOf('enc')>-1){ cols[2].innerHTML=htmlTxt(it.enc); piscar(cols[2]); }
+      if(dif.indexOf('upd')>-1){ cols[3].innerHTML=htmlTxt(it.upd); piscar(cols[3]); }
     });
     renderPlacar();
     return n;
@@ -764,7 +797,7 @@ kbd{
             '<div class="band'+(isCrit?' crit':'')+(isMod?' mod':'')+(closed?' closed':'')+'" data-b="'+bi+'">'+
             '<h2>'+esc(b.title)+'</h2><span class="n">'+items.length+'</span>'+
             '<span class="caret">▾</span></div>'+
-            '<div class="gridhead"><div>Plataforma</div><div>Status</div><div>Descrição do status</div>'+
+            '<div class="gridhead"><div>Plataforma</div><div>Descrição do status</div>'+
             '<div>Encaminhamentos</div><div>Última atualização</div></div>'+
             '</div>';
       html+='<div class="section" data-sec="'+bi+'"'+(closed?' style="display:none"':'')+'>';
@@ -773,7 +806,6 @@ kbd{
         html+='<div class="row s-'+statusClass(it.status)+'" data-id="'+id+'" data-band="'+bi+'"'+
               ' data-key="'+esc(it._key||'')+'">'+
           '<div class="plat">'+htmlPlat(it)+'</div>'+
-          '<div>'+htmlPill(it)+'</div>'+
           '<div class="clamp">'+htmlDesc(it)+'</div>'+
           '<div class="txt clamp">'+htmlTxt(it.enc)+'</div>'+
           '<div class="txt clamp">'+htmlTxt(it.upd)+'</div>'+
@@ -889,15 +921,25 @@ kbd{
   }
   document.getElementById('btn-reload').onclick=recarregar;
 
+  // "26/11/2026" -> "Pauta de 26 de novembro de 2026"
+  function porExtenso(nome){
+    var p=(nome||'').split('/');
+    if(p.length!==3) return nome;
+    var d=new Date(+p[2],+p[1]-1,+p[0]);
+    if(isNaN(d)) return nome;
+    return 'Pauta de '+d.toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+  }
+
   function stamp(){
     var d=new Date();
     document.getElementById('stamp').textContent=
-      'Lido diretamente da planilha · atualizado às '+
       d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    // só escreve o subtítulo padrão se o usuário ainda não editou
+    // o subtítulo mostra a data da pauta, a menos que você tenha escrito o seu
     var sb=document.getElementById('sub');
     if(!sb.dataset.custom)
-      sb.textContent='Os dados vêm da planilha oficial. Editar na planilha e recarregar aqui (↻).';
+      sb.textContent=porExtenso(sel.value)+
+        ' · os dados vêm da planilha oficial — sigam atualizando por lá';
+    ajustarTopo();
   }
 
   // ---------- cabeçalho editável ----------
