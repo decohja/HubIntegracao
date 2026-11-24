@@ -252,6 +252,19 @@ kbd{
   background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);
 }
 .status-line{font-size:calc(13px * var(--k));color:var(--ink-3);margin:0 0 calc(14px * var(--k))}
+.diff{font-weight:800;margin-left:calc(8px * var(--k))}
+.diff.has{color:var(--mod)}
+.diff.has::before{content:"● "}
+.diff.none{color:var(--ink-3)}
+
+/* destaque do que mudou na última leitura */
+@keyframes flash{
+  0%,65%{background-color:var(--flash)}
+  100%{background-color:transparent}
+}
+.flash{animation:flash 6s ease-out 1;border-radius:calc(8px * var(--k))}
+:root{--flash:rgba(245,196,74,.30)}
+:root[data-theme="dark"]{--flash:rgba(230,180,92,.22)}
 .loading{padding:calc(60px * var(--k)) 0;text-align:center;color:var(--ink-3);font-size:calc(16px * var(--k))}
 .err{
   background:var(--crit-bg);color:var(--crit);border-radius:calc(13px * var(--k));
@@ -295,7 +308,7 @@ kbd{
 </header>
 
 <div class="wrap">
-  <p class="status-line" id="stamp"></p>
+  <p class="status-line"><span id="stamp"></span> <span class="diff" id="diff"></span></p>
   <div class="scores" id="scores"></div>
   <div id="content"><div class="loading">Puxando dados da planilha…</div></div>
 </div>
@@ -336,7 +349,7 @@ kbd{
   }
   var SIG_INVALIDA=null;   // assinatura devolvida quando a aba não existe
 
-  var state={bands:[],filter:null,query:'',pauta:false,idx:-1,order:[]};
+  var state={bands:[],filter:null,query:'',pauta:false,idx:-1,order:[],snap:null};
 
   // ---------- zoom ----------
   var k=1;
@@ -450,7 +463,9 @@ kbd{
     return tentar();
   }
 
+  // troca de pauta: redesenha tudo
   function load(nome){
+    state.snap=null;
     document.getElementById('content').innerHTML='<div class="loading">Puxando dados da planilha…</div>';
     descobrirSigInvalida().then(function(){
       return puxarValida(nome);
@@ -514,8 +529,119 @@ kbd{
         suped:cell(r,5), ti:cell(r,6)
       });
     });
-    state.bands=bands;
+    aplicar(bands, state.snap!==null);
+  }
+
+  // ---------- montagem das células (reusadas no render e no patch) ----------
+  function htmlDesc(it){
+    var segs=parseDesc(it.desc).filter(function(p){return p[1];});
+    if(!segs.length) return '<div class="seg empty">—</div>';
+    return segs.map(function(p){
+      return '<div class="seg '+segClass(p[0])+'">'+
+             (p[0]?'<span class="lbl">'+esc(shortLabel(p[0]))+'</span>':'')+
+             esc(p[1])+'</div>';
+    }).join('');
+  }
+  function htmlPlat(it){
+    var owners='';
+    if(it.suped) owners+='<span class="own">'+esc(it.suped)+'</span>';
+    if(it.ti) owners+='<span class="own ti">'+esc(it.ti)+'</span>';
+    return '<span>'+esc(it.plat)+'</span>'+(owners?'<div class="owners">'+owners+'</div>':'');
+  }
+  function htmlPill(it){
+    return '<span class="pill '+statusClass(it.status)+'">'+esc(it.status||'—')+'</span>';
+  }
+  function htmlTxt(v){ return v?esc(v):'<span class="empty">—</span>'; }
+
+  // ---------- retrato para comparação ----------
+  var CAMPOS=['status','desc','enc','upd','suped','ti'];
+  function retrato(bands){
+    var out=[], vistos={};
+    bands.forEach(function(b,bi){
+      b.items.forEach(function(it){
+        var base=bi+'|'+it.plat;
+        vistos[base]=(vistos[base]||0)+1;
+        it._key=base+'|'+vistos[base];
+        out.push({chave:it._key, band:b.title, it:it});
+      });
+    });
+    return out;
+  }
+  function mesmaEstrutura(a,b){
+    if(!a||!b||a.length!==b.length) return false;
+    for(var i=0;i<a.length;i++) if(a[i].chave!==b[i].chave) return false;
+    return true;
+  }
+
+  // decide entre redesenhar tudo ou trocar só as células alteradas
+  function aplicar(bands, ehRefresh){
+    var novo=retrato(bands);
+    if(ehRefresh && mesmaEstrutura(state.snap,novo)){
+      var mudou=patch(novo);
+      state.bands=bands; state.snap=novo;
+      avisoDeMudanca(mudou);
+      return;
+    }
+    var antes=state.snap;
+    state.bands=bands; state.snap=novo;
     render();
+    if(ehRefresh){
+      // estrutura mudou: destaca as linhas novas ou alteradas
+      var mapa={}; (antes||[]).forEach(function(x){mapa[x.chave]=x.it;});
+      var n=0;
+      novo.forEach(function(x){
+        var velho=mapa[x.chave], difere=!velho;
+        if(velho) difere=CAMPOS.some(function(c){return velho[c]!==x.it[c];});
+        if(difere){
+          var r=document.querySelector('.row[data-key="'+cssEsc(x.chave)+'"]');
+          if(r){ n++; piscar(r); }
+        }
+      });
+      avisoDeMudanca(n);
+    }
+  }
+
+  function cssEsc(s){ return String(s).replace(/["\\]/g,'\\$&'); }
+
+  function piscar(el){
+    el.classList.remove('flash');
+    void el.offsetWidth;          // força reinício da animação
+    el.classList.add('flash');
+    setTimeout(function(){ el.classList.remove('flash'); }, 6000);
+  }
+
+  // troca só as células que mudaram
+  function patch(novo){
+    var n=0;
+    novo.forEach(function(x,i){
+      var velho=state.snap[i].it, it=x.it;
+      var dif=CAMPOS.filter(function(c){ return velho[c]!==it[c]; });
+      if(!dif.length) return;
+      var r=document.querySelector('.row[data-key="'+cssEsc(x.chave)+'"]');
+      if(!r) return;
+      var cols=r.children;   // 0 plataforma · 1 status · 2 descrição · 3 encaminhamentos · 4 atualização
+      n++;
+      if(dif.indexOf('suped')>-1||dif.indexOf('ti')>-1){ cols[0].innerHTML=htmlPlat(it); piscar(cols[0]); }
+      if(dif.indexOf('status')>-1){
+        cols[1].innerHTML=htmlPill(it);
+        r.className=r.className.replace(/\bs-\w+/,'s-'+statusClass(it.status));
+        piscar(cols[1]);
+      }
+      if(dif.indexOf('desc')>-1){ cols[2].innerHTML=htmlDesc(it); piscar(cols[2]); }
+      if(dif.indexOf('enc')>-1){ cols[3].innerHTML=htmlTxt(it.enc); piscar(cols[3]); }
+      if(dif.indexOf('upd')>-1){ cols[4].innerHTML=htmlTxt(it.upd); piscar(cols[4]); }
+    });
+    renderPlacar();
+    return n;
+  }
+
+  function avisoDeMudanca(n){
+    var el=document.getElementById('diff');
+    if(!el) return;
+    if(!n){ el.className='diff none'; el.textContent='nada mudou desde a última leitura'; }
+    else { el.className='diff has'; el.textContent=n===1?'1 linha atualizada':n+' linhas atualizadas'; }
+    clearTimeout(el._t);
+    el._t=setTimeout(function(){ el.className='diff'; el.textContent=''; },12000);
   }
 
   // ---------- render ----------
@@ -528,7 +654,7 @@ kbd{
     return true;
   }
 
-  function render(){
+  function renderPlacar(){
     var bands=state.bands||[];
     var counts={critico:0,andamento:0,concluido:0,outro:0};
     bands.forEach(function(b){ b.items.forEach(function(it){ counts[statusClass(it.status)]++; }); });
@@ -553,7 +679,11 @@ kbd{
         render();
       };
     });
+  }
 
+  function render(){
+    var bands=state.bands||[];
+    renderPlacar();
     var html='', n=0;
     bands.forEach(function(b,bi){
       var items=b.items.filter(matches);
@@ -568,23 +698,13 @@ kbd{
             '<div>Encaminhamentos</div><div>Última atualização</div></div>';
       items.forEach(function(it){
         var id=n++;
-        var segs=parseDesc(it.desc).filter(function(p){return p[1];});
-        var descHtml = segs.length
-          ? segs.map(function(p){
-              return '<div class="seg '+segClass(p[0])+'">'+
-                     (p[0]?'<span class="lbl">'+esc(shortLabel(p[0]))+'</span>':'')+
-                     esc(p[1])+'</div>';
-            }).join('')
-          : '<div class="seg empty">—</div>';
-        var owners='';
-        if(it.suped) owners+='<span class="own">'+esc(it.suped)+'</span>';
-        if(it.ti) owners+='<span class="own ti">'+esc(it.ti)+'</span>';
-        html+='<div class="row s-'+statusClass(it.status)+'" data-id="'+id+'" data-band="'+bi+'">'+
-          '<div class="plat"><span>'+esc(it.plat)+'</span>'+(owners?'<div class="owners">'+owners+'</div>':'')+'</div>'+
-          '<div><span class="pill '+statusClass(it.status)+'">'+esc(it.status||'—')+'</span></div>'+
-          '<div class="clamp">'+descHtml+'</div>'+
-          '<div class="txt clamp">'+(it.enc?esc(it.enc):'<span class="empty">—</span>')+'</div>'+
-          '<div class="txt clamp">'+(it.upd?esc(it.upd):'<span class="empty">—</span>')+'</div>'+
+        html+='<div class="row s-'+statusClass(it.status)+'" data-id="'+id+'" data-band="'+bi+'"'+
+              ' data-key="'+esc(it._key||'')+'">'+
+          '<div class="plat">'+htmlPlat(it)+'</div>'+
+          '<div>'+htmlPill(it)+'</div>'+
+          '<div class="clamp">'+htmlDesc(it)+'</div>'+
+          '<div class="txt clamp">'+htmlTxt(it.enc)+'</div>'+
+          '<div class="txt clamp">'+htmlTxt(it.upd)+'</div>'+
           '</div>';
       });
       html+='</div>';
@@ -676,7 +796,20 @@ kbd{
     clearTimeout(qT);
     qT=setTimeout(function(){ state.query=qEl.value.trim().toLowerCase(); state.idx=-1; render(); },180);
   };
-  document.getElementById('btn-reload').onclick=function(){ load(sel.value); };
+  // ↻ : baixa a aba de novo, mas troca só as células que mudaram.
+  // Mantém scroll, foco do modo pauta e seções recolhidas.
+  function recarregar(){
+    if(state.snap===null){ load(sel.value); return; }
+    var b=document.getElementById('btn-reload');
+    b.disabled=true; b.textContent='…';
+    puxarValida(sel.value).then(function(d){
+      if(d) build(d.table.rows||[]);
+      stamp();
+    }).catch(function(){}).then(function(){
+      b.disabled=false; b.textContent='↻';
+    });
+  }
+  document.getElementById('btn-reload').onclick=recarregar;
 
   function stamp(){
     var d=new Date();
