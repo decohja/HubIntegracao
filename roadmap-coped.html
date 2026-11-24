@@ -12,6 +12,8 @@
   --bg:#ccd7e6; --panel:#eaeff7; --panel-2:#dde5f0;
   --line:#c8d3e2; --line-2:#b4c2d6;
   --ink:#16222f; --ink-2:#44515f; --ink-3:#6e7b89;
+  /* título da plataforma: azul-petróleo, não preto — conversa com o logo e não vibra na projeção */
+  --titulo:#132a3e;
   --accent:#2f7fd0; --accent-2:#2168b3; --accent-soft:#e3f0fc;
   --crit:#c4393b; --crit-bg:#fde7e8;
   --mod:#8d5f06; --mod-bg:#fbefd4;
@@ -25,6 +27,7 @@
   --bg:#101823; --panel:#18222f; --panel-2:#1e2a39;
   --line:#2a3848; --line-2:#36465a;
   --ink:#eef4fb; --ink-2:#b8c6d6; --ink-3:#8a98a8;
+  --titulo:#dceaf8;
   --accent:#5aa3e8; --accent-2:#8cc3f5; --accent-soft:#17293d;
   --crit:#f59a9c; --crit-bg:#3a1d1e;
   --mod:#e6b45c; --mod-bg:#332a14;
@@ -216,9 +219,13 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .row:hover{border-color:var(--line-2)}
 .row>div{padding:calc(16px * var(--k)) calc(18px * var(--k));min-width:0}
 .row>div:first-child{padding-left:calc(24px * var(--k))}
-.row .plat{font-weight:800;font-size:calc(21px * var(--k));line-height:1.22;
-  letter-spacing:-.012em;color:var(--ink);
+.row .plat{font-weight:700;font-size:calc(21px * var(--k));line-height:1.22;
+  letter-spacing:-.02em;color:var(--titulo);
   display:flex;flex-direction:column;gap:calc(9px * var(--k))}
+/* nomes compostos ("A / B") viram título + linha secundária, em vez de quebrar na barra */
+.nome{text-wrap:balance}
+.nome .sub2{display:block;font-size:.70em;font-weight:600;letter-spacing:-.004em;
+  color:var(--ink-2);margin-top:calc(3px * var(--k))}
 .meta{display:flex}
 /* responsáveis em grade de duas colunas: rótulo curto + nome, sempre alinhados */
 .donos{display:grid;grid-template-columns:auto 1fr;
@@ -613,12 +620,26 @@ kbd{
              esc(p[1])+'</div>';
     }).join('');
   }
+  // "Banco de Questões / Gestão de Cadernos" → título forte + linha de apoio menor,
+  // em vez de a barra quebrar no meio do nome
+  function htmlNome(plat){
+    var txt=String(plat||'').trim(), full=esc(txt);
+    // "Virada 2027 (todos os ambientes)" → título + aposto na linha de apoio
+    var par=txt.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
+    if(par) txt=par[1]+' / '+par[2];
+    // só a barra cercada de espaços separa: "Lentidão/Timeout SF" é um nome só
+    var p=txt.split(/\s+\/\s+/).filter(function(s){ return s; });
+    if(p.length<2) return '<span class="nome" data-full="'+full+'">'+full+'</span>';
+    var cab=esc(p.shift());
+    return '<span class="nome" data-full="'+full+'">'+cab+
+           '<span class="sub2">'+p.map(esc).join(' · ')+'</span></span>';
+  }
   // estrutura fixa em toda linha: nome · status · responsáveis rotulados
   function htmlPlat(it){
     var donos='';
     if(it.suped) donos+='<span class="rot ped">SUPED</span><span class="dono">'+esc(it.suped)+'</span>';
     if(it.ti)    donos+='<span class="rot ti">TI</span><span class="dono">'+esc(it.ti)+'</span>';
-    return '<span class="nome">'+esc(it.plat)+'</span>'+
+    return htmlNome(it.plat)+
            '<div class="meta">'+htmlPill(it)+'</div>'+
            (donos?'<div class="donos">'+donos+'</div>':'');
   }
@@ -890,7 +911,9 @@ kbd{
         var b=document.querySelector('.band[data-b="'+r.getAttribute('data-band')+'"]');
         if(b) b.classList.add('hasactive');
         document.getElementById('dock-now').textContent=
-          r.querySelector('.plat span').textContent+'  ·  '+(state.idx+1)+' de '+state.order.length;
+          (r.querySelector('.plat .nome').getAttribute('data-full')||
+           r.querySelector('.plat .nome').textContent)+
+          '  ·  '+(state.idx+1)+' de '+state.order.length;
         if(scroll) r.scrollIntoView({behavior:'smooth',block:'center'});
       }
     });
