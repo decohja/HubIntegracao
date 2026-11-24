@@ -14,7 +14,7 @@
   --ink:#16222f; --ink-2:#44515f; --ink-3:#6e7b89;
   --accent:#2f7fd0; --accent-2:#2168b3; --accent-soft:#e3f0fc;
   --crit:#c4393b; --crit-bg:#fde7e8;
-  --mod:#a8731a; --mod-bg:#fbf0d8;
+  --mod:#8d5f06; --mod-bg:#fbefd4;
   --ok:#1b8356; --ok-bg:#e0f6ea;
   --neu:#526273; --neu-bg:#e6ecf3;
   --ped:#6f45c0; --ped-bg:#efe8fc; --ti:#1b6098;
@@ -118,8 +118,8 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .score.on{border-color:var(--accent);box-shadow:0 0 0 calc(3px * var(--k)) var(--accent-soft),var(--shadow)}
 .score b{display:block;font-size:calc(34px * var(--k));line-height:1.05;letter-spacing:-.03em}
 .score span{font-size:calc(12px * var(--k));letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:800}
-.score.c b{color:var(--crit)} .score.m b{color:var(--mod)}
-.score.a b{color:var(--ti)} .score.k b{color:var(--ok)}
+.score.c b{color:var(--crit)} .score.m b{color:var(--neu)}
+.score.a b{color:var(--mod)} .score.k b{color:var(--ok)}
 /* secundários: menores e discretos */
 .score.sec{
   padding:calc(8px * var(--k)) calc(14px * var(--k));
@@ -145,6 +145,8 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .band.closed .caret{transform:rotate(-90deg)}
 .band.crit{background:var(--crit-bg);border-color:transparent}
 .band.crit h2{color:var(--crit)}
+.band.mod{background:var(--mod-bg);border-color:transparent}
+.band.mod h2{color:var(--mod)}
 
 /* ---------- grade ---------- */
 .gridhead,.row{
@@ -174,9 +176,9 @@ input.search:focus{outline:none;border-color:var(--accent)}
   width:calc(5px * var(--k));background:var(--line-2);
 }
 .row.s-critico::before{background:var(--crit)}
-.row.s-andamento::before{background:var(--neu)}
+.row.s-andamento::before{background:var(--mod)}
 .row.s-concluido::before{background:var(--ok)}
-.row.s-outro::before{background:var(--mod)}
+.row.s-outro::before{background:var(--neu)}
 .row:hover{border-color:var(--line-2)}
 .row>div{padding:calc(16px * var(--k)) calc(18px * var(--k));min-width:0}
 .row>div:first-child{padding-left:calc(24px * var(--k))}
@@ -193,10 +195,11 @@ input.search:focus{outline:none;border-color:var(--accent)}
   display:inline-block;font-size:calc(14px * var(--k));font-weight:800;
   padding:calc(5px * var(--k)) calc(14px * var(--k));border-radius:20px;white-space:nowrap;
 }
+/* âmbar = exige atenção (em andamento) · cinza = estacionado (parado, não iniciado) */
 .pill.critico{background:var(--crit-bg);color:var(--crit)}
-.pill.andamento{background:var(--neu-bg);color:var(--neu)}
+.pill.andamento{background:var(--mod-bg);color:var(--mod)}
 .pill.concluido{background:var(--ok-bg);color:var(--ok)}
-.pill.outro{background:var(--mod-bg);color:var(--mod)}
+.pill.outro{background:var(--neu-bg);color:var(--neu)}
 .seg{font-size:calc(16px * var(--k));color:var(--ink-2);margin-bottom:calc(9px * var(--k));line-height:1.45}
 .seg:last-child{margin-bottom:0}
 .seg .lbl{font-size:calc(11.5px * var(--k));letter-spacing:.07em;text-transform:uppercase;
@@ -689,8 +692,9 @@ kbd{
       var items=b.items.filter(matches);
       if(!items.length) return;
       var isCrit=/pautas?\s+cr(í|i)tica/i.test(b.title);
+      var isMod=/moderad/i.test(b.title);
       var closed = /conclu|paralis/i.test(b.title) && !state.query;
-      html+='<div class="band'+(isCrit?' crit':'')+(closed?' closed':'')+'" data-b="'+bi+'">'+
+      html+='<div class="band'+(isCrit?' crit':'')+(isMod?' mod':'')+(closed?' closed':'')+'" data-b="'+bi+'">'+
             '<h2>'+esc(b.title)+'</h2><span class="n">'+items.length+'</span>'+
             '<span class="caret">▾</span></div>';
       html+='<div class="section" data-sec="'+bi+'"'+(closed?' style="display:none"':'')+'>';
