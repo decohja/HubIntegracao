@@ -521,7 +521,13 @@ kbd{
       var plat=cell(r,0), st=cell(r,1);
       if(!plat && !st) return;
       if(plat && plat.toLowerCase()==='plataformas') return;   // cabeçalho
-      if(plat && !st){                                          // faixa de seção
+      // Faixa de seção = sem status, sem encaminhamento/atualização/responsáveis
+      // e sem conteúdo real na descrição (os rótulos "Ponto de atenção:" vazios
+      // que algumas faixas trazem não contam). Assim uma linha em construção,
+      // com o status ainda em branco, não é confundida com uma seção nova.
+      var outras=cell(r,3)+cell(r,4)+cell(r,5)+cell(r,6);
+      var temTexto=parseDesc(cell(r,2)).some(function(p){ return p[1]; });
+      if(plat && !st && !outras && !temTexto){
         cur={title:plat,items:[]}; bands.push(cur); return;
       }
       if(!plat) return;
@@ -579,15 +585,48 @@ kbd{
   // decide entre redesenhar tudo ou trocar só as células alteradas
   function aplicar(bands, ehRefresh){
     var novo=retrato(bands);
-    if(ehRefresh && mesmaEstrutura(state.snap,novo)){
+    // Com filtro ou busca ativa, parte das linhas não está na tela: trocar
+    // célula a célula deixaria o placar e a lista fora de sincronia.
+    // Nesses casos redesenha (o foco e as seções são devolvidos abaixo).
+    var podePatch = ehRefresh && !state.filter && !state.query;
+    if(podePatch && mesmaEstrutura(state.snap,novo)){
       var mudou=patch(novo);
       state.bands=bands; state.snap=novo;
       avisoDeMudanca(mudou);
       return;
     }
     var antes=state.snap;
+    // guarda o que o usuário ajustou na tela antes de redesenhar
+    var ativa=document.querySelector('.row.active');
+    var focoChave=ativa?ativa.getAttribute('data-key'):null;
+    var fechadas={};
+    Array.prototype.forEach.call(document.querySelectorAll('.band'),function(b){
+      var h=b.querySelector('h2');
+      if(h) fechadas[h.textContent]=b.classList.contains('closed');
+    });
+
     state.bands=bands; state.snap=novo;
     render();
+
+    // devolve seções recolhidas e o item que estava em pauta
+    if(ehRefresh){
+      Array.prototype.forEach.call(document.querySelectorAll('.band'),function(b){
+        var h=b.querySelector('h2'); if(!h) return;
+        var estado=fechadas[h.textContent];
+        if(estado===undefined) return;                 // seção nova: mantém o padrão
+        var sec=document.querySelector('.section[data-sec="'+b.getAttribute('data-b')+'"]');
+        b.classList.toggle('closed',estado);
+        if(sec) sec.style.display = estado?'none':'';
+      });
+      rebuildOrder();
+      if(focoChave){
+        var r=document.querySelector('.row[data-key="'+cssEsc(focoChave)+'"]');
+        if(r){
+          var i=state.order.indexOf(parseInt(r.getAttribute('data-id'),10));
+          if(i>-1){ state.idx=i; paint(); }
+        }
+      }
+    }
     if(ehRefresh){
       // estrutura mudou: destaca as linhas novas ou alteradas
       var mapa={}; (antes||[]).forEach(function(x){mapa[x.chave]=x.it;});
