@@ -315,7 +315,7 @@ kbd{
 
 <div class="dock">
   <div class="now" id="dock-now">—</div>
-  <div class="hint"><kbd>↑</kbd> <kbd>↓</kbd> navegar · <kbd>Esc</kbd> sair · clique numa linha para focar</div>
+  <div class="hint"><kbd>↑</kbd> <kbd>↓</kbd> navegar · <kbd>Esc</kbd> sair · clique para focar · duplo clique atualiza</div>
 </div>
 
 <script>
@@ -730,6 +730,12 @@ kbd{
         var id=parseInt(r.getAttribute('data-id'),10);
         if(!state.pauta) setPauta(true);
         focus(state.order.indexOf(id));
+      };
+      // duplo clique na linha = mesmo que o ↻ (o 1º clique já focou a linha)
+      r.ondblclick=function(){
+        var s=window.getSelection && window.getSelection();
+        if(s && s.removeAllRanges) s.removeAllRanges();   // tira a seleção de texto
+        recarregar();
       };
     });
 
