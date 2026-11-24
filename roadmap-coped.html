@@ -219,16 +219,19 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .row .plat{font-weight:800;font-size:calc(21px * var(--k));line-height:1.22;
   letter-spacing:-.012em;color:var(--ink);
   display:flex;flex-direction:column;gap:calc(9px * var(--k))}
-.meta{display:flex;gap:calc(6px * var(--k));flex-wrap:wrap;align-items:center}
-.owners{display:flex;gap:calc(5px * var(--k));flex-wrap:wrap}
-/* SUPED em roxo e TI em azul, mesmo código de cor dos rótulos da descrição */
-.own{font-size:calc(12.5px * var(--k));font-weight:700;
-  padding:calc(3px * var(--k)) calc(10px * var(--k));border-radius:20px;
-  background:var(--ped-bg);color:var(--ped);white-space:nowrap}
-.own.ti{background:var(--accent-soft);color:var(--ti)}
+.meta{display:flex}
+/* responsáveis em grade de duas colunas: rótulo curto + nome, sempre alinhados */
+.donos{display:grid;grid-template-columns:auto 1fr;
+  gap:calc(3px * var(--k)) calc(9px * var(--k));align-items:baseline}
+.rot{font-size:calc(10px * var(--k));letter-spacing:.07em;text-transform:uppercase;
+  font-weight:800;line-height:1.6}
+.rot.ped{color:var(--ped)} .rot.ti{color:var(--ti)}
+.dono{font-size:calc(13px * var(--k));color:var(--ink-2);font-weight:600;line-height:1.35}
+/* largura fixa para os chips formarem uma coluna regular entre as linhas */
 .pill{
-  display:inline-block;font-size:calc(14px * var(--k));font-weight:800;
-  padding:calc(5px * var(--k)) calc(14px * var(--k));border-radius:20px;white-space:nowrap;
+  display:inline-block;font-size:calc(13.5px * var(--k));font-weight:800;
+  padding:calc(5px * var(--k)) calc(12px * var(--k));border-radius:20px;white-space:nowrap;
+  min-width:calc(132px * var(--k));text-align:center;
 }
 /* âmbar = exige atenção (em andamento) · cinza = estacionado (parado, não iniciado) */
 .pill.critico{background:var(--crit-bg);color:var(--crit)}
@@ -258,8 +261,10 @@ body.pauta .row.active::before{width:calc(8px * var(--k))}
 body.pauta .row.active>div{padding:calc(24px * var(--k)) calc(22px * var(--k))}
 body.pauta .row.active>div:first-child{padding-left:calc(30px * var(--k))}
 body.pauta .row.active .plat{font-size:calc(30px * var(--k));gap:calc(12px * var(--k))}
-body.pauta .row.active .own{font-size:calc(14px * var(--k));padding:calc(4px * var(--k)) calc(12px * var(--k))}
-body.pauta .row.active .pill{font-size:calc(16px * var(--k));padding:calc(7px * var(--k)) calc(17px * var(--k))}
+body.pauta .row.active .dono{font-size:calc(15px * var(--k))}
+body.pauta .row.active .rot{font-size:calc(11px * var(--k))}
+body.pauta .row.active .pill{font-size:calc(15.5px * var(--k));
+  padding:calc(7px * var(--k)) calc(15px * var(--k));min-width:calc(152px * var(--k))}
 body.pauta .row.active .seg,
 body.pauta .row.active .txt{font-size:calc(21px * var(--k));line-height:1.45}
 body.pauta .row.active .seg{margin-bottom:calc(12px * var(--k))}
@@ -608,12 +613,14 @@ kbd{
              esc(p[1])+'</div>';
     }).join('');
   }
-  // o status deixou de ser coluna: vive embaixo do nome, junto dos responsáveis
+  // estrutura fixa em toda linha: nome · status · responsáveis rotulados
   function htmlPlat(it){
-    var meta=htmlPill(it);
-    if(it.suped) meta+='<span class="own">'+esc(it.suped)+'</span>';
-    if(it.ti) meta+='<span class="own ti">'+esc(it.ti)+'</span>';
-    return '<span class="nome">'+esc(it.plat)+'</span><div class="meta">'+meta+'</div>';
+    var donos='';
+    if(it.suped) donos+='<span class="rot ped">SUPED</span><span class="dono">'+esc(it.suped)+'</span>';
+    if(it.ti)    donos+='<span class="rot ti">TI</span><span class="dono">'+esc(it.ti)+'</span>';
+    return '<span class="nome">'+esc(it.plat)+'</span>'+
+           '<div class="meta">'+htmlPill(it)+'</div>'+
+           (donos?'<div class="donos">'+donos+'</div>':'');
   }
   function htmlPill(it){
     return '<span class="pill '+statusClass(it.status)+'">'+esc(it.status||'—')+'</span>';
