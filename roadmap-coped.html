@@ -278,6 +278,11 @@ body.pauta .row.active .seg,
 body.pauta .row.active .txt{font-size:calc(21px * var(--k));line-height:1.45}
 body.pauta .row.active .seg{margin-bottom:calc(12px * var(--k))}
 body.pauta .row.active .seg .lbl{font-size:calc(12.5px * var(--k))}
+/* seção recolhida não deixa o cabeçalho de colunas órfão na tela */
+.band.closed + .gridhead{display:none}
+/* no modo pauta, "sem pontos de atenção" e "paralisados/concluídos" sempre saem
+   da tela: nunca são conduzidas na reunião. Críticas e moderadas nunca somem. */
+body.pauta .secwrap.fora-da-pauta{display:none}
 body.pauta .band{opacity:.45}
 body.pauta .band.hasactive{opacity:1}
 .row.active .plat::before{
@@ -820,9 +825,12 @@ kbd{
       var isCrit=/pautas?\s+cr(í|i)tica/i.test(b.title);
       var isMod=/moderad/i.test(b.title);
       var closed = /conclu|paralis/i.test(b.title) && !state.query;
+      // só estas duas somem no modo pauta — nunca as críticas ou as moderadas
+      var foraDaPauta = /conclu|paralis/i.test(b.title) ||
+                        /sem\s+pontos?\s+de\s+aten/i.test(b.title);
       // faixa + cabeçalho das colunas ficam grudados no topo enquanto a
       // seção rola; a seção seguinte empurra a anterior para fora
-      html+='<div class="secwrap">'+
+      html+='<div class="secwrap'+(foraDaPauta?' fora-da-pauta':'')+'">'+
             '<div class="sechead">'+
             '<div class="band'+(isCrit?' crit':'')+(isMod?' mod':'')+(closed?' closed':'')+'" data-b="'+bi+'">'+
             '<h2>'+esc(b.title)+'</h2><span class="n">'+items.length+'</span>'+
@@ -882,6 +890,8 @@ kbd{
     var ids=[];
     Array.prototype.forEach.call(document.querySelectorAll('.section'),function(sec){
       if(sec.style.display==='none') return;
+      // o que está escondido no modo pauta também sai da sequência de navegação
+      if(state.pauta && sec.parentNode.classList.contains('fora-da-pauta')) return;
       Array.prototype.forEach.call(sec.querySelectorAll('.row'),function(r){
         ids.push(parseInt(r.getAttribute('data-id'),10));
       });
@@ -894,6 +904,7 @@ kbd{
     var b=document.getElementById('btn-pauta');
     b.classList.toggle('on',on);
     b.textContent = on ? '■ Sair da pauta' : '▶ Modo pauta';
+    rebuildOrder();            // entrar/sair muda quais seções contam
     if(!on){ state.idx=-1; paint(); }
     else if(state.idx<0) focus(0);
   }
