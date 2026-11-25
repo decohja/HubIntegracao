@@ -245,10 +245,12 @@ input.search:focus{outline:none;border-color:var(--accent)}
 .pill.andamento{background:var(--mod-bg);color:var(--mod)}
 .pill.concluido{background:var(--ok-bg);color:var(--ok)}
 .pill.outro{background:var(--neu-bg);color:var(--neu)}
-.seg{font-size:calc(16px * var(--k));color:var(--ink-2);margin-bottom:calc(9px * var(--k));line-height:1.45}
+/* rótulo na linha de cima: todo texto nasce na mesma margem esquerda.
+   o espaço entre blocos é bem maior que o espaço rótulo→texto (proximidade) */
+.seg{font-size:calc(16px * var(--k));color:var(--ink-2);margin-bottom:calc(16px * var(--k));line-height:1.45}
 .seg:last-child{margin-bottom:0}
-.seg .lbl{font-size:calc(11.5px * var(--k));letter-spacing:.07em;text-transform:uppercase;
-  font-weight:800;margin-right:calc(6px * var(--k))}
+.seg .lbl{display:block;font-size:calc(11.5px * var(--k));letter-spacing:.07em;text-transform:uppercase;
+  font-weight:800;margin-bottom:calc(2px * var(--k))}
 .seg.ped .lbl{color:var(--ped)} .seg.ti .lbl{color:var(--ti)} .seg.at .lbl{color:var(--crit)}
 .seg.at{color:var(--ink);font-weight:500}
 .txt{font-size:calc(16px * var(--k));color:var(--ink-2);line-height:1.5;white-space:pre-line}
@@ -274,7 +276,7 @@ body.pauta .row.active .pill{font-size:calc(15.5px * var(--k));
   padding:calc(7px * var(--k)) calc(15px * var(--k));min-width:calc(152px * var(--k))}
 body.pauta .row.active .seg,
 body.pauta .row.active .txt{font-size:calc(21px * var(--k));line-height:1.45}
-body.pauta .row.active .seg{margin-bottom:calc(12px * var(--k))}
+body.pauta .row.active .seg{margin-bottom:calc(20px * var(--k))}
 body.pauta .row.active .seg .lbl{font-size:calc(12.5px * var(--k))}
 body.pauta .band{opacity:.45}
 body.pauta .band.hasactive{opacity:1}
